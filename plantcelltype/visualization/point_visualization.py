@@ -1,4 +1,4 @@
-from celltype.utils import load_full_stack
+from plantcelltype.utils import load_full_stack
 
 import numpy as np
 from ipywidgets import widgets

@@ -1,5 +1,5 @@
 from elf.segmentation.features import compute_rag, compute_boundary_mean_and_length
-from celltype.utils.utils import create_cell_mapping
+from plantcelltype.utils.utils import create_cell_mapping
 import numpy as np
 import networkx as nx
 

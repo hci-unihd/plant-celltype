@@ -1,5 +1,5 @@
-from celltype.features.utils import label2com
-from celltype.utils.utils import edges_ids2cantor_ids, create_cell_mapping
+from plantcelltype.features.utils import label2com
+from plantcelltype.utils.utils import edges_ids2cantor_ids, create_cell_mapping
 from skspatial.objects import Plane, Vector
 import numpy as np
 

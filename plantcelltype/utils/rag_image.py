@@ -2,7 +2,7 @@ from numba import njit, prange
 import numpy as np
 from numba.core import types
 from numba.typed import Dict
-from celltype.utils.utils import cantor_sym_pair
+from plantcelltype.utils.utils import cantor_sym_pair
 
 
 def get_neighborhood_structure(x=(1, 1, 1)):

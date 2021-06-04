@@ -1,5 +1,58 @@
 import numpy as np
 from skspatial.objects import Plane, Line, Point, Vector
+from skspatial.transformation import transform_coordinates
+
+
+def scale_points(points, voxel_size, reverse=False):
+    assert len(voxel_size) == 3
+    voxel_size = np.array(voxel_size)
+    voxel_size = 1 / voxel_size if reverse else voxel_size
+    return points * voxel_size
+
+
+def transform_coord(points, axis, center=(0, 0, 0), voxel_size=(1, 1, 1)):
+    scaled_points = scale_points(points, voxel_size)
+    return transform_coordinates(scaled_points, center, axis)
+
+
+def inv_transform_coord(points, axis, center=(0, 0, 0), voxel_size=(1, 1, 1)):
+    center = np.array(center)
+    inv_rot_points = transform_coordinates(points, (0, 0, 0), np.linalg.inv(axis))
+    inv_rot_centering_points = transform_coordinates(inv_rot_points, -center, [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    original_points = scale_points(inv_rot_centering_points, voxel_size, reverse=True)
+    return original_points
+
+
+class AxisTransformer:
+    def __init__(self, axis=((1, 0, 0), (0, 1, 0), (0, 0, 1)), center=(0, 0, 0), voxel_size=(1, 1, 1)):
+        self.axis = np.array(axis)
+        self.center = np.array(center)
+        self.voxel_size = np.array(voxel_size)
+
+    def transform_coord(self, points, voxel_size=None):
+        voxel_size = self.voxel_size if voxel_size is None else voxel_size
+        return transform_coord(points, self.axis, self.center, voxel_size)
+
+    def inv_transform_coord(self, points, voxel_size=None):
+        voxel_size = self.voxel_size if voxel_size is None else voxel_size
+        return inv_transform_coord(points, self.axis, self.center, voxel_size)
+
+    def transform_napari_vector(self, vector, voxel_size=None):
+        voxel_size = self.voxel_size if voxel_size is None else voxel_size
+        origin_points = self.transform_coord(vector[:, 0], voxel_size=voxel_size)
+        new_vector = transform_coord(vector[:, 1], self.axis, (0, 0, 0), voxel_size)
+        return np.stack([origin_points, new_vector], axis=1)
+
+    def inv_transform_napari_vector(self, vector, voxel_size=None):
+        voxel_size = self.voxel_size if voxel_size is None else voxel_size
+        origin_points = self.inv_transform_coord(vector[:, 0], voxel_size=voxel_size)
+        new_vector = inv_transform_coord(vector[:, 1], self.axis, (0, 0, 0), voxel_size)
+        return np.stack([origin_points, new_vector], axis=1)
+
+    def axis_vectors(self):
+        axis_vectors = np.zeros((3, 2, 3))
+        axis_vectors[:, 1, :] = self.axis
+        return axis_vectors
 
 
 def find_label_com(com, labels, label):
@@ -49,7 +102,6 @@ def find_axis_late(com, labels, l_set=(2, 3, 4, 5, 8, 14), pivot=7):
     
     # secondary axis
     if isinstance(pivot, int):
-        print(find_label_com(com, labels, (pivot, )))
         pivot_point = Point(find_label_com(com, labels, (pivot, )))
 
     elif isinstance(pivot, (list, tuple)):

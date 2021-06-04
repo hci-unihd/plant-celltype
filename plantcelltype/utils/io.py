@@ -1,4 +1,5 @@
 import h5py
+from plantcelltype.utils.axis_transforms import AxisTransformer
 
 
 def load_full_stack(path, keys=None):
@@ -11,14 +12,30 @@ def load_full_stack(path, keys=None):
             keys = f.keys()
 
         for _key in keys:
-            stacks[_key] = f[_key][...]
+            if isinstance(f[_key], h5py.Group):
+                stacks[_key] = {}
+                for __keys in f[_key].keys():
+                    stacks[_key][__keys] = f[_key][__keys][...]
 
-    return stacks
+            elif isinstance(f[_key], h5py.Dataset):
+                stacks[_key] = f[_key][...]
+
+    return stacks, _load_axis_transformer(stacks['attributes'])
 
 
-def check_keys(path):
+def _load_axis_transformer(attributes):
+    axis = attributes.get('global_reference_system_axis', ((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+    center = attributes.get('global_reference_system_origin', (0, 0, 0))
+    voxel_size = attributes.get('element_size_um', (1., 1., 1.))
+    return AxisTransformer(axis, center, voxel_size=voxel_size)
+
+
+def check_keys(path, group=None):
     with h5py.File(path, 'r') as f:
-        keys = list(f.keys())
+        if group is None:
+            keys = list(f.keys())
+        else:
+            keys = list(f[group].keys())
         attrs = list(f['attributes'].keys())
 
     return keys, attrs

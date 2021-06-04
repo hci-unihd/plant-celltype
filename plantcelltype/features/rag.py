@@ -10,7 +10,7 @@ def rag_from_seg(segmentation):
     return rag, edges
 
 
-def build_nx_graph(edges_ids, cell_ids, cell_com=None):
+def build_nx_graph(edges_ids, cell_ids, cell_com=None, remove_bg=True):
     ovule_graph = nx.Graph()
 
     if cell_com is not None:
@@ -18,10 +18,13 @@ def build_nx_graph(edges_ids, cell_ids, cell_com=None):
     else:
         cell_com_mapping = create_cell_mapping(np.ones_like(cell_ids), cell_ids)
 
+    if remove_bg:
+        mask = np.where(np.min(edges_ids, axis=1) > 0)[0]
+        edges_ids = edges_ids[mask]
+
     for (e1, e2) in edges_ids:
-        if e1 > 0 and e2 > 0:
-            d = np.sqrt(np.sum((cell_com_mapping[e1] - cell_com_mapping[e2]) ** 2))
-            ovule_graph.add_edge(e1, e2, weight=d)
+        d = np.sqrt(np.sum((cell_com_mapping[e1] - cell_com_mapping[e2]) ** 2)) if remove_bg else 1
+        ovule_graph.add_edge(e1, e2, weight=d)
 
     return ovule_graph
 

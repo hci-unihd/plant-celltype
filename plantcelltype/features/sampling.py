@@ -1,6 +1,6 @@
 from numba import njit
 import numpy as np
-from numba.core import types
+from numba import types
 from numba.typed import Dict
 
 
@@ -15,6 +15,7 @@ def create_mapping_jit(cell_ids):
     # create a cell_idx:array_idx
     for i, _ids in enumerate(cell_ids):
         cell_mapping[_ids] = i
+
     return cell_mapping
 
 
@@ -105,23 +106,26 @@ def entropy_points_sampling(segmentation, cell_ids, n_points, n_random_points=10
 
 
 def random_points_samples(segmentation, cell_ids, n_points=10):
-    _seg_points = np.nonzero(segmentation)
-    random_sampling = np.arange(len(_seg_points[0]))
+    segmentation = segmentation.astype('int64')
+    cell_ids = cell_ids.astype('int64')
+    seg_points = np.nonzero(segmentation)
+    random_sampling = np.arange(len(seg_points[0]))
     np.random.shuffle(random_sampling)
+    cell_random_sampling = _random_points_samples(seg_points, cell_ids, random_sampling, segmentation, n_points)
 
-    cell_mapping = create_mapping(cell_ids)
-    cell_random_sampling = np.zeros((cell_ids.shape[0], n_points, 3))
+    return cell_random_sampling
+
+
+@njit()
+def _random_points_samples(seg_points, cell_ids, random_sampling, segmentation, n_points=10):
+    cell_mapping = create_mapping_jit(cell_ids)
+    cell_random_sampling = np.zeros((cell_ids.shape[0], n_points, 3), dtype=np.int64)
     counts = np.zeros(cell_ids.shape[0], dtype=np.int64)
-
     for random_ids in random_sampling:
-        i, j, k = _seg_points[0][random_ids], _seg_points[1][random_ids], _seg_points[2][random_ids]
+        i, j, k = seg_points[0][random_ids], seg_points[1][random_ids], seg_points[2][random_ids]
         _idx = cell_mapping[segmentation[i, j, k]]
         if counts[_idx] < n_points:
             cell_random_sampling[_idx, counts[_idx]] = i, j, k
             counts[_idx] += 1
-
-        if np.all(counts > n_points):
-            # if all points have been sampled then exit the loop
-            break
 
     return cell_random_sampling

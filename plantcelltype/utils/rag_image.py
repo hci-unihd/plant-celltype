@@ -1,6 +1,6 @@
 from numba import njit, prange
 import numpy as np
-from numba.core import types
+from numba import types
 from numba.typed import Dict
 from plantcelltype.utils.utils import cantor_sym_pair
 
@@ -19,7 +19,7 @@ def get_neighborhood_structure(x=(1, 1, 1)):
 
 
 @njit(parallel=True)
-def compute_edges_image(segmentation, structure):
+def compute_edges_image(segmentation, structure, min_counts=0):
     
     shape = segmentation.shape
     out_edges = np.zeros((shape[0], shape[1], shape[2]), dtype=np.uint)
@@ -38,12 +38,12 @@ def compute_edges_image(segmentation, structure):
                     ss_ijk = segmentation[si, sj, sk] 
                     
                     if s_ijk != ss_ijk:
-                        if is_full == False:
+                        if not is_full:
                             label_dict = Dict.empty(key_type=types.int64, value_type=types.int64,)
                             
                         label = cantor_sym_pair(s_ijk, ss_ijk)
                         for _key, _value in label_dict.items():
-                            if label > 0 and _key == label:
+                            if 0 < label == _key:
                                 label_dict[label] += 1
                                 break
                         else:
@@ -52,7 +52,7 @@ def compute_edges_image(segmentation, structure):
                         is_full = True
                     _s += 1
                     
-                if is_full:
+                if is_full and len(label_dict) > min_counts:
                     max_count = 0
                     edge_label = 0
                     for _key, _value in label_dict.items():
@@ -109,9 +109,9 @@ def rectify_edge_image(edge_image, edges):
     return edge_image
 
 
-def boundary_rag_from_seg(segmentation, edges_ids=None):
+def boundary_rag_from_seg(segmentation, edges_ids=None, min_counts=0):
 
-    rag_boundaries = compute_edges_image(segmentation, get_neighborhood_structure())
+    rag_boundaries = compute_edges_image(segmentation, get_neighborhood_structure(), min_counts)
     if edges_ids is not None:
         rag_boundaries = rectify_edge_image(rag_boundaries, edges_ids)
 

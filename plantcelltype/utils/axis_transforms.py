@@ -54,6 +54,15 @@ class AxisTransformer:
         axis_vectors[:, 1, :] = self.axis
         return axis_vectors
 
+    def main_axis_grs(self):
+        return self.axis[0]
+
+    def secondary_axis_grs(self):
+        return self.axis[1]
+
+    def scale_volumes(self, volumes):
+        return np.prod(self.voxel_size) * volumes
+
 
 def find_label_com(com, labels, label):
     _label_com = []

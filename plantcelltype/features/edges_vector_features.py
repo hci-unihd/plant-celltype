@@ -21,17 +21,17 @@ def _plane_from_points(points, cell_com):
     return central_point, vector
 
 
-def compute_edges_planes(edges_samples,
+def compute_edges_planes(cell_ids,
                          edges_ids,
-                         cell_ids,
                          cell_com,
+                         cell_hops_to_bg,
+                         edges_samples,
                          edges_com,
-                         cell_htbg,
                          origin=(0, 0, 0),
                          min_valid_idx=20):
     edge_sampling_mapping = create_edge_mapping(edges_samples, edges_ids)
     cell_com_mapping = create_cell_mapping(cell_com, cell_ids)
-    cell_sp_mapping = create_cell_mapping(cell_htbg, cell_ids)
+    cell_sp_mapping = create_cell_mapping(cell_hops_to_bg, cell_ids)
     edge_com_mapping = create_edge_mapping(edges_com, edges_ids)
     origin = np.array(origin)
 
@@ -46,8 +46,13 @@ def compute_edges_planes(edges_samples,
             planes_points.append(central_point)
             planes_vectors.append(vector)
         else:
-            planes_points.append(edge_com_mapping[edge_idx])
-            planes_vectors.append(Vector.from_points(cell_com_mapping[center_cell],
-                                                     edge_com_mapping[edge_idx]).unit())
+            center_cell_com, edges_idx_com = cell_com_mapping[center_cell], edge_com_mapping[edge_idx]
+            planes_points.append(edges_idx_com)
+            if not np.allclose(center_cell_com, edges_idx_com):
+                planes_vectors.append(Vector.from_points(center_cell_com,
+                                                         edges_idx_com).unit())
+
+            else:
+                planes_vectors.append(Vector(np.random.rand(3)).unit())
 
     return np.stack([planes_points, planes_vectors], axis=1)

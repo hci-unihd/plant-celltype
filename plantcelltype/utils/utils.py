@@ -22,6 +22,11 @@ def edges_ids2cantor_ids(edges_ids):
     return np.array([cantor_sym_pair(e1, e2) for e1, e2 in edges_ids])
 
 
+def filter_bg_from_edges(edges_ids, features, bg=0):
+    mask = np.where(np.min(edges_ids, axis=1) != bg)[0]
+    return features[mask]
+
+
 def create_features_mapping(features, features_ids):
     mapping = {}
     for key, value in zip(features_ids, features):

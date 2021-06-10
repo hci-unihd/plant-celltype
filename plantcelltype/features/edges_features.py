@@ -9,12 +9,8 @@ def edges2com(rag_boundaries, edges_ids):
     return label2com(rag_boundaries, edges_ids)
 
 
-def compute_boundaries_com_angles(edges_ids,
-                                  edges_length,
-                                  edges_sample,
-                                  cell_ids,
-                                  cell_com):
-    cell_com_mapping = create_cell_mapping(cell_com, cell_ids)
+def compute_boundaries_com_angles(cell_ids, edges_ids, cell_com, edges_sample):
+    cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
 
     angles = np.zeros(edges_ids.shape[0])
     for i, (samples, (e1, e2)) in enumerate(zip(edges_sample, edges_ids)):
@@ -33,8 +29,8 @@ def compute_boundaries_com_angles(edges_ids,
     return angles
 
 
-def compute_edges_length(edges_ids, cell_ids, cell_com):
-    com_mapping = create_cell_mapping(cell_com, cell_ids)
+def compute_edges_length(cell_ids, edges_ids, cell_com):
+    com_mapping = create_cell_mapping(cell_ids, cell_com)
     com_distance = np.zeros(edges_ids.shape[0])
     for i, (e1, e2) in enumerate(edges_ids):
         if e1 > 0 and e2 > 0:
@@ -47,8 +43,8 @@ def compute_edges_length(edges_ids, cell_ids, cell_com):
     return com_distance
 
 
-def compute_edges_angles(edges_ids, edges_com, cell_ids, cell_com):
-    com_mapping = create_cell_mapping(cell_com, cell_ids)
+def compute_edges_angles(cell_ids, edges_ids, cell_com, edges_com):
+    com_mapping = create_cell_mapping(cell_ids, cell_com)
     com_angle = np.zeros(edges_ids.shape[0])
     for i, (e1, e2) in enumerate(edges_ids):
         if e1 > 0 and e2 > 0:

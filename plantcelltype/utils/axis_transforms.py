@@ -3,21 +3,21 @@ from skspatial.objects import Plane, Line, Point, Vector
 from skspatial.transformation import transform_coordinates
 
 
-def scale_points(points, voxel_size, reverse=False):
+def scale_points(points_coo, voxel_size, reverse=False):
     assert len(voxel_size) == 3
     voxel_size = np.array(voxel_size)
     voxel_size = 1 / voxel_size if reverse else voxel_size
-    return points * voxel_size
+    return points_coo * voxel_size
 
 
-def transform_coord(points, axis, center=(0, 0, 0), voxel_size=(1, 1, 1)):
-    scaled_points = scale_points(points, voxel_size)
+def transform_coord(points_coo, axis, center=(0, 0, 0), voxel_size=(1, 1, 1)):
+    scaled_points = scale_points(points_coo, voxel_size)
     return transform_coordinates(scaled_points, center, axis)
 
 
-def inv_transform_coord(points, axis, center=(0, 0, 0), voxel_size=(1, 1, 1)):
+def inv_transform_coord(points_coo, axis, center=(0, 0, 0), voxel_size=(1, 1, 1)):
     center = np.array(center)
-    inv_rot_points = transform_coordinates(points, (0, 0, 0), np.linalg.inv(axis))
+    inv_rot_points = transform_coordinates(points_coo, (0, 0, 0), np.linalg.inv(axis))
     inv_rot_centering_points = transform_coordinates(inv_rot_points, -center, [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     original_points = scale_points(inv_rot_centering_points, voxel_size, reverse=True)
     return original_points
@@ -29,13 +29,13 @@ class AxisTransformer:
         self.center = np.array(center)
         self.voxel_size = np.array(voxel_size)
 
-    def transform_coord(self, points, voxel_size=None):
+    def transform_coord(self, points_coo, voxel_size=None):
         voxel_size = self.voxel_size if voxel_size is None else voxel_size
-        return transform_coord(points, self.axis, self.center, voxel_size)
+        return transform_coord(points_coo, self.axis, self.center, voxel_size)
 
-    def inv_transform_coord(self, points, voxel_size=None):
+    def inv_transform_coord(self, points_coo, voxel_size=None):
         voxel_size = self.voxel_size if voxel_size is None else voxel_size
-        return inv_transform_coord(points, self.axis, self.center, voxel_size)
+        return inv_transform_coord(points_coo, self.axis, self.center, voxel_size)
 
     def transform_napari_vector(self, vector, voxel_size=None):
         voxel_size = self.voxel_size if voxel_size is None else voxel_size
@@ -64,9 +64,9 @@ class AxisTransformer:
         return np.prod(self.voxel_size) * volumes
 
 
-def find_label_com(com, labels, label):
+def find_label_com(cell_labels, cell_com, label=(1,)):
     _label_com = []
-    for _com, _label in zip(com, labels):
+    for _com, _label in zip(cell_com, cell_labels):
         if _label in label:
             _label_com.append(_com)
         
@@ -76,10 +76,10 @@ def find_label_com(com, labels, label):
         return None, None, None
     
 
-def find_axis_l123(com, labels, l_set=(1, 2, 3)):
+def find_axis_l123(cell_labels, cell_com, l123_set=(1, 2, 3)):
     labels_com = []
-    for key in l_set:
-        _com = find_label_com(com, labels, (key, ))
+    for key in l123_set:
+        _com = find_label_com(cell_labels, cell_com, (key,))
         if _com[0] is not None:
             labels_com.append(_com)
     
@@ -98,10 +98,10 @@ def find_axis_l123(com, labels, l_set=(1, 2, 3)):
     return main_axis, second_axis, third_axis
 
 
-def find_axis_late(com, labels, l_set=(2, 3, 4, 5, 8, 14), pivot=7):
+def find_axis_late(cell_labels, cell_com, l_set=(2, 3, 4, 5, 8, 14), funiculum=7):
     labels_com = []
     for key in l_set:
-        _com = find_label_com(com, labels, (key, ))
+        _com = find_label_com(cell_labels, cell_com, (key,))
         if _com[0] is not None:
             labels_com.append(_com)
             
@@ -110,11 +110,11 @@ def find_axis_late(com, labels, l_set=(2, 3, 4, 5, 8, 14), pivot=7):
     main_axis = - line.vector
     
     # secondary axis
-    if isinstance(pivot, int):
-        pivot_point = Point(find_label_com(com, labels, (pivot, )))
+    if isinstance(funiculum, int):
+        pivot_point = Point(find_label_com(cell_labels, cell_com, (funiculum,)))
 
-    elif isinstance(pivot, (list, tuple)):
-        pivot_point = Point(pivot)
+    elif isinstance(funiculum, (list, tuple)):
+        pivot_point = Point(funiculum)
 
     else:
         return None, None, None

@@ -27,17 +27,17 @@ def filter_bg_from_edges(edges_ids, features, bg=0):
     return features[mask]
 
 
-def create_features_mapping(features, features_ids):
+def create_features_mapping(features_ids, features):
     mapping = {}
     for key, value in zip(features_ids, features):
         mapping[key] = value
     return mapping
 
 
-def create_cell_mapping(cell_feature, cell_ids):
-    return create_features_mapping(cell_feature, cell_ids)
+def create_cell_mapping(cell_ids, cell_feature):
+    return create_features_mapping(cell_ids, cell_feature)
 
 
-def create_edge_mapping(edges_features, edges_ids):
+def create_edge_mapping(edges_ids, edges_features):
     cantor_edges_ids = edges_ids2cantor_ids(edges_ids)
-    return create_features_mapping(edges_features, cantor_edges_ids)
+    return create_features_mapping(cantor_edges_ids, edges_features)

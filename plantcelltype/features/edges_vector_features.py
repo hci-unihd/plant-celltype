@@ -14,8 +14,8 @@ def _valid_idx(samples, zeros=(0, 0, 0)):
     return valid_idx, counts
 
 
-def _plane_from_points(points, cell_com):
-    plane = Plane.best_fit(points)
+def _plane_from_points(points_coo, cell_com):
+    plane = Plane.best_fit(points_coo)
     central_point, vector = plane.point, plane.vector
     vector = - plane.side_point(cell_com) * vector
     return central_point, vector
@@ -29,10 +29,10 @@ def compute_edges_planes(cell_ids,
                          edges_com,
                          origin=(0, 0, 0),
                          min_valid_idx=20):
-    edge_sampling_mapping = create_edge_mapping(edges_samples, edges_ids)
-    cell_com_mapping = create_cell_mapping(cell_com, cell_ids)
-    cell_sp_mapping = create_cell_mapping(cell_hops_to_bg, cell_ids)
-    edge_com_mapping = create_edge_mapping(edges_com, edges_ids)
+    edge_sampling_mapping = create_edge_mapping(edges_ids, edges_samples)
+    cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
+    cell_sp_mapping = create_cell_mapping(cell_ids, cell_hops_to_bg)
+    edge_com_mapping = create_edge_mapping(edges_ids, edges_com)
     origin = np.array(origin)
 
     planes_points, planes_vectors = [], []

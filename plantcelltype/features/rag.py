@@ -15,13 +15,13 @@ def remove_bg_from_edges_ids(edges_ids, bg=0):
     return edges_ids[mask]
 
 
-def build_nx_graph(edges_ids, cell_ids, cell_com=None, remove_bg=True):
+def build_nx_graph(cell_ids, edges_ids, cell_com=None, remove_bg=True):
     ovule_graph = nx.Graph()
 
     if cell_com is not None:
-        cell_com_mapping = create_cell_mapping(cell_com, cell_ids)
+        cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
     else:
-        cell_com_mapping = create_cell_mapping(np.ones_like(cell_ids), cell_ids)
+        cell_com_mapping = create_cell_mapping(cell_ids, np.ones_like(cell_ids))
 
     edges_ids = remove_bg_from_edges_ids(edges_ids) if remove_bg else edges_ids
 
@@ -43,7 +43,7 @@ def get_edges_com_voxels(rag):
 
 def rectify_rag_names(cell_ids, edges_ids):
     new_edges_ids = []
-    cell_ids_mapping = create_cell_mapping(np.arange(cell_ids.shape[0]), cell_ids)
+    cell_ids_mapping = create_cell_mapping(cell_ids, np.arange(cell_ids.shape[0]))
 
     edges_ids = remove_bg_from_edges_ids(edges_ids)
     for e1, e2 in edges_ids:

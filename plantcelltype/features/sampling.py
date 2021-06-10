@@ -10,7 +10,7 @@ def l2_distance(x0, x1, x2, y):
 
 
 @njit()
-def create_mapping_jit(cell_ids):
+def create_trivial_mapping_jit(cell_ids):
     cell_mapping = Dict.empty(key_type=types.int64, value_type=types.int64, )
     # create a cell_idx:array_idx
     for i, _ids in enumerate(cell_ids):
@@ -19,7 +19,7 @@ def create_mapping_jit(cell_ids):
     return cell_mapping
 
 
-def create_mapping(cell_ids):
+def create_trivial_mapping(cell_ids):
     cell_mapping = {}
     # create a cell_idx:array_idx
     for i, _ids in enumerate(cell_ids):
@@ -33,7 +33,7 @@ def farthest_points_sampling(segmentation, cell_ids, cell_com, n_points=10):
     cell_fps = np.zeros((cell_com.shape[0], n_points + 1, 3))
 
     # create a cell_idx:array_idx
-    cell_mapping = create_mapping_jit(cell_ids)
+    cell_mapping = create_trivial_mapping_jit(cell_ids)
     # initialize com as first point
     for i, _ids in enumerate(cell_ids):
         cell_fps[i, 0] = cell_com[i]
@@ -66,7 +66,7 @@ def farthest_points_sampling(segmentation, cell_ids, cell_com, n_points=10):
 def _entropy_points_sampling(segmentation, cell_ids, cell_sampling_guess):
     shape = segmentation.shape
     # create a cell_idx:array_idx
-    cell_mapping = create_mapping_jit(cell_ids)
+    cell_mapping = create_trivial_mapping_jit(cell_ids)
 
     # check for
     start = 0
@@ -98,7 +98,7 @@ def _entropy_points_sampling(segmentation, cell_ids, cell_sampling_guess):
     return cell_sampling_guess
 
 
-def entropy_points_sampling(segmentation, cell_ids, n_points, n_random_points=10):
+def entropy_points_sampling(segmentation, cell_ids, n_points=10, n_random_points=5):
     random_points = random_points_samples(segmentation, cell_ids, n_points=n_random_points)
     empty_points = np.zeros((random_points.shape[0], n_points - n_random_points, 3))
     entropy_points = np.concatenate([random_points, empty_points], axis=1)
@@ -111,14 +111,14 @@ def random_points_samples(segmentation, cell_ids, n_points=10):
     seg_points = np.nonzero(segmentation)
     random_sampling = np.arange(len(seg_points[0]))
     np.random.shuffle(random_sampling)
-    cell_random_sampling = _random_points_samples(seg_points, cell_ids, random_sampling, segmentation, n_points)
+    cell_random_sampling = _random_points_samples(segmentation, cell_ids, seg_points, random_sampling, n_points)
 
     return cell_random_sampling
 
 
 @njit()
-def _random_points_samples(seg_points, cell_ids, random_sampling, segmentation, n_points=10):
-    cell_mapping = create_mapping_jit(cell_ids)
+def _random_points_samples(segmentation, cell_ids, seg_points, random_sampling, n_points=10):
+    cell_mapping = create_trivial_mapping_jit(cell_ids)
     cell_random_sampling = np.zeros((cell_ids.shape[0], n_points, 3), dtype=np.int64)
     counts = np.zeros(cell_ids.shape[0], dtype=np.int64)
     for random_ids in random_sampling:

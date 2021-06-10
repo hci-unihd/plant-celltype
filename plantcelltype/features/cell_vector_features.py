@@ -6,9 +6,9 @@ import numpy as np
 
 def compute_local_reference_axis1(cell_ids, edges_ids, cell_hops_to_bg, edges_plane_vectors):
 
-    nx_graph = build_nx_graph(edges_ids, cell_ids)
-    cell_hops_to_bg_mapping = create_cell_mapping(cell_hops_to_bg, cell_ids)
-    edges_pv_mapping = create_edge_mapping(edges_plane_vectors, edges_ids)
+    nx_graph = build_nx_graph(cell_ids, edges_ids)
+    cell_hops_to_bg_mapping = create_cell_mapping(cell_ids, cell_hops_to_bg)
+    edges_pv_mapping = create_edge_mapping(edges_ids, edges_plane_vectors)
     cell_axis1_mapping = {}
     for c_idx in cell_ids:
         list_nx = list(nx_graph.neighbors(c_idx))
@@ -39,9 +39,9 @@ def compute_local_reference_axis2_pair(cell_ids,
                                        global_axis=(1, 0, 0),
                                        weights=(1, 1)):
     global_axis = Vector(global_axis)
-    nx_graph = build_nx_graph(edges_ids, cell_ids)
-    cell_com_mapping = create_cell_mapping(cell_com, cell_ids)
-    edges_com_mapping = create_edge_mapping(edges_com, edges_ids)
+    nx_graph = build_nx_graph(cell_ids, edges_ids)
+    cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
+    edges_com_mapping = create_edge_mapping(edges_ids, edges_com)
     min_points = []
     lr_axis_2 = []
     for n in cell_ids:

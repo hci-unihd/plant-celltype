@@ -13,11 +13,11 @@ _supported_centrality = {'degree': degree_centrality,
                          'eigenvector': eigenvector_centrality}
 
 
-def seg2com(segmentation, cell_ids):
+def seg2com(cell_ids, segmentation):
     return label2com(segmentation, cell_ids)
 
 
-def shortest_distance_2_label(edges_ids, cell_ids, label=0):
+def shortest_distance_2_label(cell_ids, edges_ids, label=0):
     adj = csr_matrix((np.ones(edges_ids.shape[0]),
                       (edges_ids[:, 0], edges_ids[:, 1])),
                      shape=(cell_ids.max() + 1, cell_ids.max() + 1))
@@ -48,14 +48,14 @@ def compute_cell_surface(segmentation, rag_boundaries, cell_ids):
     return surface_array
 
 
-def compute_sphericity(cell_size, cell_surface):
-    sphericity = np.pi**(1/3) * (6 * cell_size)**(2/3)
+def compute_sphericity(cell_volume, cell_surface):
+    sphericity = np.pi ** (1/3) * (6 * cell_volume) ** (2 / 3)
     sphericity /= cell_surface
     return sphericity
 
 
-def compute_generic_centrality(edges_ids, cell_ids, centrality='degree', args=(), cell_com=None):
-    nx_graph = build_nx_graph(edges_ids, cell_ids, cell_com)
+def compute_generic_centrality(cell_ids, edges_ids, centrality='degree', cell_com=None, args=()):
+    nx_graph = build_nx_graph(cell_ids, edges_ids, cell_com)
     centrality_mapping = _supported_centrality[centrality](nx_graph, *args)
     centrality = np.zeros(cell_ids.shape[0])
     for i, _idx in enumerate(cell_ids):
@@ -64,17 +64,17 @@ def compute_generic_centrality(edges_ids, cell_ids, centrality='degree', args=()
     return centrality
 
 
-def compute_degree_centrality(edges_ids, cell_ids):
-    return compute_generic_centrality(edges_ids, cell_ids, centrality='degree', cell_com=None)
+def compute_degree_centrality(cell_ids, edges_ids):
+    return compute_generic_centrality(cell_ids, edges_ids, centrality='degree', cell_com=None)
 
 
-def rw_betweenness_centrality(edges_ids, cell_ids, cell_com=None):
-    return compute_generic_centrality(edges_ids, cell_ids, centrality='rw_betweenness', cell_com=cell_com)
+def rw_betweenness_centrality(cell_ids, edges_ids, cell_com=None):
+    return compute_generic_centrality(cell_ids, edges_ids, centrality='rw_betweenness', cell_com=cell_com)
 
 
-def betweenness_centrality(edges_ids, cell_ids):
-    return compute_generic_centrality(edges_ids, cell_ids, centrality='betweenness', cell_com=None)
+def betweenness_centrality(cell_ids, edges_ids):
+    return compute_generic_centrality(cell_ids, edges_ids, centrality='betweenness', cell_com=None)
 
 
-def eigen_vector_centrality(edges_ids, cell_ids):
-    return compute_generic_centrality(edges_ids, cell_ids, centrality='eigen_vector', args=None, cell_com=None)
+def eigen_vector_centrality(cell_ids, edges_ids):
+    return compute_generic_centrality(cell_ids, edges_ids, centrality='eigen_vector', args=None, cell_com=None)

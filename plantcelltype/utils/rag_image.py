@@ -19,7 +19,7 @@ def get_neighborhood_structure(x=(1, 1, 1)):
 
 
 @njit(parallel=True)
-def compute_edges_image(segmentation, structure, min_counts=0):
+def _create_rag_boundary_image(segmentation, structure, min_counts=0):
     
     shape = segmentation.shape
     out_edges = np.zeros((shape[0], shape[1], shape[2]), dtype=np.uint)
@@ -66,7 +66,7 @@ def compute_edges_image(segmentation, structure, min_counts=0):
 
 
 @njit(parallel=True)
-def _compute_boundaries_image(segmentation, structure):
+def _create_boundaries_image(segmentation, structure):
     shape = segmentation.shape
     out_edges = np.zeros((shape[0], shape[1], shape[2]), dtype=np.uint)
 
@@ -87,8 +87,8 @@ def _compute_boundaries_image(segmentation, structure):
     return out_edges
 
 
-def compute_boundaries_image(segmentation):
-    return _compute_boundaries_image(segmentation, get_neighborhood_structure())
+def create_boundaries_image(segmentation):
+    return _create_boundaries_image(segmentation, get_neighborhood_structure())
 
 
 def rectify_edge_image(edge_image, edges):
@@ -109,9 +109,9 @@ def rectify_edge_image(edge_image, edges):
     return edge_image
 
 
-def boundary_rag_from_seg(segmentation, edges_ids=None, min_counts=0):
+def create_rag_boundary_from_seg(segmentation, edges_ids=None, min_counts=0):
 
-    rag_boundaries = compute_edges_image(segmentation, get_neighborhood_structure(), min_counts)
+    rag_boundaries = _create_rag_boundary_image(segmentation, get_neighborhood_structure(), min_counts)
     if edges_ids is not None:
         rag_boundaries = rectify_edge_image(rag_boundaries, edges_ids)
 

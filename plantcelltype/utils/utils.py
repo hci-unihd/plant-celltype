@@ -27,17 +27,30 @@ def filter_bg_from_edges(edges_ids, features, bg=0):
     return features[mask]
 
 
-def create_features_mapping(features_ids, features):
+def create_features_mapping(features_ids, features, safe_cast=True):
+    if safe_cast:
+        out_type = check_safe_cast(features)
+        features = features.astype(out_type)
+
     mapping = {}
     for key, value in zip(features_ids, features):
         mapping[key] = value
     return mapping
 
 
-def create_cell_mapping(cell_ids, cell_feature):
-    return create_features_mapping(cell_ids, cell_feature)
+def create_cell_mapping(cell_ids, cell_feature, safe_cast=True):
+    return create_features_mapping(cell_ids, cell_feature, safe_cast=safe_cast)
 
 
-def create_edge_mapping(edges_ids, edges_features):
+def create_edge_mapping(edges_ids, edges_features, safe_cast=True):
     cantor_edges_ids = edges_ids2cantor_ids(edges_ids)
-    return create_features_mapping(cantor_edges_ids, edges_features)
+    return create_features_mapping(cantor_edges_ids, edges_features, safe_cast=safe_cast)
+
+
+def check_safe_cast(array, types=('int64', 'float64')):
+    for _types in types:
+        if np.can_cast(array.dtype, _types):
+            out_type = _types
+            return out_type
+    else:
+        raise RuntimeError

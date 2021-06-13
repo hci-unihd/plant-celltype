@@ -59,3 +59,27 @@ def del_h5_key(path, key, mode='a'):
     with h5py.File(path, mode) as f:
         if key in f:
             del f[key]
+
+
+def export_labels_csv(cell_ids, cell_labels, path, csv_columns=('cell_ids', 'cell_labels')):
+    label_data = []
+    for c_ids, c_l in zip(cell_ids, cell_labels):
+        label_data.append({csv_columns[0]: c_ids, csv_columns[1]: c_l})
+
+    with open(csv_file, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        writer.writeheader()
+        for data in label_data:
+            writer.writerow(data)
+
+
+def import_labels_csv(cell_ids, cell_labels, path, csv_columns=('cell_ids', 'cell_labels')):
+    label_data = []
+    for c_ids, c_l in zip(cell_ids, cell_labels):
+        label_data.append({csv_columns[0]: c_ids, csv_columns[1]: c_l})
+
+    with open(csv_file, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        writer.writeheader()
+        for data in label_data:
+            writer.writerow(data)

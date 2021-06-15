@@ -22,7 +22,7 @@ def get_neighborhood_structure(x=(1, 1, 1)):
 def _create_rag_boundary_image(segmentation, structure, min_counts=0):
     
     shape = segmentation.shape
-    out_edges = np.zeros((shape[0], shape[1], shape[2]), dtype=np.uint)
+    out_edges = np.zeros((shape[0], shape[1], shape[2]), dtype='int64')
     label_dict = Dict.empty(key_type=types.int64, value_type=types.int64,)
 
     for i in prange(1, shape[0] - 1):
@@ -68,7 +68,7 @@ def _create_rag_boundary_image(segmentation, structure, min_counts=0):
 @njit(parallel=True)
 def _create_boundaries_image(segmentation, structure):
     shape = segmentation.shape
-    out_edges = np.zeros((shape[0], shape[1], shape[2]), dtype=np.uint)
+    out_edges = np.zeros((shape[0], shape[1], shape[2]), dtype='int32')
 
     for i in prange(1, shape[0] - 1):
         for j in prange(1, shape[1] - 1):
@@ -103,6 +103,7 @@ def rectify_edge_image(edge_image, edges):
     edges_from_rag = set(edges_from_rag)
     
     if not edges_from_image.issubset(edges_from_rag):
+        print("rag_boundaries is not a edges_ids subset")
         for value in edges_from_image.difference(edges_from_rag):
             edge_image[edge_image == value] = 0
             

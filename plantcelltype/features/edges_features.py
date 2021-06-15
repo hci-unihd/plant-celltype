@@ -9,6 +9,20 @@ def edges2com(rag_boundaries, edges_ids):
     return label2com(rag_boundaries, edges_ids)
 
 
+def compute_edges_labels(cell_ids, edges_ids, cell_labels):
+    edges_labels = np.zeros(edges_ids.shape[0])
+    labels_mapping = create_cell_mapping(cell_ids, cell_labels)
+    labels_mapping[0] = 0
+    for i, (e1, e2) in enumerate(edges_ids):
+        l1, l2 = labels_mapping[e1], labels_mapping[e2]
+        if l1 == l2:
+            edges_labels[i] = 1
+        else:
+            edges_labels[i] = 0
+
+    return edges_labels
+
+
 def compute_boundaries_com_angles(cell_ids, edges_ids, cell_com, edges_sample):
     cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
 

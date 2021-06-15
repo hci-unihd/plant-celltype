@@ -13,11 +13,11 @@ _supported_centrality = {'degree': degree_centrality,
                          'eigenvector': eigenvector_centrality}
 
 
-def seg2com(cell_ids, segmentation):
+def seg2com(segmentation, cell_ids):
     return label2com(segmentation, cell_ids)
 
 
-def shortest_distance_2_label(cell_ids, edges_ids, label=0):
+def shortest_distance_to_label(cell_ids, edges_ids, label=0):
     adj = csr_matrix((np.ones(edges_ids.shape[0]),
                       (edges_ids[:, 0], edges_ids[:, 1])),
                      shape=(cell_ids.max() + 1, cell_ids.max() + 1))
@@ -32,6 +32,12 @@ def compute_max_diameter(segmentation, cell_ids, cell_com, rag_boundaries=None):
     edges_samples = farthest_points_sampling(segmentation, cell_ids, cell_com, n_points=2)
     distance = np.sqrt(np.sum((edges_samples[:, 1] - edges_samples[:, 2])**2, axis=1))
     return distance
+
+
+def compute_cell_volume(segmentation, cell_ids):
+    _cell_id, volumes = np.unique(segmentation, return_counts=True)
+    assert np.allclose(_cell_id[1:], cell_ids)
+    return volumes[1:]
 
 
 def compute_cell_surface(segmentation, rag_boundaries, cell_ids):

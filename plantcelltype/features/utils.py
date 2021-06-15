@@ -1,11 +1,12 @@
-from numba import njit
+from numba import njit, types
+from numba.typed import Dict
 import numpy as np
 
 
 @njit()
 def label2com(label_image, label_ids):
     shape = label_image.shape
-    cell_mapping = dict()
+    cell_mapping = Dict.empty(key_type=types.int64, value_type=types.int64)
 
     for i, _ids in enumerate(label_ids):
         cell_mapping[_ids] = i

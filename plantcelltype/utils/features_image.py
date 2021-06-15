@@ -29,16 +29,15 @@ def mapping2image(in_image, mappings, data_type='int64'):
     return out_image
 
 
-def cell_features2segmentation(segmentation, cell_ids, cell_feature):
+def map_cell_features2segmentation(segmentation, cell_ids, cell_feature):
     out_type = check_safe_cast(cell_feature)
     cell_feature_mapping = create_cell_mapping(cell_ids, cell_feature)
     features_image = mapping2image(segmentation, cell_feature_mapping, out_type)
     return features_image
 
 
-def edges_features2rag_boundaries(rag_boundary, edges_ids, edges_feature):
+def map_edges_features2rag_boundaries(rag_boundary, edges_ids, edges_feature):
     out_type = check_safe_cast(edges_feature)
     cell_feature_mapping = create_edge_mapping(edges_ids, edges_feature)
     features_image = mapping2image(rag_boundary, cell_feature_mapping, out_type)
     return features_image
-

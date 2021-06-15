@@ -1,8 +1,115 @@
 import h5py
+import csv
+
+import numpy as np
+
 from plantcelltype.utils.axis_transforms import AxisTransformer
 
+import tifffile
+import h5py
+import warnings
+import os
 
-def load_full_stack(path, keys=None):
+TIFF_FORMATS = ['.tiff', '.tif']
+H5_FORMATS = ['.h5', '.hdf']
+LIF_FORMATS = ['.lif']
+
+
+def read_tiff_voxel_size(file_path):
+    """
+    Implemented based on information found in https://pypi.org/project/tifffile
+    """
+
+    def _xy_voxel_size(tags, key):
+        assert key in ['XResolution', 'YResolution']
+        if key in tags:
+            num_pixels, units = tags[key].value
+            return units / num_pixels
+        # return default
+        return 1.
+
+    with tifffile.TiffFile(file_path) as tiff:
+        image_metadata = tiff.imagej_metadata
+        if image_metadata is not None:
+            z = image_metadata.get('spacing', 1.)
+        else:
+            # default voxel size
+            z = 1.
+
+        tags = tiff.pages[0].tags
+        # parse X, Y resolution
+        y = _xy_voxel_size(tags, 'YResolution')
+        x = _xy_voxel_size(tags, 'XResolution')
+        # return voxel size
+        return [z, y, x]
+
+
+def read_h5_voxel_size(f, h5key):
+    ds = f[h5key]
+
+    # parse voxel_size
+    if 'element_size_um' in ds.attrs:
+        voxel_size = ds.attrs['element_size_um']
+    else:
+        warnings.warn('Voxel size not found, returning default [1.0, 1.0. 1.0]', RuntimeWarning)
+        voxel_size = [1.0, 1.0, 1.0]
+
+    return voxel_size
+
+
+def load_h5(path, key, slices=None, safe_mode=False):
+
+    with h5py.File(path, 'r') as f:
+        if key is None:
+            key = list(f.keys())[0]
+
+        if safe_mode and key not in list(f.keys()):
+            return None, (1, 1, 1)
+
+        if slices is None:
+            file = f[key][...]
+        else:
+            file = f[key][slices]
+
+        voxel_size = read_h5_voxel_size(f, key)
+
+    return file, voxel_size
+
+
+def load_tiff(path):
+    file = tifffile.imread(path)
+    try:
+        voxel_size = read_tiff_voxel_size(path)
+
+    except:
+        # ZeroDivisionError could happen while reading the voxel size
+        warnings.warn('Voxel size not found, returning default [1.0, 1.0. 1.0]', RuntimeWarning)
+        voxel_size = [1.0, 1.0, 1.0]
+
+    return file, voxel_size
+
+
+def load_lif(path):
+    raise NotImplementedError
+
+
+def smart_load(path, key=None, default=load_tiff):
+    _, ext = os.path.splitext(path)
+    if ext in H5_FORMATS:
+        return load_h5(path, key)
+
+    elif ext in TIFF_FORMATS:
+        return load_tiff(path)
+
+    elif ext in LIF_FORMATS:
+        return load_lif(path)
+
+    else:
+        print(f"No default found for {ext}, reverting to default loader")
+        return default(path)
+
+
+def open_full_stack(path, keys=None):
     with h5py.File(path, 'r') as f:
         stacks = {'attributes': {}}
         for _key, _value in f.attrs.items():
@@ -21,6 +128,33 @@ def load_full_stack(path, keys=None):
                 stacks[_key] = f[_key][...]
 
     return stacks, _load_axis_transformer(stacks['attributes'])
+
+
+def export_full_stack(path, stack):
+    for key, value in stack.items():
+        if isinstance(value, dict):
+            for group_key, group_value in value.items():
+                if key == "attributes":
+                    create_h5_attrs(path, group_value, group_key)
+                else:
+                    create_h5(path, group_value, key=f"{key}/{group_key}", voxel_size=None)
+
+        elif isinstance(value, np.ndarray):
+            if value.ndim == 3:
+                voxel_size = stack['attributes'].get('element_size_um', [1.0, 1.0, 1.0])
+            else:
+                voxel_size = None
+            create_h5(path, value, key=key, voxel_size=voxel_size)
+
+
+def import_segmentation(segmentation_path, extra_attr=None, key='segmentation'):
+    segmentation, voxel_size = smart_load(segmentation_path, key=key)
+    attributes = {'element_size_um': voxel_size}
+    if extra_attr is not None:
+        attributes.update(extra_attr)
+
+    stack = {'segmentation': segmentation, 'attributes': attributes}
+    return stack
 
 
 def _load_axis_transformer(attributes):
@@ -66,20 +200,20 @@ def export_labels_csv(cell_ids, cell_labels, path, csv_columns=('cell_ids', 'cel
     for c_ids, c_l in zip(cell_ids, cell_labels):
         label_data.append({csv_columns[0]: c_ids, csv_columns[1]: c_l})
 
-    with open(csv_file, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+    with open(path, 'w') as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=csv_columns)
         writer.writeheader()
         for data in label_data:
             writer.writerow(data)
 
 
-def import_labels_csv(cell_ids, cell_labels, path, csv_columns=('cell_ids', 'cell_labels')):
-    label_data = []
-    for c_ids, c_l in zip(cell_ids, cell_labels):
-        label_data.append({csv_columns[0]: c_ids, csv_columns[1]: c_l})
+def import_labels_csv(path, csv_columns=('cell_ids', 'cell_labels')):
+    cell_ids, cell_labels = [], []
+    with open(path, 'r') as csv_file:
+        reader = csv.DictReader(csv_file, fieldnames=csv_columns)
+        reader = list(reader)
+        for row in reader[1:]:
+            cell_ids.append(row[csv_columns[0]])
+            cell_labels.append(row[csv_columns[1]])
 
-    with open(csv_file, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-        writer.writeheader()
-        for data in label_data:
-            writer.writerow(data)
+    return np.array(cell_ids, dtype='int32'), np.array(cell_labels, dtype='int32')

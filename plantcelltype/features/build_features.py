@@ -1,5 +1,6 @@
 import numpy as np
 from plantcelltype.utils.io import import_labels_csv
+from plantcelltype.utils import cantor_sym_pair
 from plantcelltype.utils import create_cell_mapping, map_cell_features2segmentation, create_rag_boundary_from_seg
 from plantcelltype.utils.rag_image import rectify_edge_image
 from plantcelltype.features.rag import rag_from_seg, get_edges_com_voxels
@@ -8,6 +9,8 @@ from plantcelltype.features.cell_features import seg2com, shortest_distance_to_l
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface
 from plantcelltype.features.cell_features import rw_betweenness_centrality
 from plantcelltype.features.edges_features import compute_edges_length
+from plantcelltype.features.sampling import random_points_samples
+from plantcelltype.features.utils import make_seg_hollow
 
 
 def validate_dict(stack, mandatory_keys, feature_name='feature name'):
@@ -149,8 +152,21 @@ def build_basic_edges_features(stack, axis_transformer, group='edges_features'):
 
 
 # compute samples
+def build_cell_points_samples(stack, n_points=500, group='cell_samples'):
+    stack[group] = {}
+    hollow_seg = make_seg_hollow(stack['segmentation'], stack['rag_boundaries'])
+    edge_sampling = random_points_samples(hollow_seg, stack['cell_ids'], n_points=n_points)
+    stack[group]['random_samples'] = edge_sampling
+    return stack
 
 
+def build_edges_points_samples(stack, n_points=50, group='edges_samples'):
+    stack[group] = {}
+    rag_image_ct1 = create_rag_boundary_from_seg(stack['segmentation'], stack['edges_ids'], min_counts=1)
+    cantor_ids = np.array([cantor_sym_pair(e1, e2) for e1, e2 in stack['edges_ids']])
+    edge_sampling = random_points_samples(rag_image_ct1, cantor_ids, n_points=n_points)
+    stack[group]['random_samples'] = edge_sampling
+    return stack
 
 # compute all features
 

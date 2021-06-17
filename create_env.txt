@@ -1,0 +1,2 @@
+conda create -n plant-ct -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml jupyterlab tqdm scikit-spatial elf nifty
+pip install 'napari[pyqt5]'

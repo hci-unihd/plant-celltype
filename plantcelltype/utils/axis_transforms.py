@@ -37,6 +37,12 @@ class AxisTransformer:
         voxel_size = self.voxel_size if voxel_size is None else voxel_size
         return inv_transform_coord(points_coo, self.axis, self.center, voxel_size)
 
+    def scale_coord(self, points_coo):
+        return scale_points(points_coo, self.voxel_size)
+
+    def inv_scale_coord(self, points_coo):
+        return scale_points(points_coo, self.voxel_size, reverse=True)
+
     def transform_napari_vector(self, vector, voxel_size=None):
         voxel_size = self.voxel_size if voxel_size is None else voxel_size
         origin_points = self.transform_coord(vector[:, 0], voxel_size=voxel_size)
@@ -98,7 +104,7 @@ def find_axis_l123(cell_labels, cell_com, l123_set=(1, 2, 3)):
     return main_axis, second_axis, third_axis
 
 
-def find_axis_funiculum(cell_labels, cell_com, l_set=(2, 3, 4, 5, 8, 14), funiculum=7):
+def find_axis_funiculum(cell_labels, cell_com, l_set=(2, 3, 4, 5, 8, 14), funiculum=(7, )):
     labels_com = []
     for key in l_set:
         _com = find_label_com(cell_labels, cell_com, (key,))

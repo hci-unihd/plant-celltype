@@ -11,15 +11,15 @@ from plantcelltype.features.cell_features import rw_betweenness_centrality
 from plantcelltype.features.edges_features import compute_edges_length
 from plantcelltype.features.sampling import random_points_samples
 from plantcelltype.features.utils import make_seg_hollow
+from plantcelltype.utils.axis_transforms import find_axis_funiculum, find_label_com
 
 
 def validate_dict(stack, mandatory_keys, feature_name='feature name'):
     for key in stack.keys():
         assert key in mandatory_keys, f'{key} missing, can not create {feature_name}'
 
+
 # Base features
-
-
 def _update_labels_from_csv(stack, csv_path, create_labels_image=True):
     cell_ids, cell_labels = stack['cell_ids'], stack['cell_labels']
 
@@ -76,8 +76,6 @@ def build_basic(stack, csv_path=None):
 
 
 # cell features
-
-
 def build_cell_com(stack, feat_name='com_voxels', group='cell_features'):
     cell_com = seg2com(stack['segmentation'], stack['cell_ids'])
     cell_com = cell_com.astype('float32')
@@ -126,8 +124,6 @@ def build_basic_cell_features(stack, group='cell_features'):
 
 
 # edges features
-
-
 def build_edges_com_surface(stack, feat_name=('com_voxels', 'surface_voxels'), group='edges_features'):
     rag, edges_ids = rag_from_seg(stack['segmentation'])
     edges_com, edges_surface = get_edges_com_voxels(rag)
@@ -151,6 +147,16 @@ def build_basic_edges_features(stack, axis_transformer, group='edges_features'):
     return stack
 
 
+# compute global axis
+def build_grs(stack, axis_transformer):
+    cell_com_um = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
+    axis = find_axis_funiculum(stack['cell_labels'], cell_com_um)
+    center = find_label_com(stack['cell_labels'], cell_com_um, (7, ))
+    stack['attributes']['global_reference_system_origin'] = center
+    stack['attributes']['global_reference_system_axis'] = axis
+    return stack
+
+
 # compute samples
 def build_cell_points_samples(stack, n_points=500, group='cell_samples'):
     stack[group] = {}
@@ -167,7 +173,3 @@ def build_edges_points_samples(stack, n_points=50, group='edges_samples'):
     edge_sampling = random_points_samples(rag_image_ct1, cantor_ids, n_points=n_points)
     stack[group]['random_samples'] = edge_sampling
     return stack
-
-# compute all features
-
-

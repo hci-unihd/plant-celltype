@@ -12,6 +12,9 @@ from plantcelltype.features.edges_features import compute_edges_length
 from plantcelltype.features.sampling import random_points_samples
 from plantcelltype.features.utils import make_seg_hollow
 from plantcelltype.utils.axis_transforms import find_axis_funiculum, find_label_com
+from plantcelltype.features.edges_vector_features import compute_edges_planes
+from plantcelltype.features.cell_vector_features import compute_local_reference_axis2_pair
+from plantcelltype.features.cell_vector_features import compute_local_reference_axis1
 
 
 def validate_dict(stack, mandatory_keys, feature_name='feature name'):
@@ -154,6 +157,46 @@ def build_grs(stack, axis_transformer):
     center = find_label_com(stack['cell_labels'], cell_com_um, (7, ))
     stack['attributes']['global_reference_system_origin'] = center
     stack['attributes']['global_reference_system_axis'] = axis
+    return stack
+
+
+# compute local axis
+def build_edges_planes(stack, axis_transform):
+
+    edge_sampling_grs = axis_transform.transform_coord(stack['edges_samples']['random_samples'])
+    cell_com_grs = axis_transform.transform_coord(stack['cell_features']['com_voxels'])
+    edges_com_grs = axis_transform.transform_coord(stack['edges_features']['com_voxels'])
+    origin = axis_transform.transform_coord([0, 0, 0])
+
+    edges_planes = compute_edges_planes(stack['cell_ids'],
+                                        stack['edges_ids'],
+                                        cell_com_grs,
+                                        stack['cell_features']['hops_to_bg'],
+                                        edge_sampling_grs,
+                                        edges_com_grs,
+                                        origin)
+
+    stack["edges_features"]["plane_vectors_grs"] = edges_planes
+    return stack
+
+
+def build_lrs(stack, axis_transformer, group='cell_features'):
+
+    lr_axis_1 = compute_local_reference_axis1(stack['cell_ids'],
+                                              stack['edges_ids'],
+                                              stack['cell_features']['hops_to_bg'],
+                                              stack['edges_features']['plane_vectors_grs'])
+
+    cell_com_grs = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
+    edges_com_grs = axis_transformer.transform_coord(stack['edges_features']['com_voxels'])
+
+    lr_axis_2, _ = compute_local_reference_axis2_pair(stack['cell_ids'],
+                                                      stack['edges_ids'],
+                                                      cell_com_grs,
+                                                      edges_com_grs)
+
+    stack[group]['lr_axis1_grs'] = lr_axis_1
+    stack[group]['lr_axis2_grs'] = lr_axis_2
     return stack
 
 

@@ -17,25 +17,25 @@ gt_mapping_wb = {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10:
 def create_edges_features(stack, axis_transform):
     edges_features = stack['edges_features']
     cell_features = stack['cell_features']
-    cell_com_grs = axis_transform.transform_coord(cell_features['cell_com_voxels'])
+    cell_com_grs = axis_transform.transform_coord(cell_features['com_voxels'])
 
     edges_com_grs = filter_bg_from_edges(stack['edges_ids'],
-                                         axis_transform.transform_coord(edges_features['edges_com_voxels']))
+                                         axis_transform.transform_coord(edges_features['com_voxels']))
     edges_surface_mu = filter_bg_from_edges(stack['edges_ids'],
-                                            axis_transform.scale_volumes(edges_features['edges_surface_voxels']))
+                                            axis_transform.scale_volumes(edges_features['surface_voxels']))
     edges_com_distance_mu = filter_bg_from_edges(stack['edges_ids'],
-                                                 edges_features['edges_com_distance_mu'])
+                                                 edges_features['com_distance_um'])
 
     edges_ids = rectify_rag_names(stack['cell_ids'], stack['edges_ids'])
     edges_cosine_features = []
     for i, (e1, e2) in enumerate(edges_ids):
         e_v = Vector.from_points(cell_com_grs[e1], cell_com_grs[e2]).unit()
 
-        e1_axis1 = cell_features['cell_lr_axis1_grs'][e1]
-        e2_axis1 = cell_features['cell_lr_axis1_grs'][e2]
+        e1_axis1 = cell_features['lr_axis1_grs'][e1]
+        e2_axis1 = cell_features['lr_axis1_grs'][e2]
 
-        e1_axis2 = cell_features['cell_lr_axis2_grs'][e1]
-        e2_axis2 = cell_features['cell_lr_axis2_grs'][e2]
+        e1_axis2 = cell_features['lr_axis2_grs'][e1]
+        e2_axis2 = cell_features['lr_axis2_grs'][e2]
 
         _cosine_features = [np.dot(e1_axis1, e2_axis1),
                             np.dot(e1_axis2, e2_axis2),
@@ -58,13 +58,13 @@ def create_edges_features(stack, axis_transform):
 
 def create_cell_features(stack, axis_transform):
     cell_features = stack['cell_features']
-    cell_com_grs = scale_points(cell_features['cell_com_voxels'], stack['attributes']['element_size_um'])
-    cell_volume_mu = axis_transform.scale_volumes(cell_features['cell_volume_voxels'])
-    cell_surface_mu = axis_transform.scale_volumes(cell_features['cell_surface_voxels'])
-    cell_rw_centrality = cell_features['cell_rw_centrality']
-    cell_hops_bg = cell_features['cell_hops_to_bg']
-    cell_axis1_grs = axis_transform.inv_transform_coord(cell_features['cell_lr_axis1_grs'], voxel_size=(1, 1, 1))
-    cell_axis2_grs = axis_transform.inv_transform_coord(cell_features['cell_lr_axis2_grs'], voxel_size=(1, 1, 1))
+    cell_com_grs = scale_points(cell_features['com_voxels'], stack['attributes']['element_size_um'])
+    cell_volume_mu = axis_transform.scale_volumes(cell_features['volume_voxels'])
+    cell_surface_mu = axis_transform.scale_volumes(cell_features['surface_voxels'])
+    cell_rw_centrality = cell_features['rw_centrality']
+    cell_hops_bg = cell_features['hops_to_bg']
+    cell_axis1_grs = axis_transform.inv_transform_coord(cell_features['lr_axis1_grs'], voxel_size=(1, 1, 1))
+    cell_axis2_grs = axis_transform.inv_transform_coord(cell_features['lr_axis2_grs'], voxel_size=(1, 1, 1))
 
     cell_features_array = np.concatenate([cell_axis1_grs,
                                           cell_axis2_grs,

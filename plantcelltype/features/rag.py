@@ -15,6 +15,14 @@ def remove_bg_from_edges_ids(edges_ids, bg=0):
     return edges_ids[mask]
 
 
+def fill_bg_from_edges_ids(edges_ids, edges_features, value=1, bg=0):
+    mask = np.where(np.min(edges_ids, axis=1) != bg)[0]
+    new_features = np.zeros(edges_ids.shape[0])
+    new_features[~mask] = value
+    new_features[mask] = edges_features
+    return new_features
+
+
 def build_nx_graph(cell_ids, edges_ids, cell_com=None, remove_bg=True):
     ovule_graph = nx.Graph()
 

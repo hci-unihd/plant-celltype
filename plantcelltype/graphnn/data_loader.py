@@ -80,8 +80,13 @@ def create_cell_features(stack, axis_transform):
     return cell_features_tensors
 
 
-def create_data(file, sample=100):
-    stack, at = open_full_stack(file, keys=['cell_features', 'cell_ids', 'cell_labels', 'edges_features', 'edges_ids'])
+def create_data(file):
+    stack, at = open_full_stack(file, keys=['cell_features',
+                                            'cell_ids',
+                                            'cell_labels',
+                                            'edges_features',
+                                            'edges_ids',
+                                            'edges_labels'])
     # cell feat
     cell_features_tensors = create_cell_features(stack, at)
     edges_features_tensors = create_edges_features(stack, at)
@@ -92,34 +97,27 @@ def create_data(file, sample=100):
     labels = np.array([gt_mapping_wb[_l] for _l in labels])
     labels = torch.from_numpy(labels.astype('int64')).long()
 
-    cell_type = np.unique(stack['cell_labels'])
-    mask_ids = []
-    for ct in cell_type:
-        ct_mask_ids = np.where(stack['cell_labels'] == ct)[0]
-        mask_ids += list(np.random.choice(ct_mask_ids, size=min(sample, ct_mask_ids.shape[0]), replace=False))
-
-    mask = np.zeros_like(stack['cell_ids'])
-    mask[mask_ids] = 1
-    mask = torch.from_numpy(mask.astype('bool'))
+    edges_labels = stack['edges_labels']
+    edges_labels = filter_bg_from_edges(stack['edges_ids'], edges_labels)
+    edges_labels = torch.from_numpy(edges_labels.astype('int64')).long()
 
     graph_data = Data(x=cell_features_tensors,
                       y=labels,
                       file_path=file,
-                      train_mask=mask,
-                      test_mask=~mask,
                       edge_attr=edges_features_tensors,
+                      edge_y=edges_labels,
                       edge_index=new_edges_ids.T)
     return graph_data
 
 
-def create_loaders(files_list, sample=200, batch_size=1, shuffle=True):
-    data = [create_data(file, sample=sample) for file in files_list]
+def create_loaders(files_list, batch_size=1, shuffle=True):
+    data = [create_data(file) for file in files_list]
 
     loader = DataLoader(data, batch_size=batch_size, shuffle=shuffle)
     return loader
 
 
-def get_random_split(base_path, test_ratio=0.33, seed=0, sample=200, batch_size=1):
+def get_random_split(base_path, test_ratio=0.33, seed=0, batch_size=1):
     files = glob.glob(base_path)
 
     np.random.seed(seed)
@@ -127,6 +125,6 @@ def get_random_split(base_path, test_ratio=0.33, seed=0, sample=200, batch_size=
     split = int(len(files) * test_ratio)
     files_test, files_train = files[:split], files[split:]
 
-    loader_test = create_loaders(files_test, sample, batch_size, shuffle=False)
-    loader_train = create_loaders(files_train, sample, batch_size, shuffle=True)
+    loader_test = create_loaders(files_test, batch_size, shuffle=False)
+    loader_train = create_loaders(files_train, batch_size, shuffle=True)
     return loader_test, loader_train

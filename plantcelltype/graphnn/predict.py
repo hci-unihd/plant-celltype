@@ -1,4 +1,4 @@
-from plantcelltype.graphnn.pl_models import GraphClassification, EdgesClassification
+from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
 import pytorch_lightning as pl
 from plantcelltype.graphnn.data_loader import get_random_split
 from plantcelltype.utils import create_h5

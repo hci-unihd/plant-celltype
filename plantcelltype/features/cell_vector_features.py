@@ -135,8 +135,10 @@ def compute_length_along_axis(cell_axis, cell_com, cell_samples, origin=(0, 0, 0
 
             if _value > max_value:
                 max_value, max_point = _value, sample
-
-        _length = np.sqrt(np.sum((min_point - max_point) ** 2))
+        if min_point is None or max_point is None:
+            _length = 0
+        else:
+            _length = np.sqrt(np.sum((min_point - max_point) ** 2))
         lengths.append(_length)
 
     lengths = np.array(lengths)

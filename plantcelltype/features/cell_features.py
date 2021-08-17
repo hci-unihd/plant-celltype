@@ -74,13 +74,13 @@ def compute_degree_centrality(cell_ids, edges_ids):
     return compute_generic_centrality(cell_ids, edges_ids, centrality='degree', cell_com=None)
 
 
-def rw_betweenness_centrality(cell_ids, edges_ids, cell_com=None):
+def compute_rw_betweenness_centrality(cell_ids, edges_ids, cell_com=None):
     return compute_generic_centrality(cell_ids, edges_ids, centrality='rw_betweenness', cell_com=cell_com)
 
 
-def betweenness_centrality(cell_ids, edges_ids):
+def compute_betweenness_centrality(cell_ids, edges_ids):
     return compute_generic_centrality(cell_ids, edges_ids, centrality='betweenness', cell_com=None)
 
 
-def eigen_vector_centrality(cell_ids, edges_ids):
+def compute_eigen_vector_centrality(cell_ids, edges_ids):
     return compute_generic_centrality(cell_ids, edges_ids, centrality='eigen_vector', args=None, cell_com=None)

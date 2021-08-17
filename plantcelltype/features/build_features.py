@@ -7,7 +7,7 @@ from plantcelltype.features.rag import rag_from_seg, get_edges_com_voxels
 from plantcelltype.features.edges_features import compute_edges_labels
 from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface
-from plantcelltype.features.cell_features import rw_betweenness_centrality
+from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
 from plantcelltype.features.edges_features import compute_edges_length
 from plantcelltype.features.sampling import random_points_samples
 from plantcelltype.features.utils import make_seg_hollow
@@ -110,9 +110,16 @@ def build_surface(stack, feat_name='surface_voxels', group='cell_features'):
 
 
 def build_rw_centrality(stack, feat_name='rw_centrality', group='cell_features'):
-    rw_centrality = rw_betweenness_centrality(stack['cell_ids'], stack['edges_ids'])
+    rw_centrality = compute_rw_betweenness_centrality(stack['cell_ids'], stack['edges_ids'])
     rw_centrality = rw_centrality.astype('float32')
     stack[group][feat_name] = rw_centrality
+    return stack
+
+
+def build_degree_centrality(stack, feat_name='degree_centrality', group='cell_features'):
+    degree_centrality = compute_degree_centrality(stack['cell_ids'], stack['edges_ids'])
+    degree_centrality = degree_centrality.astype('float32')
+    stack[group][feat_name] = degree_centrality
     return stack
 
 

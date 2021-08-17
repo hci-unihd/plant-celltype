@@ -36,3 +36,14 @@ def make_seg_hollow(segmentation, rag_boundaries):
     mask = rag_boundaries != 0
     hollow_segmentation[mask] = segmentation[mask]
     return hollow_segmentation
+
+
+def check_valid_idx(samples, zeros=(0, 0, 0)):
+    zeros = np.array(zeros)
+    counts = 0
+    _valid_idx = []
+    for i, _point in enumerate(samples):
+        if not np.allclose(_point, zeros):
+            counts += 1
+            _valid_idx.append(i)
+    return _valid_idx, counts

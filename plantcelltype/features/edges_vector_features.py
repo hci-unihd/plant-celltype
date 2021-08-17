@@ -1,17 +1,8 @@
 import numpy as np
 from skspatial.objects import Vector, Plane
+
+from plantcelltype.features.utils import check_valid_idx
 from plantcelltype.utils.utils import cantor_sym_depair, create_edge_mapping, create_cell_mapping
-
-
-def _valid_idx(samples, zeros=(0, 0, 0)):
-    zeros = np.array(zeros)
-    counts = 0
-    valid_idx = []
-    for i, _point in enumerate(samples):
-        if not np.allclose(_point, zeros):
-            counts += 1
-            valid_idx.append(i)
-    return valid_idx, counts
 
 
 def _plane_from_points(points_coo, cell_com):
@@ -37,7 +28,7 @@ def compute_edges_planes(cell_ids,
 
     planes_points, planes_vectors = [], []
     for i, (edge_idx, points) in enumerate(edge_sampling_mapping.items()):
-        valid_idx, counts = _valid_idx(points, origin)
+        valid_idx, counts = check_valid_idx(points, origin)
         e1, e2 = cantor_sym_depair(edge_idx)
         e1_sd, e2_sd = cell_sp_mapping.get(e1, 0), cell_sp_mapping.get(e2, 0)
         center_cell = e1 if e1_sd > e2_sd else e2

@@ -1,6 +1,7 @@
 from plantcelltype.utils.utils import create_edge_mapping, create_cell_mapping, cantor_sym_pair
-from skspatial.objects import Vector, Line
+from skspatial.objects import Vector
 from plantcelltype.features.rag import build_nx_graph
+from plantcelltype.features.utils import check_valid_idx
 import numpy as np
 
 
@@ -109,3 +110,43 @@ def local_vectors_alignment(nx_graph, vectors_mapping):
 
     return
 
+
+def compute_length_along_axis(cell_axis, cell_com, cell_samples, origin=(0, 0, 0)):
+    lengths = []
+    for i, _vector in enumerate(cell_axis):
+        # create axis vector
+        vector = Vector(_vector)
+        _cell_com = cell_com[i]
+
+        # remove empty samples
+        samples = cell_samples[i]
+        valid_idx, _ = check_valid_idx(samples, origin)
+        samples = samples[valid_idx]
+
+        # find min and max point along the axis
+        min_point, max_point = None, None
+        min_value, max_value = 0, 0
+        for sample in samples:
+            test_vector = Vector.from_points(_cell_com, sample)
+            _value = vector.cosine_similarity(test_vector)
+
+            if _value < min_value:
+                min_value, min_point = _value, sample
+
+            if _value > max_value:
+                max_value, max_point = _value, sample
+
+        _length = np.sqrt(np.sum((min_point - max_point) ** 2))
+        lengths.append(_length)
+
+    lengths = np.array(lengths)
+    return lengths
+
+
+def compute_local_reference_axis3(cell_axis1, cell_axis2):
+    cell_axis3 = np.zeros_like(cell_axis1)
+    for i, (ax1, ax2) in enumerate(zip(cell_axis1, cell_axis2)):
+        ax3 = Vector(ax1).cross(ax2)
+        cell_axis3[i] = ax3
+
+    return cell_axis3

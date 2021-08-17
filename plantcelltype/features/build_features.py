@@ -15,6 +15,8 @@ from plantcelltype.utils.axis_transforms import find_axis_funiculum, find_label_
 from plantcelltype.features.edges_vector_features import compute_edges_planes
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis2_pair
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis1
+from plantcelltype.features.cell_vector_features import compute_local_reference_axis3
+from plantcelltype.features.cell_vector_features import compute_length_along_axis
 
 
 def validate_dict(stack, mandatory_keys, feature_name='feature name'):
@@ -195,8 +197,11 @@ def build_lrs(stack, axis_transformer, group='cell_features'):
                                                       cell_com_grs,
                                                       edges_com_grs)
 
+    lr_axis_3 = compute_local_reference_axis3(lr_axis_1, lr_axis_2)
+
     stack[group]['lr_axis1_grs'] = lr_axis_1
     stack[group]['lr_axis2_grs'] = lr_axis_2
+    stack[group]['lr_axis3_grs'] = lr_axis_3
     return stack
 
 
@@ -215,4 +220,21 @@ def build_edges_points_samples(stack, n_points=50, group='edges_samples'):
     cantor_ids = np.array([cantor_sym_pair(e1, e2) for e1, e2 in stack['edges_ids']])
     edge_sampling = random_points_samples(rag_image_ct1, cantor_ids, n_points=n_points)
     stack[group]['random_samples'] = edge_sampling
+    return stack
+
+
+# compute length along axis
+def build_length_along_local_axis(stack, axis_transformer, group='cell_features'):
+    origin_grs = axis_transformer.transform_coord((0, 0, 0))
+    com_grs = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
+    samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples'])
+
+    for name_axis, name_feat in zip(['lr_axis1_grs', 'lr_axis2_grs', 'lr_axis3_grs'],
+                                    ['length_axis1_grs', 'length_axis2_grs', 'length_axis3_grs']):
+        len_axis = compute_length_along_axis(stack['cell_features'][name_axis],
+                                             com_grs,
+                                             samples_grs,
+                                             origin=origin_grs)
+        stack[group][name_feat] = len_axis
+
     return stack

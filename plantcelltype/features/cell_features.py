@@ -1,11 +1,12 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import shortest_path
-from plantcelltype.features.utils import label2com, make_seg_hollow
+from plantcelltype.features.utils import label2com, make_seg_hollow, check_valid_idx
 from plantcelltype.features.rag import build_nx_graph
 from networkx.algorithms.centrality import degree_centrality, betweenness_centrality, eigenvector_centrality
 from networkx.algorithms.centrality import current_flow_betweenness_centrality
 from plantcelltype.features.sampling import farthest_points_sampling
+from sklearn.decomposition import PCA
 
 _supported_centrality = {'degree': degree_centrality,
                          'betweenness': betweenness_centrality,
@@ -84,3 +85,28 @@ def compute_betweenness_centrality(cell_ids, edges_ids):
 
 def compute_eigen_vector_centrality(cell_ids, edges_ids):
     return compute_generic_centrality(cell_ids, edges_ids, centrality='eigen_vector', args=None, cell_com=None)
+
+
+def compute_pca(cell_samples, origin=(0, 0, 0)):
+    pca_axis_1, pca_axis_2, pca_axis_3 = [], [], []
+    pca_explained_variance = []
+
+    for samples in cell_samples:
+        valid_idx, _ = check_valid_idx(samples, origin)
+        samples = samples[valid_idx]
+
+        pca = PCA()
+        pca.fit(samples)
+
+        pca_axis_1.append(pca.components_[0])
+        pca_axis_2.append(pca.components_[1])
+        pca_axis_3.append(pca.components_[2])
+
+        pca_explained_variance.append(pca.explained_variance_)
+
+    pca_axis_1 = np.array(pca_axis_1)
+    pca_axis_2 = np.array(pca_axis_2)
+    pca_axis_3 = np.array(pca_axis_3)
+
+    pca_explained_variance = np.array(pca_explained_variance)
+    return pca_axis_1, pca_axis_2, pca_axis_3, pca_explained_variance

@@ -5,7 +5,7 @@ from plantcelltype.utils import create_cell_mapping, map_cell_features2segmentat
 from plantcelltype.utils.rag_image import rectify_edge_image
 from plantcelltype.features.rag import rag_from_seg, get_edges_com_voxels
 from plantcelltype.features.edges_features import compute_edges_labels
-from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label
+from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
 from plantcelltype.features.edges_features import compute_edges_length
@@ -227,6 +227,20 @@ def build_edges_points_samples(stack, n_points=50, group='edges_samples'):
     cantor_ids = np.array([cantor_sym_pair(e1, e2) for e1, e2 in stack['edges_ids']])
     edge_sampling = random_points_samples(rag_image_ct1, cantor_ids, n_points=n_points)
     stack[group]['random_samples'] = edge_sampling
+    return stack
+
+
+# compute PCA along axis
+def build_pca_features(stack, axis_transformer, group='cell_features'):
+    origin_grs = axis_transformer.transform_coord((0, 0, 0))
+    samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples'])
+    pca1, pca2, pca3, pca_v = compute_pca(samples_grs, origin_grs)
+
+    stack[group]['pca_axis1_grs'] = pca1
+    stack[group]['pca_axis2_grs'] = pca2
+    stack[group]['pca_axis3_grs'] = pca3
+
+    stack[group]['pca_explained_variance_grs'] = pca_v
     return stack
 
 

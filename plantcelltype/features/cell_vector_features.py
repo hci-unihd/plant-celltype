@@ -93,6 +93,15 @@ def compute_local_reference_axis2_pair(cell_ids,
     return np.array(lr_axis_2), np.array(min_points)
 
 
+def compute_local_reference_axis3(cell_axis1, cell_axis2):
+    cell_axis3 = np.zeros_like(cell_axis1)
+    for i, (ax1, ax2) in enumerate(zip(cell_axis1, cell_axis2)):
+        ax3 = Vector(ax1).cross(ax2)
+        cell_axis3[i] = ax3
+
+    return cell_axis3
+
+
 def local_vectors_alignment(nx_graph, vectors_mapping):
     all_vectors = {}
     for n, current_vector in vectors_mapping.items():
@@ -135,6 +144,8 @@ def compute_length_along_axis(cell_axis, cell_com, cell_samples, origin=(0, 0, 0
 
             if _value > max_value:
                 max_value, max_point = _value, sample
+
+        # evaluate length
         if min_point is None or max_point is None:
             _length = 0
         else:
@@ -143,12 +154,3 @@ def compute_length_along_axis(cell_axis, cell_com, cell_samples, origin=(0, 0, 0
 
     lengths = np.array(lengths)
     return lengths
-
-
-def compute_local_reference_axis3(cell_axis1, cell_axis2):
-    cell_axis3 = np.zeros_like(cell_axis1)
-    for i, (ax1, ax2) in enumerate(zip(cell_axis1, cell_axis2)):
-        ax3 = Vector(ax1).cross(ax2)
-        cell_axis3[i] = ax3
-
-    return cell_axis3

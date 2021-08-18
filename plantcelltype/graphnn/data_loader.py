@@ -56,23 +56,40 @@ def create_edges_features(stack, axis_transform):
     return edges_features_tensors
 
 
-def create_cell_features(stack, axis_transform):
+def create_cell_features_grs(stack, axis_transform):
     cell_features = stack['cell_features']
-    cell_com_grs = scale_points(cell_features['com_voxels'], stack['attributes']['element_size_um'])
+    global_axis = stack['attributes']['global_reference_system_axis']
+
+    # transforms to grs
+    cell_com_grs = axis_transform.transform_coord(cell_features['com_voxels'])
     cell_volume_mu = axis_transform.scale_volumes(cell_features['volume_voxels'])
     cell_surface_mu = axis_transform.scale_volumes(cell_features['surface_voxels'])
+
+    # absolute features
     cell_rw_centrality = cell_features['rw_centrality']
+    cell_degree_centrality = cell_features['degree_centrality']
     cell_hops_bg = cell_features['hops_to_bg']
-    cell_axis1_grs = axis_transform.inv_transform_coord(cell_features['lr_axis1_grs'], voxel_size=(1, 1, 1))
-    cell_axis2_grs = axis_transform.inv_transform_coord(cell_features['lr_axis2_grs'], voxel_size=(1, 1, 1))
+
+    #
+    cell_axis1_grs = cell_features['lr_axis1_grs']
+    cell_axis2_grs = cell_features['lr_axis2_grs']
+    cell_axis3_grs = cell_features['lr_axis3_grs']
+    # cell_axis2_grs = axis_transform.inv_transform_coord(cell_features['lr_axis2_grs'], voxel_size=(1, 1, 1))
+
+    # projections
+    cell_com_proj_axis = cell_com_grs.dot(global_axis.T)
+    cell_lrs_proj_axis = cell_axis1_grs.dot(global_axis.T)
 
     cell_features_array = np.concatenate([cell_axis1_grs,
                                           cell_axis2_grs,
+                                          cell_axis3_grs,
                                           cell_com_grs,
-                                          cell_hops_bg[..., None],
-                                          cell_rw_centrality[..., None],
-                                          cell_volume_mu[..., None],
-                                          cell_surface_mu[..., None]], axis=1)
+                                          cell_hops_bg[..., None], #divide by max
+                                          cell_rw_centrality[..., None], #standard score
+                                          cell_degree_centrality[..., None], #strandard score
+                                          cell_volume_mu[..., None], # rm outliers + standard score
+                                          cell_surface_mu[..., None]], # # rm outliers + standard score
+                                          axis=1)
 
     cell_features_tensors = torch.from_numpy(cell_features_array).float()
     cell_features_tensors = cell_features_tensors - torch.mean(cell_features_tensors, 0)
@@ -88,7 +105,7 @@ def create_data(file):
                                             'edges_ids',
                                             'edges_labels'])
     # cell feat
-    cell_features_tensors = create_cell_features(stack, at)
+    cell_features_tensors = create_cell_features_grs(stack, at)
     edges_features_tensors = create_edges_features(stack, at)
 
     new_edges_ids = torch.from_numpy(rectify_rag_names(stack['cell_ids'], stack['edges_ids'])).long()

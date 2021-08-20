@@ -247,15 +247,32 @@ def build_pca_features(stack, axis_transformer, group='cell_features'):
 # compute length along axis
 def build_length_along_local_axis(stack, axis_transformer, group='cell_features'):
     origin_grs = axis_transformer.transform_coord((0, 0, 0))
-    com_grs = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
+    com_grs = axis_transformer.transform_coord(stack[group]['com_voxels'])
     samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples'])
 
     for name_axis, name_feat in zip(['lr_axis1_grs', 'lr_axis2_grs', 'lr_axis3_grs'],
                                     ['length_axis1_grs', 'length_axis2_grs', 'length_axis3_grs']):
-        len_axis = compute_length_along_axis(stack['cell_features'][name_axis],
+        len_axis = compute_length_along_axis(stack[group][name_axis],
                                              com_grs,
                                              samples_grs,
                                              origin=origin_grs)
         stack[group][name_feat] = len_axis
 
+    return stack
+
+
+def build_cell_dot_features(stack, at, group='cell_features'):
+    cell_features = stack[group]
+    global_axis = stack['attributes']['global_reference_system_axis']
+    cell_com_grs = at.transform_coord(cell_features['com_voxels'])
+
+    stack[group]['com_proj_grs'] = cell_com_grs.dot(global_axis.T)
+
+    stack[group]['lrs_proj_axis1_grs'] = cell_features['lr_axis1_grs'].dot(global_axis.T)
+    stack[group]['lrs_proj_axis2_grs'] = cell_features['lr_axis2_grs'].dot(global_axis.T)
+    stack[group]['lrs_proj_axis3_grs'] = cell_features['lr_axis3_grs'].dot(global_axis.T)
+
+    stack[group]['pca_proj_axis1_grs'] = cell_features['pca_axis1_grs'].dot(global_axis.T)
+    stack[group]['pca_proj_axis2_grs'] = cell_features['pca_axis2_grs'].dot(global_axis.T)
+    stack[group]['pca_proj_axis3_grs'] = cell_features['pca_axis3_grs'].dot(global_axis.T)
     return stack

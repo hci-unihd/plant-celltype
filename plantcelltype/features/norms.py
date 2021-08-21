@@ -1,5 +1,5 @@
 import numpy as np
-import scipy
+from scipy.stats import median_abs_deviation
 
 
 def clip_quantile(feat, q=(0.01, 0.95)):
@@ -21,7 +21,7 @@ def quantile_robust_zscore(feat, q=(0.01, 0.95), mad=1):
     if q is not None:
         feat = clip_quantile(feat, q)
 
-    mad = scipy.stats.median_abs_deviation(feat) if mad is None else 1
+    mad = median_abs_deviation(feat) if mad is None else 1
     feat = (feat - np.median(feat)) / mad
     return feat
 

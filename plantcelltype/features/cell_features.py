@@ -110,14 +110,3 @@ def compute_pca(cell_samples, origin=(0, 0, 0)):
 
     pca_explained_variance = np.array(pca_explained_variance)
     return pca_axis_1, pca_axis_2, pca_axis_3, pca_explained_variance
-
-
-def compute_hops_to_bg_onehot(hops_to_bg, max_hops=6, extreme=(0, 1)):
-    hops_to_bg[hops_to_bg > max_hops] = max_hops
-    hops_to_bg_onehot = np.zeros((hops_to_bg.shape[0], max_hops))
-    hops_to_bg_onehot += extreme[0]
-
-    for i, h_to_bg in enumerate(hops_to_bg):
-        hops_to_bg_onehot[i, h_to_bg - 1] = extreme[1]
-
-    return hops_to_bg_onehot

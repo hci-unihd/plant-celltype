@@ -36,21 +36,12 @@ def stack_to_df(stack, at,
     cell_feat = _make_data_onedim_dict(cell_features)
     dict_data.update(cell_feat)
 
-    num_feat = stack[g_feat].shape[0]
+    num_feat = stack[global_feat[0]].shape[0]
     for attr in attributes:
         dict_data[attr] = num_feat * [stack['attributes'][attr]]
 
     df_data = pd.DataFrame(dict_data)
     return df_data
-
-
-def multi_stack_df(list_files):
-    glob_df_stack = pd.DataFrame()
-    for file in tqdm.tqdm(list_files):
-        stack, at = open_full_stack(file, ['cell_ids', 'cell_labels', 'cell_features'])
-        df_stack = stack_to_df(stack, at)
-        glob_df_stack = glob_df_stack.append(df_stack)
-    return glob_df_stack
 
 
 def multi_stack_df(list_files):

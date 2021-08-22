@@ -3,6 +3,7 @@ from plantcelltype.utils import open_full_stack
 from plantcelltype.utils.utils import filter_bg_from_edges
 from plantcelltype.features.rag import rectify_rag_names
 from plantcelltype.utils.axis_transforms import scale_points
+from plantcelltype.features.norms import quantile_zscore, feat_to_bg_onehot
 import numpy as np
 
 from torch_geometric.data.data import Data
@@ -56,6 +57,43 @@ def create_edges_features(stack, axis_transform):
     return edges_features_tensors
 
 
+def collect_cell_scalar_features(stack, axis_transform, as_array=True):
+    cell_features = stack['cell_features']
+
+    list_feat = [quantile_zscore(axis_transform.transform_coord(cell_features['com_voxels'])),
+                 quantile_zscore(axis_transform.scale_volumes(cell_features['volume_voxels'])),
+                 quantile_zscore(axis_transform.scale_volumes(cell_features['surface_voxels'])),
+                 feat_to_bg_onehot(cell_features['hops_to_bg'], max_channel=6)]
+
+    for zscore_feat in ['length_axis1_grs',
+                        'length_axis2_grs',
+                        'length_axis3_grs',
+                        'pca_explained_variance_grs',
+                        'rw_centrality',
+                        'degree_centrality']:
+        list_feat.append(quantile_zscore(cell_features[zscore_feat]))
+
+    for dot_feat in ['com_proj_grs',
+                     'lrs_proj_axis1_grs',
+                     'lrs_proj_axis2_grs',
+                     'lrs_proj_axis3_grs',
+                     'pca_proj_axis1_grs',
+                     'pca_proj_axis2_grs',
+                     'pca_proj_axis3_grs',
+                     'lr_axis1_grs',
+                     'lr_axis2_grs',
+                     'lr_axis3_grs',
+                     'pca_axis1_grs',
+                     'pca_axis2_grs',
+                     'pca_axis3_grs']:
+        list_feat.append(cell_features[dot_feat])
+
+        list_feat = [feat if feat.ndim == 2 else feat[:, None] for feat in list_feat]
+
+    list_feat = np.concatenate(list_feat, axis=1) if as_array else list_feat
+    return list_feat
+
+
 def create_cell_features_grs(stack, axis_transform):
     cell_features = stack['cell_features']
     global_axis = stack['attributes']['global_reference_system_axis']
@@ -70,7 +108,7 @@ def create_cell_features_grs(stack, axis_transform):
     cell_degree_centrality = cell_features['degree_centrality']
     cell_hops_bg = cell_features['hops_to_bg']
 
-    #
+    # vector
     cell_axis1_grs = cell_features['lr_axis1_grs']
     cell_axis2_grs = cell_features['lr_axis2_grs']
     cell_axis3_grs = cell_features['lr_axis3_grs']

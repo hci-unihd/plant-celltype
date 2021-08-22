@@ -1,22 +1,23 @@
 import numpy as np
-from plantcelltype.utils.io import import_labels_csv
-from plantcelltype.utils import cantor_sym_pair
-from plantcelltype.utils import create_cell_mapping, map_cell_features2segmentation, create_rag_boundary_from_seg
-from plantcelltype.utils.rag_image import rectify_edge_image
-from plantcelltype.features.rag import rag_from_seg, get_edges_com_voxels
-from plantcelltype.features.edges_features import compute_edges_labels
-from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca
+
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
+from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca
+from plantcelltype.features.cell_vector_features import compute_length_along_axis
+from plantcelltype.features.cell_vector_features import compute_local_reference_axis1
+from plantcelltype.features.cell_vector_features import compute_local_reference_axis2_pair
+from plantcelltype.features.cell_vector_features import compute_local_reference_axis3
+from plantcelltype.features.edges_features import compute_edges_labels
 from plantcelltype.features.edges_features import compute_edges_length
+from plantcelltype.features.edges_vector_features import compute_edges_planes
+from plantcelltype.features.rag import rag_from_seg, get_edges_com_voxels
 from plantcelltype.features.sampling import random_points_samples
 from plantcelltype.features.utils import make_seg_hollow
+from plantcelltype.utils import cantor_sym_pair
+from plantcelltype.utils import create_cell_mapping, map_cell_features2segmentation, create_rag_boundary_from_seg
 from plantcelltype.utils.axis_transforms import find_axis_funiculum, find_label_com
-from plantcelltype.features.edges_vector_features import compute_edges_planes
-from plantcelltype.features.cell_vector_features import compute_local_reference_axis2_pair
-from plantcelltype.features.cell_vector_features import compute_local_reference_axis1
-from plantcelltype.features.cell_vector_features import compute_local_reference_axis3
-from plantcelltype.features.cell_vector_features import compute_length_along_axis
+from plantcelltype.utils.io import import_labels_csv
+from plantcelltype.utils.rag_image import rectify_edge_image
 
 
 def validate_dict(stack, mandatory_keys, feature_name='feature name'):

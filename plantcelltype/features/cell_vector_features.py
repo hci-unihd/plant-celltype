@@ -1,8 +1,9 @@
-from plantcelltype.utils.utils import create_edge_mapping, create_cell_mapping, cantor_sym_pair
+import numpy as np
 from skspatial.objects import Vector
+
 from plantcelltype.features.rag import build_nx_graph
 from plantcelltype.features.utils import check_valid_idx
-import numpy as np
+from plantcelltype.utils.utils import create_edge_mapping, create_cell_mapping, cantor_sym_pair
 
 
 def compute_local_reference_axis1(cell_ids, edges_ids, cell_hops_to_bg, edges_plane_vectors):

@@ -1,7 +1,8 @@
 import torch
-from egmodels.layers.graph_conv_blocks import GCNLayer, TGCNLayer
+
 from egmodels import tg_dispatch
 from egmodels.classifier import ClassifierMLP2
+from egmodels.layers.graph_conv_blocks import GCNLayer, TGCNLayer
 from plantcelltype.graphnn.line_graph import to_line_graph, mix_node_features
 
 

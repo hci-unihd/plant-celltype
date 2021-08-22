@@ -1,5 +1,6 @@
-import numpy as np
 import napari
+import numpy as np
+
 from plantcelltype.utils import map_edges_features2rag_boundaries, map_cell_features2segmentation
 
 

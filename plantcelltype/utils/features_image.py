@@ -2,6 +2,7 @@ import numpy as np
 from numba import njit, prange
 from numba.core import types
 from numba.typed import Dict
+
 from plantcelltype.utils import create_cell_mapping, create_edge_mapping, check_safe_cast
 
 

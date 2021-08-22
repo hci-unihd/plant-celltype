@@ -57,7 +57,7 @@ def create_edges_features(stack, axis_transform):
     return edges_features_tensors
 
 
-def collect_cell_scalar_features(stack, axis_transform, as_array=True):
+def collect_cell_features(stack, axis_transform, as_array=True):
     cell_features = stack['cell_features']
 
     list_feat = [quantile_zscore(axis_transform.transform_coord(cell_features['com_voxels'])),

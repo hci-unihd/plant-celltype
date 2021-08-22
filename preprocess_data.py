@@ -1,7 +1,8 @@
 import glob
 import os
-from plantcelltype.utils import open_full_stack, export_full_stack
+
 from plantcelltype.features.build_features import build_basic_cell_features, build_basic_edges_features, build_basic
+from plantcelltype.utils import open_full_stack, export_full_stack
 
 data_location = "./data/ovules-celltype/late_cropped_ds3/"
 out_location = "./data/ovules-celltype-processed/"

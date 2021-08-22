@@ -1,14 +1,12 @@
-import h5py
 import csv
+import os
+import warnings
 
+import h5py
 import numpy as np
+import tifffile
 
 from plantcelltype.utils.axis_transforms import AxisTransformer
-
-import tifffile
-import h5py
-import warnings
-import os
 
 TIFF_FORMATS = ['.tiff', '.tif']
 H5_FORMATS = ['.h5', '.hdf']

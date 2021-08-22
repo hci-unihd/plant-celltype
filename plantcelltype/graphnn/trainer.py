@@ -1,6 +1,7 @@
-from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
 import pytorch_lightning as pl
+
 from plantcelltype.graphnn.data_loader import get_random_split
+from plantcelltype.graphnn.pl_models import EdgesClassification
 
 files_path = "/home/lcerrone/PycharmProjects/plant-celltype/data/ovules-celltype-processed/**/*.h5"
 test_loader, train_loader = get_random_split(files_path)

@@ -1,12 +1,13 @@
 import numpy as np
+from networkx.algorithms.centrality import current_flow_betweenness_centrality
+from networkx.algorithms.centrality import degree_centrality, betweenness_centrality, eigenvector_centrality
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import shortest_path
-from plantcelltype.features.utils import label2com, make_seg_hollow, check_valid_idx
-from plantcelltype.features.rag import build_nx_graph
-from networkx.algorithms.centrality import degree_centrality, betweenness_centrality, eigenvector_centrality
-from networkx.algorithms.centrality import current_flow_betweenness_centrality
-from plantcelltype.features.sampling import farthest_points_sampling
 from sklearn.decomposition import PCA
+
+from plantcelltype.features.rag import build_nx_graph
+from plantcelltype.features.sampling import farthest_points_sampling
+from plantcelltype.features.utils import label2com, make_seg_hollow, check_valid_idx
 
 _supported_centrality = {'degree': degree_centrality,
                          'betweenness': betweenness_centrality,

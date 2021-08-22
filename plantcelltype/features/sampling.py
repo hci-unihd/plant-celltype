@@ -1,5 +1,5 @@
-from numba import njit
 import numpy as np
+from numba import njit
 from numba import types
 from numba.typed import Dict
 

@@ -1,10 +1,10 @@
-import torch
-import torch.nn.functional as F
-from plantcelltype.utils import create_cell_mapping, create_edge_mapping
-from plantcelltype.features.rag import build_nx_graph
-from plantcelltype.utils import cantor_sym_pair
 import networkx as nx
 import numpy as np
+import torch
+
+from plantcelltype.features.rag import build_nx_graph
+from plantcelltype.utils import cantor_sym_pair
+from plantcelltype.utils import create_cell_mapping, create_edge_mapping
 
 
 def concatenate_feat(f1, f2, axis=0):

@@ -1,6 +1,6 @@
+import numpy as np
 from numba import njit, types
 from numba.typed import Dict
-import numpy as np
 
 
 @njit()

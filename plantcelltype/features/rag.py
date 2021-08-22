@@ -1,7 +1,8 @@
-from elf.segmentation.features import compute_rag, compute_boundary_mean_and_length
-from plantcelltype.utils.utils import create_cell_mapping
-import numpy as np
 import networkx as nx
+import numpy as np
+from elf.segmentation.features import compute_rag, compute_boundary_mean_and_length
+
+from plantcelltype.utils.utils import create_cell_mapping
 
 
 def rag_from_seg(segmentation):

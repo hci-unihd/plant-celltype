@@ -1,7 +1,8 @@
-from numba import njit, prange
 import numpy as np
+from numba import njit, prange
 from numba import types
 from numba.typed import Dict
+
 from plantcelltype.utils.utils import cantor_sym_pair
 
 

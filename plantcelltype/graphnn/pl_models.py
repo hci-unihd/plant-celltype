@@ -1,12 +1,9 @@
-import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 
 from egmodels.graph_models import GCN2, GCN3, GAT2, GAT3, TGCN2, TGCN3
 from plantcelltype.graphnn.models import LineGCN2, LineTGCN2, EGCN2, ETGCN2
-from tensorboard.plugins.mesh import summary as mesh_summary
-
 
 models_pool = {'GCN3': GCN3, 'GCN2': GCN2,
                'GAT3': GAT3, 'GAT2': GAT2,

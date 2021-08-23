@@ -1,9 +1,12 @@
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 
 from egmodels.graph_models import GCN2, GCN3, GAT2, GAT3, TGCN2, TGCN3
 from plantcelltype.graphnn.models import LineGCN2, LineTGCN2, EGCN2, ETGCN2
+from tensorboard.plugins.mesh import summary as mesh_summary
+
 
 models_pool = {'GCN3': GCN3, 'GCN2': GCN2,
                'GAT3': GAT3, 'GAT2': GAT2,
@@ -21,6 +24,7 @@ def load_model(name, model_kwargs=None):
 class NodesClassification(pl.LightningModule):
     def __init__(self, model_name, model_kwargs):
         super(NodesClassification, self).__init__()
+        self.colors = 255 * torch.randn(15, 3)
         self.net = load_model(model_name, model_kwargs)
         self.lr = 1e-3
         self.wd = 1e-5
@@ -51,18 +55,37 @@ class NodesClassification(pl.LightningModule):
         logits = val_batch.out
         pred = logits.max(1)[1]
         loss = F.nll_loss(logits, val_batch.y)
-        acc = pred.eq(val_batch.y).sum().item() / val_batch.y.shape[0]
+        correct_pred = pred.eq(val_batch.y)
+        acc = correct_pred.sum().item() / val_batch.y.shape[0]
+
+        self.log_meshes(val_batch.pos, pred, correct_pred, batch_idx)
         self.log('val_loss', loss)
         self.log('val_acc', acc)
         return loss
 
+    def log_meshes(self, pos, pred, cor_pred, batch_idx):
+        tensorboard = self.logger.experiment
+        pos = torch.unsqueeze(pos, 0)
+
+        color = torch.empty_like(pos)
+        cor_pred = cor_pred.long()
+        for i in range(color.shape[1]):
+            # color[0, i, :] = self.colors[pred[i]]
+            color[0, i, :] = self.colors[cor_pred[i]]
+
+        config_pc = {'material': {'cls': 'PointsMaterial', 'size': 5}}
+
+        tensorboard.add_mesh(f'test_mesh_{batch_idx}', pos,
+                             colors=color,
+                             config_dict=config_pc, global_step=self.global_step)
+
 
 class NodesEmbedding(pl.LightningModule):
-    def __init__(self, model_name, model_kwargs):
+    def __init__(self, model_name, model_kwargs, lr=1e-3, wd=1e-5):
         super(NodesEmbedding, self).__init__()
         self.net = load_model(model_name, model_kwargs)
-        self.lr = 1e-3
-        self.wd = 1e-5
+        self.lr = lr
+        self.wd = wd
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.wd)

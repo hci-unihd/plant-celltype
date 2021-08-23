@@ -9,7 +9,7 @@ from torch_geometric.data.data import Data
 from torch.utils.data import DataLoader as TorchDataLoader
 from torch.utils.data import Dataset as TorchDataset
 
-from plantcelltype.features.norms import quantile_zscore, feat_to_bg_onehot
+from plantcelltype.features.norms import quantile_zscore, feat_to_bg_onehot, quantile_norm
 from plantcelltype.features.rag import rectify_rag_names
 from plantcelltype.utils import open_full_stack
 from plantcelltype.utils.utils import filter_bg_from_edges
@@ -71,11 +71,14 @@ def collect_cell_features_grs(stack, axis_transform, as_array=True):
                         'length_axis2_grs',
                         'length_axis3_grs',
                         'pca_explained_variance_grs',
+                        'com_proj_grs',
                         'rw_centrality',
-                        'degree_centrality']:
-        list_feat.append(quantile_zscore(cell_features[zscore_feat]))
+                        'degree_centrality',
+                        ]:
+        list_feat.append(quantile_norm(cell_features[zscore_feat],
+                                       data_range=(-1, 1)))
 
-    for dot_feat in ['com_proj_grs',
+    for dot_feat in [#'com_proj_grs', #never to be used
                      'lrs_proj_axis1_grs',
                      'lrs_proj_axis2_grs',
                      'lrs_proj_axis3_grs',
@@ -87,11 +90,11 @@ def collect_cell_features_grs(stack, axis_transform, as_array=True):
                      'lr_axis3_grs',
                      'pca_axis1_grs',
                      'pca_axis2_grs',
-                     'pca_axis3_grs']:
+                     'pca_axis3_grs'
+                     ]:
         list_feat.append(cell_features[dot_feat])
 
-        list_feat = [feat if feat.ndim == 2 else feat[:, None] for feat in list_feat]
-
+    list_feat = [feat if feat.ndim == 2 else feat[:, None] for feat in list_feat]
     list_feat = np.concatenate(list_feat, axis=1) if as_array else list_feat
     return list_feat
 
@@ -104,8 +107,8 @@ def create_data(file):
                                             'edges_ids',
                                             'edges_labels'])
     # cell feat
-    cell_features_tensors = torch.from_numpy(collect_cell_features_grs(stack, at))
-    edges_features_tensors = None  # torch.from_numpy(collect_edges_features(stack, at))
+    cell_features_tensors = torch.from_numpy(collect_cell_features_grs(stack, at)).float()
+    edges_features_tensors = None  # torch.from_numpy(collect_edges_features(stack, at)).float()
     new_edges_ids = torch.from_numpy(rectify_rag_names(stack['cell_ids'], stack['edges_ids'])).long()
 
     # create labels
@@ -118,10 +121,12 @@ def create_data(file):
     edges_labels = torch.from_numpy(edges_labels.astype('int64')).long()
 
     stage = stack['attributes']['stage']
+    pos = torch.from_numpy(stack['cell_features']['com_voxels'])
 
     # build torch_geometric Data obj
     graph_data = Data(x=cell_features_tensors,
                       y=labels,
+                      pos=pos,
                       file_path=file,
                       stage=stage,
                       edge_attr=edges_features_tensors,
@@ -190,18 +195,19 @@ def build_geometric_loaders(base_path, test_ratio=0.33, seed=0, batch_size=1, mo
 
     loader_test = create_loaders(files_test, batch_size, shuffle=False)
     loader_train = create_loaders(files_train, batch_size, shuffle=True)
-    return loader_test, loader_train
+    num_feat = loader_train.dataset[0].x.shape[-1]
+    return loader_test, loader_train, num_feat
 
 
 def build_standard_loaders(base_path, test_ratio=0.33, seed=0, batch_size=1, mode='stage_random'):
-    loader_g_test, loader_g_train = build_geometric_loaders(base_path,
-                                                            test_ratio=test_ratio,
-                                                            seed=seed,
-                                                            batch_size=1,
-                                                            mode=mode)
+    loader_g_test, loader_g_train, num_feat = build_geometric_loaders(base_path,
+                                                                      test_ratio=test_ratio,
+                                                                      seed=seed,
+                                                                      batch_size=1,
+                                                                      mode=mode)
 
     std_data_test = ConvertGeometricDataSet(loader_g_test)
     std_data_train = ConvertGeometricDataSet(loader_g_train)
     loader_test = TorchDataLoader(std_data_test, batch_size=batch_size, shuffle=False)
     loader_train = TorchDataLoader(std_data_train, batch_size=batch_size, shuffle=True)
-    return loader_test, loader_train
+    return loader_test, loader_train, num_feat

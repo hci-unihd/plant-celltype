@@ -60,4 +60,4 @@ def collect_multi_stack_features(list_files):
         feat_vector = collect_cell_features_grs(stack, at)
         list_feat_vector.append(feat_vector)
 
-    return np.concatenate(list_feat_ve
+    return np.concatenate(list_feat_vector)

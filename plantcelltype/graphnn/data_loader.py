@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader as TorchDataLoader
 from torch.utils.data import Dataset as TorchDataset
 
 from plantcelltype.features.norms import quantile_zscore, feat_to_bg_onehot, quantile_norm
+from plantcelltype.features.norms import quantile_robust_zscore
 from plantcelltype.features.rag import rectify_rag_names
 from plantcelltype.utils import open_full_stack
 from plantcelltype.utils.utils import filter_bg_from_edges
@@ -65,7 +66,8 @@ def collect_cell_features_grs(stack, axis_transform, as_array=True):
     list_feat = [quantile_zscore(axis_transform.transform_coord(cell_features['com_voxels'])),
                  quantile_zscore(axis_transform.scale_volumes(cell_features['volume_voxels'])),
                  quantile_zscore(axis_transform.scale_volumes(cell_features['surface_voxels'])),
-                 feat_to_bg_onehot(cell_features['hops_to_bg'], max_channel=6)]
+                 feat_to_bg_onehot(cell_features['hops_to_bg'], max_channel=5, extreme=(-1, 1))
+                 ]
 
     for zscore_feat in ['length_axis1_grs',
                         'length_axis2_grs',
@@ -75,11 +77,9 @@ def collect_cell_features_grs(stack, axis_transform, as_array=True):
                         'rw_centrality',
                         'degree_centrality',
                         ]:
-        list_feat.append(quantile_norm(cell_features[zscore_feat],
-                                       data_range=(-1, 1)))
+        list_feat.append(quantile_zscore(cell_features[zscore_feat]))
 
-    for dot_feat in [#'com_proj_grs', #never to be used
-                     'lrs_proj_axis1_grs',
+    for dot_feat in ['lrs_proj_axis1_grs',
                      'lrs_proj_axis2_grs',
                      'lrs_proj_axis3_grs',
                      'pca_proj_axis1_grs',
@@ -92,7 +92,7 @@ def collect_cell_features_grs(stack, axis_transform, as_array=True):
                      'pca_axis2_grs',
                      'pca_axis3_grs'
                      ]:
-        list_feat.append(cell_features[dot_feat])
+        list_feat.append(quantile_zscore(cell_features[dot_feat]))
 
     list_feat = [feat if feat.ndim == 2 else feat[:, None] for feat in list_feat]
     list_feat = np.concatenate(list_feat, axis=1) if as_array else list_feat
@@ -106,6 +106,7 @@ def create_data(file):
                                             'edges_features',
                                             'edges_ids',
                                             'edges_labels'])
+
     # cell feat
     cell_features_tensors = torch.from_numpy(collect_cell_features_grs(stack, at)).float()
     edges_features_tensors = None  # torch.from_numpy(collect_edges_features(stack, at)).float()

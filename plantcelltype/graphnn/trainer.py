@@ -7,17 +7,19 @@ from plantcelltype.graphnn.pl_models import NodesClassification
 
 def main_train(config):
     home_dir = os.path.expanduser('~')
-    files_path = os.path.join(home_dir, config['files_path'])
+    files_path = f"{home_dir}{config['files_path']}"
+    logs_path = f"{home_dir}{config['logs_path']}"
     model_kwargs = config['model_kwargs']
 
     test_loader, train_loader, n_feat = build_geometric_loaders(files_path)
 
     model_kwargs['in_features'] = n_feat
     model = NodesClassification(model_name=config['model_name'],
-                                model_kwargs=model_kwargs)
+                                model_kwargs=model_kwargs,
+                                lr=config['lr'],
+                                wd=config['wd'])
 
-    # trainer = pl.Trainer(gpus=1)
     run_name = f"{config['model_name']}_{config['run_keyword']}"
-    tb_logger = pl_loggers.TensorBoardLogger(config['logs_path'], name=run_name)
-    trainer = pl.Trainer(logger=tb_logger)
+    tb_logger = pl_loggers.TensorBoardLogger(logs_path, name=run_name)
+    trainer = pl.Trainer(logger=tb_logger, gpus=1)
     trainer.fit(model, train_loader, test_loader)

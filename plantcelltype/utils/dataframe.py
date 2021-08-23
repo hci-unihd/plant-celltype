@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import tqdm
 
-from plantcelltype.graphnn.data_loader import collect_cell_features
+from plantcelltype.graphnn.data_loader import collect_cell_features_grs
 from plantcelltype.utils import open_full_stack
 
 
@@ -44,7 +44,7 @@ def stack_to_df(stack, at,
     return df_data
 
 
-def multi_stack_df(list_files):
+def collect_multi_stack_df(list_files):
     glob_df_stack = pd.DataFrame()
     for file in tqdm.tqdm(list_files):
         stack, at = open_full_stack(file, ['cell_ids', 'cell_labels', 'cell_features'])
@@ -53,11 +53,11 @@ def multi_stack_df(list_files):
     return glob_df_stack
 
 
-def collect_multi_features(list_files):
+def collect_multi_stack_features(list_files):
     list_feat_vector = []
     for file in tqdm.tqdm(list_files):
         stack, at = open_full_stack(file, ['cell_ids', 'cell_labels', 'cell_features'])
-        feat_vector = collect_cell_features(stack, at)
+        feat_vector = collect_cell_features_grs(stack, at)
         list_feat_vector.append(feat_vector)
 
-    return np.concatenate(list_feat_vector, axis=0)
+    return np.concatenate(list_feat_ve

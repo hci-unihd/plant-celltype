@@ -141,7 +141,7 @@ def create_data(file, load_edge_attr=False):
 def create_loaders(files_list, batch_size=1, load_edge_attr=False, shuffle=True):
     data = [create_data(file, load_edge_attr=load_edge_attr) for file in files_list]
 
-    loader = DataLoader(data, batch_size=batch_size, shuffle=shuffle)
+    loader = DataLoader(data, batch_size=batch_size, shuffle=shuffle, num_workers=8)
     return loader
 
 
@@ -218,6 +218,6 @@ def build_standard_loaders(base_path, test_ratio=0.33, seed=0, batch_size=1, mod
 
     std_data_test = ConvertGeometricDataSet(loader_g_test)
     std_data_train = ConvertGeometricDataSet(loader_g_train)
-    loader_test = TorchDataLoader(std_data_test, batch_size=batch_size, shuffle=False)
-    loader_train = TorchDataLoader(std_data_train, batch_size=batch_size, shuffle=True)
+    loader_test = TorchDataLoader(std_data_test, batch_size=batch_size, shuffle=False, num_workers=8)
+    loader_train = TorchDataLoader(std_data_train, batch_size=batch_size, shuffle=True, num_workers=8)
     return loader_test, loader_train, num_feat

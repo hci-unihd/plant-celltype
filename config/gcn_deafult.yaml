@@ -1,0 +1,23 @@
+
+logs:
+  path: "/results/plant-ct-logs/baseline/"
+  run_keyword: "default"
+
+trainer:
+  gpus: 1
+  max_epochs: 10
+
+loader:
+  path: "/data/ovules/ovules-celltype-processed/**/*.h5"
+  load_edge_attr: false
+
+pl_lightning:
+  config_optimizer:
+    lr: 1e-4
+    wd: 1e-6
+
+  config_model:
+    name: 'TransformerGCN2'
+    kwargs:
+      out_features: 10
+      hidden_feat: 128

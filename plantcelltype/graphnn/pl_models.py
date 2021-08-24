@@ -21,15 +21,18 @@ def load_model(name, model_kwargs=None):
 
 
 class NodesClassification(pl.LightningModule):
-    def __init__(self, model_name, model_kwargs, lr=1e-3, wd=1e-5):
+    def __init__(self, config_model, config_optimizer):
         super(NodesClassification, self).__init__()
         self.colors = 255 * torch.randn(15, 3)
-        self.net = load_model(model_name, model_kwargs)
-        self.lr = lr
-        self.wd = wd
+        print(config_model)
+        self.net = load_model(config_model['name'], config_model['kwargs'])
+        self.config_optimizer = config_optimizer
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.wd)
+        lr = float(self.config_optimizer['lr'])
+        wd = float(self.config_optimizer['wd'])
+
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=wd)
         return optimizer
 
     def forward(self, data):

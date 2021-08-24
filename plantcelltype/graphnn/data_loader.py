@@ -111,7 +111,7 @@ def create_data(file, load_edge_attr=False):
 
     # cell feat
     cell_features_tensors = torch.from_numpy(collect_cell_features_grs(stack, at)).float()
-    edges_features_tensors = torch.from_numpy(collect_edges_features(stack, at)).float() if load_edge_attr else None
+    edges_features_tensors = torch.from_numpy(collect_edges_features(stack, at)).float() if load_edge_attr else 0
     new_edges_ids = torch.from_numpy(rectify_rag_names(stack['cell_ids'], stack['edges_ids'])).long()
 
     # create labels

@@ -25,5 +25,5 @@ def main_train(config):
 
     run_name = f"{config['model_name']}_{config['run_keyword']}"
     tb_logger = pl_loggers.TensorBoardLogger(logs_path, name=run_name)
-    trainer = pl.Trainer(logger=tb_logger)
+    trainer = pl.Trainer(logger=tb_logger, gpus=1, max_epochs=100)
     trainer.fit(model, train_loader, test_loader)

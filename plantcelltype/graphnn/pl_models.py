@@ -2,16 +2,18 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 
-from egmodels.graph_models import GCN2, GCN3, GAT2, GAT3, TGCN2, TGCN3
+from egmodels.graph_base_models import GCN2, GCN3, GAT2, GAT3, TGCN2, TGCN3
 from plantcelltype.graphnn.models import LineGCN2, LineTGCN2, EGCN2, ETGCN2
-
+from plantcelltype.graphnn.modelsv2 import SkipGCN2
+from plantcelltype.graphnn.psgd import KFAC
 models_pool = {'GCN3': GCN3, 'GCN2': GCN2,
                'GAT3': GAT3, 'GAT2': GAT2,
                'TGCN3': TGCN3, 'TGCN2': TGCN2,
                'LineGCN2': LineGCN2,
                'LineTGCN2': LineTGCN2,
                'EGCN2': EGCN2,
-               'ETGCN2': ETGCN2}
+               'ETGCN2': ETGCN2,
+               'SkipGCN2': SkipGCN2}
 
 
 def load_model(name, model_kwargs=None):
@@ -38,7 +40,7 @@ class NodesClassification(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         # to generalize
         batch = self.net(batch)
-        logits = batch.out
+        logits = torch.log_softmax(batch.out, 1)
         pred = logits.max(1)[1]
         loss = F.nll_loss(logits, batch.y)
         acc = pred.eq(batch.y).sum().item() / batch.y.shape[0]
@@ -49,7 +51,7 @@ class NodesClassification(pl.LightningModule):
     def validation_step(self, val_batch, batch_idx):
         # to generalize
         val_batch = self.net(val_batch)
-        logits = val_batch.out
+        logits = torch.log_softmax(val_batch.out, 1)
         pred = logits.max(1)[1]
         loss = F.nll_loss(logits, val_batch.y)
         correct_pred = pred.eq(val_batch.y)

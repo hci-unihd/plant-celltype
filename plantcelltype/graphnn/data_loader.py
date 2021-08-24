@@ -18,17 +18,22 @@ from plantcelltype.utils.utils import filter_bg_from_edges
 gt_mapping_wb = {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 14: 3}
 
 
-def collect_edges_features(stack, axis_transform):
+def collect_edges_features(stack, axis_transform, as_array=True):
     edges_features = stack['edges_features']
     cell_features = stack['cell_features']
-    cell_com_grs = axis_transform.transform_coord(cell_features['com_voxels'])
+    global_axis = stack['attributes']['global_reference_system_axis']
 
+    cell_com_grs = axis_transform.transform_coord(cell_features['com_voxels'])
     edges_com_grs = filter_bg_from_edges(stack['edges_ids'],
                                          axis_transform.transform_coord(edges_features['com_voxels']))
-    edges_surface_mu = filter_bg_from_edges(stack['edges_ids'],
+    edges_suface_grs = filter_bg_from_edges(stack['edges_ids'],
                                             axis_transform.scale_volumes(edges_features['surface_voxels']))
-    edges_com_distance_mu = filter_bg_from_edges(stack['edges_ids'],
-                                                 edges_features['com_distance_um'])
+    edges_com_dist_grs = filter_bg_from_edges(stack['edges_ids'],
+                                              edges_features['com_distance_um'])
+
+    list_feat = [quantile_zscore(edges_com_grs),
+                 quantile_zscore(edges_suface_grs),
+                 quantile_zscore(edges_com_dist_grs)]
 
     edges_ids = rectify_rag_names(stack['cell_ids'], stack['edges_ids'])
     edges_cosine_features = []
@@ -41,23 +46,20 @@ def collect_edges_features(stack, axis_transform):
         e1_axis2 = cell_features['lr_axis2_grs'][e1]
         e2_axis2 = cell_features['lr_axis2_grs'][e2]
 
+        e1_axis3 = cell_features['lr_axis3_grs'][e1]
+        e2_axis3 = cell_features['lr_axis3_grs'][e2]
+
         _cosine_features = [np.dot(e1_axis1, e2_axis1),
                             np.dot(e1_axis2, e2_axis2),
-                            np.dot(e_v, (e1_axis1 + e2_axis1) / 2.0),
-                            np.dot(e_v, (e1_axis2 + e2_axis2) / 2.0)]
-        _cosine_features = [abs(_feat) for _feat in _cosine_features]
+                            np.dot(e1_axis3, e2_axis3)]
+        _cosine_features += list(np.dot(e_v, global_axis.T))
         edges_cosine_features.append(_cosine_features)
 
-    edges_cosine_features = np.array(edges_cosine_features)
-    edges_features_array = np.concatenate([edges_com_grs,
-                                           edges_surface_mu[..., None],
-                                           edges_com_distance_mu[..., None],
-                                           edges_cosine_features], axis=1)
-    edges_features_tensors = torch.from_numpy(edges_features_array).float()
-    edges_features_tensors = edges_features_tensors - torch.mean(edges_features_tensors, 0)
-    edges_features_tensors = edges_features_tensors / torch.std(edges_features_tensors, 0)
+    list_feat.append(np.array(edges_cosine_features))
+    list_feat = [feat if feat.ndim == 2 else feat[:, None] for feat in list_feat]
+    list_feat = np.concatenate(list_feat, axis=1) if as_array else list_feat
 
-    return edges_features_tensors
+    return list_feat
 
 
 def collect_cell_features_grs(stack, axis_transform, as_array=True):
@@ -99,7 +101,7 @@ def collect_cell_features_grs(stack, axis_transform, as_array=True):
     return list_feat
 
 
-def create_data(file):
+def create_data(file, load_edge_attr=False):
     stack, at = open_full_stack(file, keys=['cell_features',
                                             'cell_ids',
                                             'cell_labels',
@@ -109,7 +111,7 @@ def create_data(file):
 
     # cell feat
     cell_features_tensors = torch.from_numpy(collect_cell_features_grs(stack, at)).float()
-    edges_features_tensors = None  # torch.from_numpy(collect_edges_features(stack, at)).float()
+    edges_features_tensors = torch.from_numpy(collect_edges_features(stack, at)).float() if load_edge_attr else None
     new_edges_ids = torch.from_numpy(rectify_rag_names(stack['cell_ids'], stack['edges_ids'])).long()
 
     # create labels
@@ -136,8 +138,8 @@ def create_data(file):
     return graph_data
 
 
-def create_loaders(files_list, batch_size=1, shuffle=True):
-    data = [create_data(file) for file in files_list]
+def create_loaders(files_list, batch_size=1, load_edge_attr=False, shuffle=True):
+    data = [create_data(file, load_edge_attr=load_edge_attr) for file in files_list]
 
     loader = DataLoader(data, batch_size=batch_size, shuffle=shuffle)
     return loader
@@ -186,7 +188,12 @@ class ConvertGeometricDataSet(TorchDataset):
         return len(self.y)
 
 
-def build_geometric_loaders(base_path, test_ratio=0.33, seed=0, batch_size=1, mode='stage_random'):
+def build_geometric_loaders(base_path,
+                            test_ratio=0.33,
+                            seed=0,
+                            batch_size=1,
+                            mode='stage_random',
+                            load_edge_attr=False):
     if mode == 'stage_random':
         files_test, files_train = get_stage_random_split(base_path, test_ratio=test_ratio, seed=seed)
     elif mode == 'random':
@@ -194,18 +201,20 @@ def build_geometric_loaders(base_path, test_ratio=0.33, seed=0, batch_size=1, mo
     else:
         raise NotImplemented
 
-    loader_test = create_loaders(files_test, batch_size, shuffle=False)
-    loader_train = create_loaders(files_train, batch_size, shuffle=True)
+    loader_test = create_loaders(files_test, batch_size=batch_size, load_edge_attr=load_edge_attr, shuffle=False)
+    loader_train = create_loaders(files_train, batch_size=batch_size, load_edge_attr=load_edge_attr, shuffle=True)
     num_feat = loader_train.dataset[0].x.shape[-1]
-    return loader_test, loader_train, num_feat
+    num_edge_feat = loader_train.dataset[0].edge_attr.shape[-1] if load_edge_attr else None
+    return loader_test, loader_train, num_feat, num_edge_feat
 
 
-def build_standard_loaders(base_path, test_ratio=0.33, seed=0, batch_size=1, mode='stage_random'):
-    loader_g_test, loader_g_train, num_feat = build_geometric_loaders(base_path,
-                                                                      test_ratio=test_ratio,
-                                                                      seed=seed,
-                                                                      batch_size=1,
-                                                                      mode=mode)
+def build_standard_loaders(base_path, test_ratio=0.33, seed=0, batch_size=1, mode='stage_random', load_edge_attr=False):
+    loader_g_test, loader_g_train, num_feat, _ = build_geometric_loaders(base_path,
+                                                                         test_ratio=test_ratio,
+                                                                         seed=seed,
+                                                                         batch_size=1,
+                                                                         mode=mode,
+                                                                         load_edge_attr=load_edge_attr)
 
     std_data_test = ConvertGeometricDataSet(loader_g_test)
     std_data_train = ConvertGeometricDataSet(loader_g_train)

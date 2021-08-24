@@ -2,18 +2,18 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 
-from egmodels.graph_base_models import GCN2, GCN3, GAT2, GAT3, TGCN2, TGCN3
+from egmodels.graph_base_models import GCN2, GCN3, GAT2, GAT3, TransformerGCN2, TransformerGCN3
 from plantcelltype.graphnn.models import LineGCN2, LineTGCN2, EGCN2, ETGCN2
-from plantcelltype.graphnn.modelsv2 import SkipGCN2
-from plantcelltype.graphnn.psgd import KFAC
+from plantcelltype.graphnn.modelsv2 import TestGCN2
+
 models_pool = {'GCN3': GCN3, 'GCN2': GCN2,
                'GAT3': GAT3, 'GAT2': GAT2,
-               'TGCN3': TGCN3, 'TGCN2': TGCN2,
+               'TransformerGCN3': TransformerGCN3, 'TransformerGCN2': TransformerGCN2,
                'LineGCN2': LineGCN2,
                'LineTGCN2': LineTGCN2,
                'EGCN2': EGCN2,
                'ETGCN2': ETGCN2,
-               'SkipGCN2': SkipGCN2}
+               'TestGCN2': TestGCN2}
 
 
 def load_model(name, model_kwargs=None):

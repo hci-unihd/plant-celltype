@@ -1,3 +1,4 @@
+mode: NodesClassification
 
 logs:
   path: "/results/plant-ct-logs/baseline/"

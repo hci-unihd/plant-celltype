@@ -15,7 +15,7 @@ def main_train(config):
      train_loader,
      n_feat,
      n_edge_feat) = build_geometric_loaders(files_path,
-                                            batch_size=config['loader']['batch'],
+                                            batch=config['loader']['batch'],
                                             load_edge_attr=config['loader']['load_edge_attr'])
 
     model_kwargs['in_features'] = n_feat

@@ -4,18 +4,16 @@ import os
 import numpy as np
 import torch
 from skspatial.objects import Vector
-from torch_geometric.data import DataLoader
-from torch_geometric.data.data import Data
 from torch.utils.data import DataLoader as TorchDataLoader
 from torch.utils.data import Dataset as TorchDataset
+from torch_geometric.data import DataLoader
+from torch_geometric.data.data import Data
 
-from plantcelltype.features.norms import quantile_zscore, feat_to_bg_onehot, quantile_norm
-from plantcelltype.features.norms import quantile_robust_zscore
+from plantcelltype.features.norms import quantile_zscore, feat_to_bg_onehot
 from plantcelltype.features.rag import rectify_rag_names
+from plantcelltype.graphnn.line_graph import to_line_graph
 from plantcelltype.utils import open_full_stack
 from plantcelltype.utils.utils import filter_bg_from_edges
-from torch_sparse.tensor import SparseTensor
-from torch_geometric.nn.conv.gcn_conv import gcn_norm
 
 gt_mapping_wb = {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 14: 3}
 
@@ -103,7 +101,7 @@ def collect_cell_features_grs(stack, axis_transform, as_array=True):
     return list_feat
 
 
-def create_data(file, load_edge_attr=False):
+def create_data(file, load_edge_attr=False, as_line_graph=False):
     stack, at = open_full_stack(file, keys=['cell_features',
                                             'cell_ids',
                                             'cell_labels',
@@ -114,7 +112,9 @@ def create_data(file, load_edge_attr=False):
     # cell feat
     cell_features_tensors = torch.from_numpy(collect_cell_features_grs(stack, at)).float()
     edges_features_tensors = torch.from_numpy(collect_edges_features(stack, at)).float() if load_edge_attr else 0
+
     new_edges_ids = torch.from_numpy(rectify_rag_names(stack['cell_ids'], stack['edges_ids'])).long()
+    new_edges_ids = new_edges_ids.T
 
     # create labels
     labels = stack['cell_labels']
@@ -128,6 +128,10 @@ def create_data(file, load_edge_attr=False):
     stage = stack['attributes']['stage']
     pos = torch.from_numpy(stack['cell_features']['com_voxels'])
 
+    if as_line_graph:
+        cell_features_tensors, new_edges_ids = to_line_graph(cell_features_tensors,
+                                                             new_edges_ids,
+                                                             node_feat_mixing='cat')
     # build torch_geometric Data obj
     graph_data = Data(x=cell_features_tensors,
                       y=labels,
@@ -136,12 +140,14 @@ def create_data(file, load_edge_attr=False):
                       stage=stage,
                       edge_attr=edges_features_tensors,
                       edge_y=edges_labels,
-                      edge_index=new_edges_ids.T)
+                      edge_index=new_edges_ids)
     return graph_data
 
 
-def create_loaders(files_list, batch_size=1, load_edge_attr=False, shuffle=True):
-    data = [create_data(file, load_edge_attr=load_edge_attr) for file in files_list]
+def create_loaders(files_list, batch_size=1, load_edge_attr=False, as_line_graph=False, shuffle=True):
+    data = [create_data(file,
+                        load_edge_attr=load_edge_attr,
+                        as_line_graph=as_line_graph) for file in files_list]
 
     loader = DataLoader(data, batch_size=batch_size, shuffle=shuffle, num_workers=8)
     return loader
@@ -190,36 +196,52 @@ class ConvertGeometricDataSet(TorchDataset):
         return len(self.y)
 
 
-def build_geometric_loaders(base_path,
+def build_geometric_loaders(path,
                             test_ratio=0.33,
                             seed=0,
-                            batch_size=1,
+                            batch=1,
                             mode='stage_random',
-                            load_edge_attr=False):
+                            load_edge_attr=False,
+                            as_line_graph=False):
     if mode == 'stage_random':
-        files_test, files_train = get_stage_random_split(base_path, test_ratio=test_ratio, seed=seed)
+        files_test, files_train = get_stage_random_split(path, test_ratio=test_ratio, seed=seed)
     elif mode == 'random':
-        files_test, files_train = get_random_split(base_path, test_ratio=test_ratio, seed=seed)
+        files_test, files_train = get_random_split(path, test_ratio=test_ratio, seed=seed)
     else:
         raise NotImplemented
 
-    loader_test = create_loaders(files_test, batch_size=batch_size, load_edge_attr=load_edge_attr, shuffle=False)
-    loader_train = create_loaders(files_train, batch_size=batch_size, load_edge_attr=load_edge_attr, shuffle=True)
+    loader_test = create_loaders(files_test,
+                                 batch_size=batch,
+                                 load_edge_attr=load_edge_attr,
+                                 as_line_graph=as_line_graph,
+                                 shuffle=False)
+    loader_train = create_loaders(files_train,
+                                  batch_size=batch,
+                                  load_edge_attr=load_edge_attr,
+                                  as_line_graph=as_line_graph,
+                                  shuffle=True)
     num_feat = loader_train.dataset[0].x.shape[-1]
     num_edge_feat = loader_train.dataset[0].edge_attr.shape[-1] if load_edge_attr else None
     return loader_test, loader_train, num_feat, num_edge_feat
 
 
-def build_standard_loaders(base_path, test_ratio=0.33, seed=0, batch_size=1, mode='stage_random', load_edge_attr=False):
-    loader_g_test, loader_g_train, num_feat, _ = build_geometric_loaders(base_path,
+def build_standard_loaders(path,
+                           test_ratio=0.33,
+                           seed=0,
+                           batch=1,
+                           mode='stage_random',
+                           load_edge_attr=False,
+                           as_line_graph=False):
+    loader_g_test, loader_g_train, num_feat, _ = build_geometric_loaders(path,
                                                                          test_ratio=test_ratio,
                                                                          seed=seed,
-                                                                         batch_size=1,
+                                                                         batch=1,
                                                                          mode=mode,
+                                                                         as_line_graph=as_line_graph,
                                                                          load_edge_attr=load_edge_attr)
 
     std_data_test = ConvertGeometricDataSet(loader_g_test)
     std_data_train = ConvertGeometricDataSet(loader_g_train)
-    loader_test = TorchDataLoader(std_data_test, batch_size=batch_size, shuffle=False, num_workers=8)
-    loader_train = TorchDataLoader(std_data_train, batch_size=batch_size, shuffle=True, num_workers=8)
+    loader_test = TorchDataLoader(std_data_test, batch_size=batch, shuffle=False, num_workers=8)
+    loader_train = TorchDataLoader(std_data_train, batch_size=batch, shuffle=True, num_workers=8)
     return loader_test, loader_train, num_feat

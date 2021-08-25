@@ -200,13 +200,15 @@ def build_geometric_loaders(path,
                             test_ratio=0.33,
                             seed=0,
                             batch=1,
-                            mode='stage_random',
+                            mode='split',
                             load_edge_attr=False,
                             as_line_graph=False):
     if mode == 'stage_random':
         files_test, files_train = get_stage_random_split(path, test_ratio=test_ratio, seed=seed)
     elif mode == 'random':
         files_test, files_train = get_random_split(path, test_ratio=test_ratio, seed=seed)
+    elif mode == 'split':
+        files_test, files_train = path['test'], path['train']
     else:
         raise NotImplemented
 

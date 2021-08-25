@@ -14,6 +14,8 @@ from plantcelltype.features.norms import quantile_robust_zscore
 from plantcelltype.features.rag import rectify_rag_names
 from plantcelltype.utils import open_full_stack
 from plantcelltype.utils.utils import filter_bg_from_edges
+from torch_sparse.tensor import SparseTensor
+from torch_geometric.nn.conv.gcn_conv import gcn_norm
 
 gt_mapping_wb = {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 14: 3}
 

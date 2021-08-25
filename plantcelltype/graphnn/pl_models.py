@@ -3,12 +3,14 @@ import torch
 import torch.nn.functional as F
 
 from egmodels.graph_base_models import GCN2, GCN3, GAT2, GAT3, TransformerGCN2, TransformerGCN3
-from plantcelltype.graphnn.models import LineGCN2, LineTGCN2, EGCN2, ETGCN2
-from plantcelltype.graphnn.modelsv2 import TestGCN2
+from plantcelltype.graphnn.edge_models import LineGCN2, LineTGCN2, EGCN2, ETGCN2
+from plantcelltype.graphnn.graph_models import TestGCN2, GCNII, DeeperGCN
 
 models_pool = {'GCN3': GCN3, 'GCN2': GCN2,
                'GAT3': GAT3, 'GAT2': GAT2,
-               'TransformerGCN3': TransformerGCN3, 'TransformerGCN2': TransformerGCN2,
+               'GCNII': GCNII, 'DeeperGCN': DeeperGCN,
+               'TransformerGCN3': TransformerGCN3,
+               'TransformerGCN2': TransformerGCN2,
                'LineGCN2': LineGCN2,
                'LineTGCN2': LineTGCN2,
                'EGCN2': EGCN2,
@@ -24,7 +26,6 @@ class NodesClassification(pl.LightningModule):
     def __init__(self, config_model, config_optimizer):
         super(NodesClassification, self).__init__()
         self.colors = 255 * torch.randn(15, 3)
-        print(config_model)
         self.net = load_model(config_model['name'], config_model['kwargs'])
         self.config_optimizer = config_optimizer
 
@@ -72,7 +73,6 @@ class NodesClassification(pl.LightningModule):
         color = torch.empty_like(pos)
         cor_pred = cor_pred.long()
         for i in range(color.shape[1]):
-            # color[0, i, :] = self.colors[pred[i]]
             color[0, i, :] = self.colors[cor_pred[i]]
 
         config_pc = {'material': {'cls': 'PointsMaterial', 'size': 5}}

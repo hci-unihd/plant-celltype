@@ -1,0 +1,28 @@
+
+logs:
+  path: "/results/plant-ct-logs/baseline/"
+  run_keyword: "base"
+
+trainer:
+  gpus: 1
+  max_steps: 12000
+
+loader:
+  path: "/data/ovules/ovules-celltype-processed/**/*.h5"
+  load_edge_attr: false
+  batch: 1
+
+pl_lightning:
+  config_optimizer:
+    lr: 1e-3
+    wd: 1e-6
+
+  config_model:
+    name: 'GCNII'
+    kwargs:
+      out_features: 10
+      hidden_feat: 128
+      in_features: None
+      num_layers: 8
+      alpha: 0.1
+      theta: 0.5

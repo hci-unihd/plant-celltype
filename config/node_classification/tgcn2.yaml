@@ -1,15 +1,16 @@
 
 logs:
   path: "/results/plant-ct-logs/baseline/"
-  run_keyword: "default"
+  run_keyword: "base"
 
 trainer:
   gpus: 1
-  max_epochs: 10
+  max_steps: 12000
 
 loader:
   path: "/data/ovules/ovules-celltype-processed/**/*.h5"
   load_edge_attr: false
+  batch: 1
 
 pl_lightning:
   config_optimizer:

@@ -1,3 +1,4 @@
+import csv
 import glob
 import os
 
@@ -154,7 +155,7 @@ def create_loaders(files_list, batch_size=1, load_edge_attr=False, as_line_graph
 
 
 def get_random_split(base_path, test_ratio=0.33, seed=0):
-    files = glob.glob(base_path)
+    files = glob.glob(f'{base_path}/**/*.h5')
 
     np.random.seed(seed)
     np.random.shuffle(files)
@@ -164,7 +165,7 @@ def get_random_split(base_path, test_ratio=0.33, seed=0):
 
 
 def get_stage_random_split(base_path, test_ratio=0.33, seed=0):
-    files = glob.glob(base_path)
+    files = glob.glob(f'{base_path}/**/*.h5')
 
     all_stages = np.unique([os.path.split(file)[0] for file in files])
     files_test, files_train = [], []
@@ -177,6 +178,36 @@ def get_stage_random_split(base_path, test_ratio=0.33, seed=0):
         files_train += stage_files[split:]
 
     return files_test, files_train
+
+
+def get_n_splits(dataset_location, list_data_path, number_split=5, seed=0):
+    with open(list_data_path, 'r') as f:
+        reader = csv.DictReader(f)
+        dataset = {}
+        for line in reader:
+            if line['stage'] in dataset:
+                dataset[line['stage']].append(line['stack'])
+            else:
+                dataset[line['stage']] = [line['stack']]
+
+    splits = {i: {'test': [], 'train': []} for i in range(number_split)}
+
+    for stage, stage_file_list in dataset.items():
+        np.random.seed(seed)
+        np.random.shuffle(stage_file_list)
+        base_path = os.path.join(dataset_location, stage)
+        stage_file_list = [os.path.join(base_path, f) for f in stage_file_list]
+        for i in range(number_split):
+            stage_split = np.array_split(stage_file_list, number_split)
+            # test
+            splits[i]['test'] += stage_split.pop(i).tolist()
+
+            # train
+            train_list = []
+            for _x in stage_split:
+                train_list += _x.tolist()
+            splits[i]['train'] += train_list
+    return splits
 
 
 class ConvertGeometricDataSet(TorchDataset):

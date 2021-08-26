@@ -1,6 +1,16 @@
-from plantcelltype.graphnn.trainer import simple_train
+from plantcelltype.graphnn.trainer import train
 from plantcelltype.utils.io import load_yaml
 import argparse
+
+
+def print_config(config, indentation=0):
+    spaces = indentation * '  '
+    for key, value in config.items():
+        if isinstance(value, dict):
+            print(f'{spaces}{key}:')
+            print_config(value, indentation + 1)
+        else:
+            print(f'{spaces}{key}: {value}')
 
 
 def parser():
@@ -11,6 +21,6 @@ def parser():
 
 
 _args = parser()
-config = load_yaml(_args.config)
-print('config: ', config)
-simple_train(config)
+_config = load_yaml(_args.config)
+print_config(_config)
+train(_config)

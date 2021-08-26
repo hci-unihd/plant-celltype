@@ -1,8 +1,10 @@
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 import os
-from plantcelltype.graphnn.data_loader import build_geometric_loaders
+from plantcelltype.graphnn.data_loader import build_geometric_loaders, get_n_splits
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
+
+pl.seed_everything(42, workers=True)
 
 
 def add_home_path(path):
@@ -40,10 +42,27 @@ def simple_train(config):
     test_loader, train_loader, config = get_loaders(config)
     model = get_model(config)
     config = get_logger(config)
-
     trainer = pl.Trainer(**config['trainer'])
     trainer.fit(model, train_loader, test_loader)
 
 
-def cross_validation_train(config, num_splits):
-    pass
+def cross_validation_train(config):
+    data_location = config['loader']['path']
+    list_path = f'{data_location}/list_data.csv'
+    split = config['cross_validation'].get('split', 5)
+    seed = config['cross_validation'].get('seed', 0)
+    splits = get_n_splits(data_location, list_path, number_split=split, seed=seed)
+
+    config['loader']['mode'] = 'split'
+    run_name = config['logs']['name']
+    for key, split in splits.items():
+        config['logs']['name'] = f'{run_name}_split{key}'
+        config['loader']['path'] = split
+        simple_train(config)
+
+
+def train(config):
+    if 'cross_validation' in config:
+        cross_validation_train(config)
+    else:
+        simple_train(config)

@@ -1,6 +1,6 @@
 _internal_variables:
-  template: !update 'config/node_classification/shared.yaml'
-  model_name: &model_name 'GCN2'
+  template: !update 'config/node_classification/template.yaml'
+  model_name: &model_name 'GAT2'
 
 logs:
   name: !join [*model_name, _base]

@@ -5,6 +5,9 @@ _internal_variables:
 logs:
   name: !join [*model_name, _base]
 
+loader:
+  load_edge_attr: true
+
 module:
   model:
     name: *model_name

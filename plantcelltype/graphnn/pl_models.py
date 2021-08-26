@@ -22,15 +22,18 @@ def load_model(name, model_kwargs=None):
 
 
 class NodesClassification(pl.LightningModule):
-    def __init__(self, config_model, config_optimizer):
+    def __init__(self, model, optimizer, logger=None):
         super(NodesClassification, self).__init__()
-        self.colors = 255 * torch.randn(15, 3)
-        self.net = load_model(config_model['name'], config_model['kwargs'])
-        self.config_optimizer = config_optimizer
+
+        self.net = load_model(model['name'], model['kwargs'])
+        self.optimizer = {} if optimizer is None else optimizer
+
+        logger = {} if logger is None else logger
+        self.log_points = logger.get('log_points', False)
 
     def configure_optimizers(self):
-        lr = float(self.config_optimizer['lr'])
-        wd = float(self.config_optimizer['wd'])
+        lr = float(self.optimizer.get('lr', 1e-5))
+        wd = float(self.optimizer.get('wd', 1e-6))
 
         optimizer = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=wd)
         return optimizer
@@ -60,12 +63,13 @@ class NodesClassification(pl.LightningModule):
         correct_pred = pred.eq(val_batch.y)
         acc = correct_pred.sum().item() / val_batch.y.shape[0]
 
-        self.log_meshes(val_batch.pos, pred, correct_pred, batch_idx)
+        if self.log_points:
+            self._log_points(val_batch.pos, pred, correct_pred, batch_idx)
         self.log('val_loss', loss)
         self.log('val_acc', acc)
         return loss
 
-    def log_meshes(self, pos, pred, cor_pred, batch_idx):
+    def _log_points(self, pos, pred, cor_pred, batch_idx):
         tensorboard = self.logger.experiment
         pos = torch.unsqueeze(pos, 0)
 
@@ -81,24 +85,11 @@ class NodesClassification(pl.LightningModule):
                              config_dict=config_pc, global_step=self.global_step)
 
 
-class EdgesClassification(pl.LightningModule):
-    def __init__(self, config_model, config_optimizer):
-        super(EdgesClassification, self).__init__()
-        print(config_model)
-        self.net = load_model(config_model['name'], config_model['kwargs'])
-        self.config_optimizer = config_optimizer
-
-    def configure_optimizers(self):
-        lr = float(self.config_optimizer['lr'])
-        wd = float(self.config_optimizer['wd'])
-
-        optimizer = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=wd)
-        return optimizer
-
-    def forward(self, data):
-        data = self.net(data)
-        logits = data.out
-        return data, logits
+class EdgesClassification(NodesClassification, pl.LightningModule):
+    def __init__(self, model, optimizer=None, logger=None):
+        super(EdgesClassification, self).__init__(model=model,
+                                                  optimizer=optimizer,
+                                                  logger=logger)
 
     def training_step(self, batch, batch_idx):
         # to generalize

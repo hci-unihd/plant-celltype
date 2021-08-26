@@ -1,5 +1,5 @@
-from plantcelltype.graphnn.trainer import main_train
-import yaml
+from plantcelltype.graphnn.trainer import simple_train
+from plantcelltype.utils.io import load_yaml
 import argparse
 
 
@@ -10,12 +10,7 @@ def parser():
     return args
 
 
-def load_config(args):
-    config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
-    return config
-
-
 _args = parser()
-_config = load_config(_args)
-
-main_train(config=_config)
+config = load_yaml(_args.config)
+print('config: ', config)
+simple_train(config)

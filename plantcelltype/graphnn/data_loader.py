@@ -200,7 +200,7 @@ def build_geometric_loaders(path,
                             test_ratio=0.33,
                             seed=0,
                             batch=1,
-                            mode='split',
+                            mode='stage_random',
                             load_edge_attr=False,
                             as_line_graph=False):
     if mode == 'stage_random':

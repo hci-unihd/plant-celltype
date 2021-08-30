@@ -1,6 +1,7 @@
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 import os
+import yaml
 from plantcelltype.graphnn.data_loader import build_geometric_loaders, get_n_splits
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
 
@@ -45,6 +46,22 @@ def simple_train(config):
     trainer = pl.Trainer(**config['trainer'])
     trainer.fit(model, train_loader, test_loader)
 
+    version = f'version_{trainer.logger.version}'
+    checkpoint_path = os.path.join(trainer.logger.save_dir,
+                                   trainer.logger.name,
+                                   version)
+
+    config['run'] = {'save_dir': trainer.logger.save_dir,
+                     'name': trainer.logger.name,
+                     'version': trainer.logger.version,
+                     'results': model.saved_metrics}
+    
+    del config['trainer']['logger']
+    with open(os.path.join(checkpoint_path, 'config.yaml'), 'w') as outfile:
+        yaml.dump(config, outfile)
+
+    return checkpoint_path
+
 
 def cross_validation_train(config):
     data_location = config['loader']['path']
@@ -55,10 +72,11 @@ def cross_validation_train(config):
 
     config['loader']['mode'] = 'split'
     run_name = config['logs']['name']
+    run_check_points = []
     for key, split in splits.items():
         config['logs']['name'] = f'{run_name}_split{key}'
         config['loader']['path'] = split
-        simple_train(config)
+        run_check_points.append(simple_train(config))
 
 
 def train(config):

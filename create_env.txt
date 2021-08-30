@@ -8,3 +8,5 @@ pip install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.9.0+c
 pip install torch-geometric
 pip install 'napari[pyqt5]'
 pip install plotly==5.0.0
+# pip install tensorboard-reducer
+

@@ -10,7 +10,7 @@ logs:
 
 trainer:
   gpus: 1
-  max_steps: 10000
+  max_epochs: 30
 
 loader:
   path: !join [*home_path, /data/ovules/ovules-celltype-processed/]

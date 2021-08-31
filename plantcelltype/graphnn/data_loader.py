@@ -16,7 +16,7 @@ from plantcelltype.graphnn.line_graph import to_line_graph
 from plantcelltype.utils import open_full_stack
 from plantcelltype.utils.utils import filter_bg_from_edges
 
-gt_mapping_wb = {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 14: 3}
+gt_mapping_wb = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 10: 8, 14: 3}
 
 
 def collect_edges_features(stack, axis_transform, as_array=True):
@@ -127,6 +127,7 @@ def create_data(file, load_edge_attr=False, as_line_graph=False):
     edges_labels = torch.from_numpy(edges_labels.astype('int64')).long()
 
     stage = stack['attributes']['stage']
+    stack_name = stack['attributes']['stack']
     pos = torch.from_numpy(stack['cell_features']['com_voxels'])
 
     if as_line_graph:
@@ -139,6 +140,7 @@ def create_data(file, load_edge_attr=False, as_line_graph=False):
                       pos=pos,
                       file_path=file,
                       stage=stage,
+                      stack=stack_name,
                       edge_attr=edges_features_tensors,
                       edge_y=edges_labels,
                       edge_index=new_edges_ids)

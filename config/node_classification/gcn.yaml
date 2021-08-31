@@ -4,7 +4,6 @@ _internal_variables:
   home: &home_path !home_path
 
 logs:
-  save_dir: !join [*home_path, /results/plant-ct-logs/test-cv/]
   name: !join [*model_name, _base]
 
 module:

@@ -1,3 +1,4 @@
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
@@ -31,6 +32,10 @@ class NodesClassification(pl.LightningModule):
 
         logger = {} if logger is None else logger
         self.log_points = logger.get('log_points', False)
+
+
+        reference_metric, reference_mode, reference_default = 'accuracy_micro', 'max', 0
+        reference_metric, loss_mode, loss_default = 'loss', 'min', 1e16
         self.saved_metrics = {'val': {'loss': {'value': 1e16, 'step': 0, 'mode': 'min'},
                                       'acc': {'value': 0, 'step': 0, 'mode': 'max'}},
                               'train': {'loss': {'value': 1e16, 'step': 0, 'mode': 'min'},
@@ -41,7 +46,8 @@ class NodesClassification(pl.LightningModule):
         self.micro_accuracy = Accuracy(average='micro')
         self.macro_accuracy = Accuracy(num_classes=out_class, average='macro')
 
-        self.pl_metrics = {'accuracy_micro': self.micro_accuracy,
+        self.pl_metrics = {'accuracy_micro': Accuracy(average='micro'),
+                           'accuracy_macro': Accuracy(num_classes=out_class, average='macro'),
                            'accuracy_class': Accuracy(num_classes=out_class, average=None),
                            'precision_micro': Precision(average='micro'),
                            'precision_class': Precision(num_classes=out_class, average=None),
@@ -73,9 +79,11 @@ class NodesClassification(pl.LightningModule):
         loss = F.nll_loss(logits, batch.y)
         glob_acc = self.micro_accuracy(pred, batch.y)
         class_acc = self.macro_accuracy(pred, batch.y)
+
         self.log('train_loss', loss)
         self.log('train_global_acc', glob_acc)
         self.log('train_class_acc', class_acc)
+
         self._save_metrics(loss.item(), 'train', 'loss')
         self._save_metrics(glob_acc.item(), 'train', 'acc')
         return loss
@@ -87,17 +95,29 @@ class NodesClassification(pl.LightningModule):
         pred = logits.max(1)[1]
         loss = F.nll_loss(logits, val_batch.y)
 
-        glob_acc = self.micro_accuracy(pred, val_batch.y)
-        class_acc = self.macro_accuracy(pred, val_batch.y)
+        full_metrics = self.compute_metrics(pred.cpu(), val_batch.y.cpu())
 
         if self.log_points:
             self._log_points(val_batch.pos, pred, pred, batch_idx)
+
         self.log('val_loss', loss)
-        self.log('val_global_acc', glob_acc)
-        self.log('val_class_acc', class_acc)
-        self._save_metrics(loss.item(), 'val', 'loss')
-        self._save_metrics(glob_acc.item(), 'val', 'acc', pred, val_batch.y)
-        return loss
+        self.log('val_global_acc', full_metrics['accuracy_micro'])
+        self.log('val_class_acc', full_metrics['accuracy_macro'])
+
+        metrics = {'hp_metric': full_metrics['accuracy_micro']}
+        self.log_dict(metrics)
+        return full_metrics, val_batch.file_path, val_batch.stage, val_batch.stack
+
+    def validation_epoch_end(self, outputs):
+        reference_metric = 'accuracy_micro'
+        reference_acc = 0
+        reference_mode = 'max'
+        for val_sample in outputs:
+            metrics = val_sample[0]
+            reference_acc += metrics['accuracy_micro']
+        reference_acc /= len(outputs)
+
+        pass
 
     def _save_metrics(self, value, phase, metric, pred_tensor=None, y_tensor=None):
         check = self.saved_metrics[phase][metric]['value'] - value

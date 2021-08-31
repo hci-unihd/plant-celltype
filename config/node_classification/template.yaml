@@ -10,7 +10,7 @@ logs:
 
 trainer:
   gpus: 1
-  max_epochs: 30
+  max_epochs: 10
 
 loader:
   path: !join [*home_path, /data/ovules/ovules-celltype-processed/]
@@ -27,4 +27,4 @@ module:
 
   model:
     kwargs:
-      out_features: 10
+      out_features: 9

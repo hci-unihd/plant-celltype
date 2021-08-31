@@ -77,6 +77,7 @@ def cross_validation_train(config):
         config['logs']['name'] = f'{run_name}_split{key}'
         config['loader']['path'] = split
         run_check_points.append(simple_train(config))
+        exit()
 
 
 def train(config):

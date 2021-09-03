@@ -123,6 +123,8 @@ class NodesClassification(pl.LightningModule):
 
         if (mode == 'min' and check > 0) or (mode == 'max' and check < 0):
             self.saved_metrics['val']['results'] = results
+            self.saved_metrics['val'][self.reference_metric]['value'] = epoch_acc
+            self.saved_metrics['val'][self.reference_metric]['step'] = self.global_step
         self.saved_metrics['val']['results_last'] = results
         self.log('val_epoch_acc', epoch_acc)
 

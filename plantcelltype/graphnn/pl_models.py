@@ -33,13 +33,17 @@ class NodesClassification(pl.LightningModule):
         logger = {} if logger is None else logger
         self.log_points = logger.get('log_points', False)
 
-
-        reference_metric, reference_mode, reference_default = 'accuracy_micro', 'max', 0
-        reference_metric, loss_mode, loss_default = 'loss', 'min', 1e16
+        self.reference_metric, reference_mode, reference_default = 'accuracy_micro', 'max', 0
         self.saved_metrics = {'val': {'loss': {'value': 1e16, 'step': 0, 'mode': 'min'},
-                                      'acc': {'value': 0, 'step': 0, 'mode': 'max'}},
+                                      self.reference_metric: {'value': reference_default,
+                                                              'step': 0,
+                                                              'mode': reference_mode},
+                                      'results': [],
+                                      'results_last': []},
                               'train': {'loss': {'value': 1e16, 'step': 0, 'mode': 'min'},
-                                        'acc': {'value': 0, 'step': 0, 'mode': 'max'}}
+                                        self.reference_metric: {'value': reference_default,
+                                                                'step': 0,
+                                                                'mode': reference_mode}}
                               }
 
         out_class = model['kwargs']['out_features']
@@ -55,7 +59,7 @@ class NodesClassification(pl.LightningModule):
                            'recall_class': Recall(num_classes=out_class, average=None),
                            'f1_micro': F1(average='micro'),
                            'f1_class': F1(num_classes=out_class, average=None),
-                           'confusion_matrix': ConfusionMatrix(num_classes=out_class)
+                           # 'confusion_matrix': ConfusionMatrix(num_classes=out_class)
                            }
         self.save_hyperparameters()
 
@@ -83,9 +87,6 @@ class NodesClassification(pl.LightningModule):
         self.log('train_loss', loss)
         self.log('train_global_acc', glob_acc)
         self.log('train_class_acc', class_acc)
-
-        self._save_metrics(loss.item(), 'train', 'loss')
-        self._save_metrics(glob_acc.item(), 'train', 'acc')
         return loss
 
     def validation_step(self, val_batch, batch_idx):
@@ -109,26 +110,21 @@ class NodesClassification(pl.LightningModule):
         return full_metrics, val_batch.file_path, val_batch.stage, val_batch.stack
 
     def validation_epoch_end(self, outputs):
-        reference_metric = 'accuracy_micro'
-        reference_acc = 0
-        reference_mode = 'max'
+        epoch_acc = [val_sample[0][self.reference_metric] for val_sample in outputs]
+        epoch_acc = sum(epoch_acc) / len(outputs)
+        mode = self.saved_metrics['val'][self.reference_metric]['mode']
+        check = self.saved_metrics['val'][self.reference_metric]['value'] - epoch_acc
+        keys = ['results', 'file_path', 'stage', 'stack']
+        results = []
         for val_sample in outputs:
-            metrics = val_sample[0]
-            reference_acc += metrics['accuracy_micro']
-        reference_acc /= len(outputs)
-
-        pass
-
-    def _save_metrics(self, value, phase, metric, pred_tensor=None, y_tensor=None):
-        check = self.saved_metrics[phase][metric]['value'] - value
-        mode = self.saved_metrics[phase][metric]['mode']
+            _results = {key: value for key, value in zip(keys, val_sample)}
+            _results.get('step', self.global_step)
+            results.append(_results)
 
         if (mode == 'min' and check > 0) or (mode == 'max' and check < 0):
-            self.saved_metrics[phase][metric]['value'] = value
-            self.saved_metrics[phase][metric]['step'] = self.global_step
-            if pred_tensor is not None and y_tensor is not None:
-                results = self.compute_metrics(pred_tensor.cpu(), y_tensor.cpu())
-                self.saved_metrics[phase][metric]['advanced'] = results
+            self.saved_metrics['val']['results'] = results
+        self.saved_metrics['val']['results_last'] = results
+        self.log('val_epoch_acc', epoch_acc)
 
     def compute_metrics(self, pred, target):
         results = {}
@@ -137,10 +133,13 @@ class NodesClassification(pl.LightningModule):
             results[key] = value
             if value.ndim == 0:
                 value = value.item()
+
             elif value.ndim == 1:
                 value = [v.item() for v in value]
+
             elif value.ndim == 2:
                 value = [[v1.item() for v1 in v2] for v2 in value]
+
             else:
                 raise NotImplementedError
 

@@ -2,8 +2,11 @@ import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 import os
 import yaml
+import itertools
+import copy
 from plantcelltype.graphnn.data_loader import build_geometric_loaders, get_n_splits
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
+from plantcelltype.utils.utils import print_config
 
 pl.seed_everything(42, workers=True)
 
@@ -63,7 +66,7 @@ def simple_train(config):
     return checkpoint_path
 
 
-def cross_validation_train(config):
+def setup_cross_validation(config):
     data_location = config['loader']['path']
     list_path = f'{data_location}/list_data.csv'
     split = config['cross_validation'].get('split', 5)
@@ -71,16 +74,51 @@ def cross_validation_train(config):
     splits = get_n_splits(data_location, list_path, number_split=split, seed=seed)
 
     config['loader']['mode'] = 'split'
+    return config, splits
+
+
+def cross_validation_train(config):
+    config, splits = setup_cross_validation(config)
     run_name = config['logs']['name']
-    run_check_points = []
     for key, split in splits.items():
         config['logs']['name'] = f'{run_name}_split{key}'
         config['loader']['path'] = split
-        run_check_points.append(simple_train(config))
-        exit()
+        config['split_id'] = key
+        simple_train(config)
+
+
+def update_nested_dict(base, key, value):
+    keys = key.split('/')
+    key0, _key = keys[0], '/'.join(keys[1:])
+    if len(keys) == 1:
+        base.update({key0: value})
+    else:
+        if key0 not in base:
+            base.update({key0: {}})
+        up_config = update_nested_dict(base[key0], '/'.join(keys[1:]), value)
+        base.update({key0: up_config})
+    return base
+
+
+def grid_search_train(config, kwargs):
+    all_config = []
+    for new_params in itertools.product(*kwargs.values()):
+        _config = copy.deepcopy(config)
+        new_name = _config['logs']['name']
+
+        for value, key in zip(new_params, kwargs.keys()):
+            _config = update_nested_dict(_config, key, value)
+            key_final = key.split('/')[-1]
+            new_name += f'_{key_final}:{value}'
+        _config['logs']['name'] = new_name
+        all_config.append(_config)
+
+    for _config in all_config:
+        train(_config)
 
 
 def train(config):
+    print_config(config)
     if 'cross_validation' in config:
         cross_validation_train(config)
     else:

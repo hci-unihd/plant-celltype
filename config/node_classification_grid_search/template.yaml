@@ -6,12 +6,12 @@ cross_validation:
   split: 5
 
 logs:
-  save_dir: !join [*home_path, /results/plant-ct-logs/baseline/]
+  save_dir: !join [*home_path, /results/plant-ct-logs/grid_search/]
 
 trainer:
   gpus: 1
   # max_steps: 15000
-  max_epochs: 5
+  max_epochs: 2
 
 loader:
   path: !join [*home_path, /data/ovules/ovules-celltype-processed/]

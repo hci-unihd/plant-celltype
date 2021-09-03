@@ -233,6 +233,7 @@ def build_geometric_loaders(path,
                             test_ratio=0.33,
                             seed=0,
                             batch=1,
+                            test_batch=None,
                             mode='stage_random',
                             load_edge_attr=False,
                             as_line_graph=False):
@@ -244,9 +245,9 @@ def build_geometric_loaders(path,
         files_test, files_train = path['test'], path['train']
     else:
         raise NotImplemented
-
+    test_batch = batch if test_batch is None else test_batch
     loader_test = create_loaders(files_test,
-                                 batch_size=batch,
+                                 batch_size=test_batch,
                                  load_edge_attr=load_edge_attr,
                                  as_line_graph=as_line_graph,
                                  shuffle=False)

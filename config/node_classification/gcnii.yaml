@@ -6,6 +6,9 @@ logs:
   name: !join [*model_name, _base]
 
 module:
+  optimizer:
+    lr: 1e-3
+
   model:
     name: *model_name
     kwargs:

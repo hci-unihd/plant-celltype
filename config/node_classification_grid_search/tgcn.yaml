@@ -1,0 +1,22 @@
+_internal_variables:
+  template: !update 'config/node_classification_grid_search/template.yaml'
+  model_name: &model_name 'TransformerGCN2'
+
+logs:
+  name: !join [*model_name, _base]
+
+module:
+  model:
+    name: *model_name
+    kwargs:
+      hidden_feat: 128
+
+grid_search:
+  module/optimizer/lr: [ 1e-2, 1e-3, 1e-4 ]
+  module/optimizer/wd: [ 0, 1e-5 ]
+  module/model/kwargs/hidden_feat: [ 32, 64, 128, 256 ]
+  module/model/kwargs/layer1_kwargs/heads: [ 1, 3, 5 ]
+  module/model/kwargs/layer1_kwargs/concat: [ true, false ]
+  module/model/kwargs/layer1_kwargs/batch_norm: [ true, false ]
+  module/model/kwargs/layer1_kwargs/drop_out: [ 0., 0.5 ]
+  loader/batch: [ 1, 5 ]

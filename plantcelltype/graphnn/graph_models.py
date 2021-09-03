@@ -10,11 +10,16 @@ from egmodels import tg_dispatch
 
 
 class DeeperGCN(torch.nn.Module):
-    def __init__(self, in_features, out_features, hidden_feat, num_layers, in_edges=None):
+    def __init__(self, in_features, out_features,
+                 hidden_feat,
+                 num_layers,
+                 in_edges=None,
+                 dropout=0.1):
         super(DeeperGCN, self).__init__()
 
         self.node_encoder = Linear(in_features, hidden_feat)
         self.edge_encoder = Linear(in_edges, hidden_feat)
+        self.dropout = dropout
 
         self.layers = torch.nn.ModuleList()
         for i in range(1, num_layers + 1):
@@ -40,7 +45,7 @@ class DeeperGCN(torch.nn.Module):
             x = layer(x, edge_index, edge_attr)
 
         x = self.layers[0].act(self.layers[0].norm(x))
-        x = F.dropout(x, p=0.1, training=self.training)
+        x = F.dropout(x, p=self.dropout, training=self.training)
 
         return self.lin(x)
 

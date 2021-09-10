@@ -1,6 +1,6 @@
 import numpy as np
 
-from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface
+from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface, compute_cell_average_edt
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
 from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca
 from plantcelltype.features.cell_vector_features import compute_length_along_axis
@@ -124,13 +124,24 @@ def build_degree_centrality(stack, feat_name='degree_centrality', group='cell_fe
     return stack
 
 
+def build_average_cell_edt(stack, label=0, feat_name='edt_um', group='cell_features'):
+    edt_um = compute_cell_average_edt(stack['cell_ids'],
+                                      stack['segmentation'],
+                                      voxel_size=stack['attributes']['element_size_um'],
+                                      label=label)
+    stack[group][feat_name] = edt_um
+    return stack
+
+
 def build_basic_cell_features(stack, group='cell_features'):
     stack[group] = {}
     feat_to_compute = [build_cell_com,
                        build_hops_to_bg,
                        build_volume,
                        build_surface,
-                       build_rw_centrality]
+                       build_rw_centrality,
+                       build_degree_centrality,
+                       build_average_cell_edt]
     for feat in feat_to_compute:
         stack = feat(stack)
     return stack

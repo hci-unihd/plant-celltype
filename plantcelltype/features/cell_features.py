@@ -4,6 +4,10 @@ from networkx.algorithms.centrality import degree_centrality, betweenness_centra
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import shortest_path
 from sklearn.decomposition import PCA
+from scipy.ndimage import distance_transform_edt
+from numba import njit
+from numba import types
+from numba.typed import Dict
 
 from plantcelltype.features.rag import build_nx_graph
 from plantcelltype.features.sampling import farthest_points_sampling
@@ -60,6 +64,38 @@ def compute_sphericity(cell_volume, cell_surface):
     sphericity = np.pi ** (1/3) * (6 * cell_volume) ** (2 / 3)
     sphericity /= cell_surface
     return sphericity
+
+
+@njit()
+def _cell_average_edt(label_image, dt_image, label_ids):
+    shape = label_image.shape
+    cell_mapping = Dict.empty(key_type=types.int64, value_type=types.int64)
+
+    for i, _ids in enumerate(label_ids):
+        cell_mapping[_ids] = i
+
+    edt_vector = np.zeros((label_ids.shape[0]))
+    counts_vector = np.zeros((label_ids.shape[0]))
+
+    for i in range(0, shape[0]):
+        for j in range(0, shape[1]):
+            for k in range(0, shape[2]):
+                _label = label_image[i, j, k]
+                if _label != 0:
+                    _ids = cell_mapping[_label]
+                    edt_vector[_ids] += dt_image[i, j, k]
+                    counts_vector[_ids] += 1
+
+    for i, _ids in enumerate(label_ids):
+        edt_vector[i] /= counts_vector[i]
+
+    return edt_vector
+
+
+def compute_cell_average_edt(cell_ids, segmentation, voxel_size=(1, 1, 1), label=0):
+    mask = segmentation != label
+    dt_mask = distance_transform_edt(mask, sampling=voxel_size)
+    return _cell_average_edt(segmentation, dt_mask, cell_ids)
 
 
 def compute_generic_centrality(cell_ids, edges_ids, centrality='degree', cell_com=None, args=()):

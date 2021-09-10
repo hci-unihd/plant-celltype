@@ -6,6 +6,7 @@ import h5py
 import numpy as np
 import tifffile
 import yaml
+from scipy.ndimage import zoom
 
 from plantcelltype.utils.axis_transforms import AxisTransformer
 
@@ -146,9 +147,25 @@ def export_full_stack(path, stack):
             create_h5(path, value, key=key, voxel_size=voxel_size)
 
 
-def import_segmentation(segmentation_path, extra_attr=None, key='segmentation'):
+def compute_scaling_factor(input_voxel_size, output_voxel_size):
+    scaling = [i_size/o_size for i_size, o_size in zip(input_voxel_size, output_voxel_size)]
+    return scaling
+
+
+def scale_image(image, input_voxel_size, output_voxel_size, order=0):
+    scaling = compute_scaling_factor(input_voxel_size, output_voxel_size)
+    return zoom(image, scaling, order=order)
+
+
+def import_segmentation(segmentation_path, extra_attr=None, out_voxel_size=None, key='segmentation'):
     segmentation, voxel_size = smart_load(segmentation_path, key=key)
-    attributes = {'element_size_um': voxel_size}
+    if out_voxel_size is not None:
+        segmentation = scale_image(segmentation, voxel_size, out_voxel_size)
+    else:
+        out_voxel_size = voxel_size
+
+    attributes = {'element_size_um': out_voxel_size, 'original_element_size_um': voxel_size}
+
     if extra_attr is not None:
         attributes.update(extra_attr)
 

@@ -17,6 +17,15 @@ from plantcelltype.utils import open_full_stack
 from plantcelltype.utils.utils import filter_bg_from_edges
 
 gt_mapping_wb = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 10: 8, 14: 3}
+gt_mapping_label = {0: 'ab oi/oi2 / L1',
+                    1: 'ad oi/oi1 / L2',
+                    2: 'ab ii/ii2 / L3',
+                    3: 'ad ii/ii1 / L4',
+                    4: 'nu',
+                    5: 'pc',
+                    6: 'fu / Funiculus',
+                    7: 'es',
+                    8: 'ac'}
 
 
 def collect_edges_features(stack, axis_transform, as_array=True):
@@ -27,13 +36,13 @@ def collect_edges_features(stack, axis_transform, as_array=True):
     cell_com_grs = axis_transform.transform_coord(cell_features['com_voxels'])
     edges_com_grs = filter_bg_from_edges(stack['edges_ids'],
                                          axis_transform.transform_coord(edges_features['com_voxels']))
-    edges_suface_grs = filter_bg_from_edges(stack['edges_ids'],
-                                            axis_transform.scale_volumes(edges_features['surface_voxels']))
+    edges_surface_grs = filter_bg_from_edges(stack['edges_ids'],
+                                             axis_transform.scale_volumes(edges_features['surface_voxels']))
     edges_com_dist_grs = filter_bg_from_edges(stack['edges_ids'],
                                               edges_features['com_distance_um'])
 
     list_feat = [quantile_zscore(edges_com_grs),
-                 quantile_zscore(edges_suface_grs),
+                 quantile_zscore(edges_surface_grs),
                  quantile_zscore(edges_com_dist_grs)]
 
     edges_ids = rectify_rag_names(stack['cell_ids'], stack['edges_ids'])

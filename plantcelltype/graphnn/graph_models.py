@@ -82,4 +82,3 @@ class GCNII(torch.nn.Module):
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.lins[1](x)
         return x
-

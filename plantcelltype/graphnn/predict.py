@@ -1,23 +1,40 @@
-from plantcelltype.graphnn.data_loader import get_random_split
-from plantcelltype.graphnn.pl_models import EdgesClassification
+from plantcelltype.graphnn.data_loader import create_loaders
+from plantcelltype.graphnn.trainer import get_model
+from plantcelltype.utils.io import load_yaml
 from plantcelltype.utils import create_h5
+import glob
+import torch
 
-files_path = "/home/lcerrone/PycharmProjects/plant-celltype/data/ovules-celltype-processed/**/*.h5"
-check_point_path = "/home/lcerrone/PycharmProjects/plant-celltype/plantcelltype/graphnn/lightning_logs/version_56/checkpoints/epoch=8-step=512.ckpt"
-test_loader, _ = get_random_split(files_path)
-"""
-model = GraphClassification(model_name='GCN3',
-                            model_kwargs={'in_features': 13, 'out_features': 10, 'hidden_feat': [256, 256]})
-trainer = pl.Trainer(gpus=1)
-trainer.fit(model, train_loader, test_loader)
-"""
-#model = EdgesClassification(model_name='ETGCN2',
-#                            model_kwargs={'in_features': 13, 'out_features': 2, 'hidden_feat': 256})
-model = EdgesClassification.load_from_checkpoint(check_point_path,
-                                                 model_name='ETGCN2',
-                                                 model_kwargs={'in_features': 13, 'out_features': 1, 'hidden_feat': 256})
+
+def build_test_loader(config, glob_paths=True):
+    if glob_paths:
+        config['files_list'] = glob.glob(config['files_list'])
+    return create_loaders(**config)
+
+
+config_path = "/home/lcerrone/PycharmProjects/plant-celltype/config/node_predictions/depp_gcn.yaml"
+predict_config = load_yaml(config_path=config_path)
+check_point = predict_config['checkpoint']
+check_point_config = f'{check_point}/config.yaml'
+check_point_weights = f'{check_point}/checkpoints/*ckpt'
+check_point_weights = glob.glob(check_point_weights)[0]
+model_config = load_yaml(check_point_config)
+
+
+test_loader = build_test_loader(predict_config['loader'])
+model = get_model(model_config)
+model = model.load_from_checkpoint(check_point_weights)
+
 for data in test_loader:
-    pred, _ = model.forward(data)
-    logit = pred.out.cpu().data.numpy()
-    print(data.file_path)
-    create_h5(data.file_path[0], logit, key='edges_predictions', voxel_size=None)
+    data, _ = model.forward(data)
+    logits = torch.log_softmax(data.out, 1)
+    pred = logits.max(1)[1]
+
+    print(data.file_path[0])
+    create_h5(data.file_path[0],
+              pred.cpu().data.numpy(),
+              key='cell_predictions', voxel_size=None)
+
+    create_h5(data.file_path[0],
+              data.out.cpu().data.numpy(),
+              key='cell_net_out', voxel_size=None)

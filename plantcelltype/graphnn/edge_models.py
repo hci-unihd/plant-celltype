@@ -83,4 +83,3 @@ class LineTGCN2(torch.nn.Module):
         line_x, line_edges_index = to_line_graph(x, edge_index, node_feat_mixing='cat')
         x = self.lt_gcn1(line_x, line_edges_index)
         return x
-

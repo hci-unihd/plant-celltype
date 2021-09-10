@@ -246,12 +246,13 @@ def load_yaml(config_path):
     with open(config_path, 'r') as f:
         config = yaml.full_load(f)
 
-    if 'template' in config['_internal_variables']:
+    if '_internal_variables' in config and 'template' in config['_internal_variables']:
         template_config = config['_internal_variables']['template']
         del template_config['_internal_variables']
         del config['_internal_variables']
         config = _update(template_config, config)
     else:
-        del config['_internal_variables']
+        if '_internal_variables' in config:
+            del config['_internal_variables']
 
     return config

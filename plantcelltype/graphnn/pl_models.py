@@ -99,7 +99,7 @@ class NodesClassification(pl.LightningModule):
         full_metrics = self.compute_metrics(pred.cpu(), val_batch.y.cpu())
 
         if self.log_points:
-            self._log_points(val_batch.pos, pred, pred, batch_idx)
+            self._log_points(val_batch.pos, pred, batch_idx)
 
         self.log('val_loss', loss)
         self.log('val_global_acc', full_metrics['accuracy_micro'])
@@ -149,7 +149,7 @@ class NodesClassification(pl.LightningModule):
         results['step'] = self.global_step
         return results
 
-    def _log_points(self, pos, pred, cor_pred, batch_idx):
+    def _log_points(self, pos, cor_pred, batch_idx):
         tensorboard = self.logger.experiment
         pos = torch.unsqueeze(pos, 0)
 

@@ -3,7 +3,7 @@ _internal_variables:
   model_name: &model_name 'GAT2'
 
 logs:
-  name: !join [*model_name, v2_base]
+  name: *model_name
 
 module:
   model:

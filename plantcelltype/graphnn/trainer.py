@@ -8,8 +8,6 @@ from plantcelltype.graphnn.data_loader import build_geometric_loaders, get_n_spl
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
 from plantcelltype.utils.utils import print_config
 
-pl.seed_everything(42, workers=True)
-
 
 def add_home_path(path):
     home_dir = os.path.expanduser('~')
@@ -43,6 +41,7 @@ def get_logger(config):
 
 
 def simple_train(config):
+    pl.seed_everything(42, workers=True)
     test_loader, train_loader, config = get_loaders(config)
     model = get_model(config)
     config = get_logger(config)

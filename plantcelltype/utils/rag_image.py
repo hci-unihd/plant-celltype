@@ -20,16 +20,63 @@ def get_neighborhood_structure(x=(1, 1, 1)):
 
 
 @njit(parallel=True)
-def _create_rag_boundary_image(segmentation, structure, min_counts=0):
-    
+def __create_rag_boundary_image(segmentation, structure, min_counts=0):
     shape = segmentation.shape
     out_edges = np.zeros((shape[0], shape[1], shape[2]), dtype='int64')
-    label_dict = Dict.empty(key_type=types.int64, value_type=types.int64,)
+    struct_label_array = np.zeros(structure.shape[0])
 
     for i in prange(1, shape[0] - 1):
         for j in prange(1, shape[1] - 1):
             for k in prange(1, shape[2] - 1):
                 _s, is_full = 0, False
+                for s_id, s in enumerate(structure):
+                    si = s[0] + i
+                    sj = s[1] + j
+                    sk = s[2] + k
+
+                    s_ijk = segmentation[i, j, k]
+                    ss_ijk = segmentation[si, sj, sk]
+
+                    if s_ijk != ss_ijk:
+                        label = cantor_sym_pair(s_ijk, ss_ijk)
+                        is_full = True
+                    else:
+                        label = 0
+
+                    struct_label_array[s_id] = label
+
+                if is_full:
+                    final_label, count = 0, 0
+                    for label in struct_label_array:
+                        temp_cont = 0
+                        if label == final_label:
+                            break
+
+                        for test_label in struct_label_array:
+                            if test_label == label:
+                                temp_cont += 1
+
+                        if temp_cont > count:
+                            count = temp_cont
+                            final_label = label
+
+                    if count > min_counts:
+                        out_edges[i, j, k] = final_label
+
+    return out_edges
+
+
+@njit(parallel=True)
+def _create_rag_boundary_image(segmentation, structure, min_counts=0):
+    
+    shape = segmentation.shape
+    out_edges = np.zeros((shape[0], shape[1], shape[2]), dtype='int64')
+    label_dict = Dict.empty(key_type=types.int64, value_type=types.int64, )
+
+    for i in prange(1, shape[0] - 1):
+        for j in prange(1, shape[1] - 1):
+            for k in prange(1, shape[2] - 1):
+                is_full = False
                 for s in structure:
                     si = s[0] + i
                     sj = s[1] + j
@@ -41,28 +88,18 @@ def _create_rag_boundary_image(segmentation, structure, min_counts=0):
                     if s_ijk != ss_ijk:
                         if not is_full:
                             label_dict = Dict.empty(key_type=types.int64, value_type=types.int64,)
+                            is_full = True
                             
                         label = cantor_sym_pair(s_ijk, ss_ijk)
-                        for _key, _value in label_dict.items():
-                            if 0 < label == _key:
-                                label_dict[label] += 1
-                                break
-                        else:
-                            label_dict[label] = 0
-                        
-                        is_full = True
-                    _s += 1
+                        label_dict[label] = label_dict.get(label, 1) + 1
                     
                 if is_full and len(label_dict) > min_counts:
-                    max_count = 0
-                    edge_label = 0
+                    max_count, edge_label = 0, 0
                     for _key, _value in label_dict.items():
                         if _value > max_count:
-                            edge_label = _key
-                            max_count = _value
+                            edge_label, max_count = _key, _value
                             
                     out_edges[i, j, k] = edge_label
-                
     return out_edges
 
 

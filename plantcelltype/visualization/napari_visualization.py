@@ -7,10 +7,14 @@ from plantcelltype.graphnn.data_loader import gt_mapping_wb
 
 def visualize_all_cell_features(stack):
     viewer = napari.Viewer()
-    viewer.add_labels(stack['segmentation'], name='segmentation')
+    viewer.add_labels(stack['segmentation'],
+                      name='segmentation',
+                      scale=stack['attributes']['element_size_um'])
 
     if 'labels' in stack:
-        viewer.add_labels(stack['labels'], name='labels')
+        viewer.add_labels(stack['labels'],
+                          name='labels',
+                          scale=stack['attributes']['element_size_um'])
 
     if 'cell_predictions' in stack:
         cell_labels = stack['cell_labels']
@@ -22,9 +26,11 @@ def visualize_all_cell_features(stack):
         feat = map_cell_features2segmentation(stack['segmentation'], stack['cell_ids'], cell_predictions)
         labels_2 = map_cell_features2segmentation(stack['segmentation'], stack['cell_ids'], cell_labels)
 
-        viewer.add_labels(labels_2, name='labels_t')
-        viewer.add_labels(feat.astype('uint16'), name='predictions')
-        viewer.add_labels(np.where(feat.astype('uint16') != labels_2, 19, 0), name='difference')
+        viewer.add_labels(labels_2, name='labels_t', scale=stack['attributes']['element_size_um'])
+        viewer.add_labels(feat.astype('uint16'), name='predictions', scale=stack['attributes']['element_size_um'])
+        viewer.add_labels(np.where(feat.astype('uint16') != labels_2, 19, 0),
+                          name='difference',
+                          scale=stack['attributes']['element_size_um'])
 
     print("cell features:")
     if 'cell_features' in stack:
@@ -33,7 +39,11 @@ def visualize_all_cell_features(stack):
                 print(key, value.shape, value.dtype)
                 if value.ndim == 1:
                     feat = map_cell_features2segmentation(stack['segmentation'], stack['cell_ids'], value)
-                    viewer.add_image(feat, name=key, colormap='inferno', visible=False)
+                    viewer.add_image(feat,
+                                     name=key,
+                                     colormap='inferno',
+                                     visible=False,
+                                     scale=stack['attributes']['element_size_um'])
 
 
 def visualize_all_edges_features(stack):

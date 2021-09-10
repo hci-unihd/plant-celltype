@@ -9,7 +9,7 @@ from numba import njit
 from numba import types
 from numba.typed import Dict
 
-from plantcelltype.features.rag import build_nx_graph
+from plantcelltype.features.rag import build_nx_graph, remove_bg_from_edges_ids
 from plantcelltype.features.sampling import farthest_points_sampling
 from plantcelltype.features.utils import label2com, make_seg_hollow, check_valid_idx
 
@@ -23,7 +23,10 @@ def seg2com(segmentation, cell_ids):
     return label2com(segmentation, cell_ids)
 
 
-def shortest_distance_to_label(cell_ids, edges_ids, label=0):
+def shortest_distance_to_label(cell_ids, edges_ids, label=0, not_bg=False):
+    if not_bg:
+        edges_ids = remove_bg_from_edges_ids(edges_ids)
+
     adj = csr_matrix((np.ones(edges_ids.shape[0]),
                       (edges_ids[:, 0], edges_ids[:, 1])),
                      shape=(cell_ids.max() + 1, cell_ids.max() + 1))

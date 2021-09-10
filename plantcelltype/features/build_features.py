@@ -147,6 +147,26 @@ def build_basic_cell_features(stack, group='cell_features'):
     return stack
 
 
+# propose es
+def build_es_proposal(stack, feat_name=('hops_to_es', 'edt_es_um'), group='cell_features'):
+    es_index = np.argmax(stack['cell_features']['volume_voxels'])
+    es_label = stack['cell_ids'][es_index]
+    sd = shortest_distance_to_label(stack['cell_ids'],
+                                    stack['edges_ids'],
+                                    label=es_label,
+                                    not_bg=True)
+    #edt = compute_cell_average_edt(stack['cell_ids'],
+    #                               stack['segmentation'],
+    #                               voxel_size=stack['attributes']['element_size_um'],
+    #                               label=es_label)
+    stack[group][feat_name[0]] = sd
+    #stack[group][feat_name[1]] = edt
+    stack['attributes']['es_index'] = es_index
+    stack['attributes']['es_label'] = es_label
+    stack['attributes']['es_com_voxels'] = stack['cell_features']['com_voxels'][es_index]
+    return stack
+
+
 # edges features
 def build_edges_com_surface(stack, feat_name=('com_voxels', 'surface_voxels'), group='edges_features'):
     rag, edges_ids = rag_from_seg(stack['segmentation'])
@@ -233,9 +253,15 @@ def build_cell_points_samples(stack, n_points=500, group='cell_samples'):
     return stack
 
 
-def build_edges_points_samples(stack, n_points=50, group='edges_samples'):
+def build_edges_points_samples(stack, n_points=50, recompute_rag=True, group='edges_samples'):
     stack[group] = {}
-    rag_image_ct1 = create_rag_boundary_from_seg(stack['segmentation'], stack['edges_ids'], min_counts=1)
+    if recompute_rag:
+        rag_image_ct1 = create_rag_boundary_from_seg(stack['segmentation'],
+                                                     stack['edges_ids'],
+                                                     min_counts=1)
+    else:
+        rag_image_ct1 = stack['rag_boundaries']
+
     cantor_ids = np.array([cantor_sym_pair(e1, e2) for e1, e2 in stack['edges_ids']])
     edge_sampling = random_points_samples(rag_image_ct1, cantor_ids, n_points=n_points)
     stack[group]['random_samples'] = edge_sampling

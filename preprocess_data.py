@@ -1,10 +1,12 @@
 import glob
 import os
+import time
 
 from plantcelltype.utils.io import import_segmentation
 from plantcelltype.utils.axis_transforms import AxisTransformer
 from plantcelltype.utils import export_full_stack
-from plantcelltype.features.build_features import build_basic_cell_features, build_basic
+from plantcelltype.features.build_features import build_basic_cell_features, build_basic, build_es_proposal
+from plantcelltype.features.build_features import build_cell_points_samples, build_edges_points_samples
 
 
 train_data_voxels_size = [0.25, 0.2, 0.2]
@@ -15,17 +17,24 @@ files = glob.glob(f'{raw_data_location}')
 
 
 for i, file in enumerate(files):
+    timer = time.time()
     print(f'{i}/{len(files)} - processing: {file} ')
+
     base, stack_name = os.path.split(file)
     stack_name, _ = os.path.splitext(stack_name)
     export_location = base if export_location is None else export_location
     assert os.path.isdir(export_location)
     out_file = os.path.join(export_location, f'{stack_name}_ct.h5')
+
     stack = import_segmentation(file, key=default_seg_key)
     at = AxisTransformer()
     stack = build_basic(stack)
     stack = build_basic_cell_features(stack)
+    stack = build_es_proposal(stack)
+    stack = build_cell_points_samples(stack)
+    stack = build_edges_points_samples(stack)
 
     # export processed files
     export_full_stack(out_file, stack)
+    print(time.time() - timer)
     break

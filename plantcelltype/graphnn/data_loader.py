@@ -135,8 +135,8 @@ def create_data(file, load_edge_attr=False, as_line_graph=False):
     edges_labels = filter_bg_from_edges(stack['edges_ids'], edges_labels)
     edges_labels = torch.from_numpy(edges_labels.astype('int64')).long()
 
-    stage = stack['attributes']['stage']
-    stack_name = stack['attributes']['stack']
+    stage = stack['attributes'].get('stage', 'unknown')
+    stack_name = stack['attributes'].get('stack', 'unknown')
     pos = torch.from_numpy(stack['cell_features']['com_voxels'])
 
     if as_line_graph:

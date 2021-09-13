@@ -7,8 +7,7 @@ from plantcelltype.features.cell_vector_features import compute_length_along_axi
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis1
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis2_pair
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis3
-from plantcelltype.features.edges_features import compute_edges_labels
-from plantcelltype.features.edges_features import compute_edges_length
+from plantcelltype.features.edges_features import compute_edges_labels, compute_edges_length
 from plantcelltype.features.edges_vector_features import compute_edges_planes
 from plantcelltype.features.rag import rag_from_seg, get_edges_com_voxels
 from plantcelltype.features.sampling import random_points_samples
@@ -91,7 +90,7 @@ def build_cell_com(stack, feat_name='com_voxels', group='cell_features'):
 
 def build_hops_to_bg(stack, feat_name='hops_to_bg', group='cell_features'):
     hops_to_bg = shortest_distance_to_label(stack['cell_ids'], stack['edges_ids'])
-    hops_to_bg = hops_to_bg.astype('int64')
+    hops_to_bg = hops_to_bg.astype('int32')
     stack[group][feat_name] = hops_to_bg
     return stack
 
@@ -129,7 +128,7 @@ def build_average_cell_edt(stack, label=0, feat_name='edt_um', group='cell_featu
                                       stack['segmentation'],
                                       voxel_size=stack['attributes']['element_size_um'],
                                       label=label)
-    stack[group][feat_name] = edt_um
+    stack[group][feat_name] = edt_um.astype('float32')
     return stack
 
 
@@ -148,22 +147,30 @@ def build_basic_cell_features(stack, group='cell_features'):
 
 
 # propose es
-def build_es_proposal(stack, feat_name=('hops_to_es', 'edt_es_um'), group='cell_features'):
+def build_es_proposal(stack):
     es_index = np.argmax(stack['cell_features']['volume_voxels'])
     es_label = stack['cell_ids'][es_index]
+
+    stack['attributes']['es_index'] = [es_index]
+    stack['attributes']['es_label'] = [es_label]
+    stack['attributes']['es_com_voxels'] = [stack['cell_features']['com_voxels'][es_index].tolist()]
+    return stack
+
+
+def build_es_features(stack, compute_etd=False, feat_name=('hops_to_es', 'edt_es_um'), group='cell_features'):
+    es_label = stack['attributes']['es_label']
     sd = shortest_distance_to_label(stack['cell_ids'],
                                     stack['edges_ids'],
                                     label=es_label,
                                     not_bg=True)
-    #edt = compute_cell_average_edt(stack['cell_ids'],
-    #                               stack['segmentation'],
-    #                               voxel_size=stack['attributes']['element_size_um'],
-    #                               label=es_label)
-    stack[group][feat_name[0]] = sd
-    #stack[group][feat_name[1]] = edt
-    stack['attributes']['es_index'] = es_index
-    stack['attributes']['es_label'] = es_label
-    stack['attributes']['es_com_voxels'] = stack['cell_features']['com_voxels'][es_index]
+    stack[group][feat_name[0]] = sd.astype('int32')
+
+    if compute_etd:
+        edt = compute_cell_average_edt(stack['cell_ids'],
+                                       stack['segmentation'],
+                                       voxel_size=stack['attributes']['element_size_um'],
+                                       label=es_label)
+        stack[group][feat_name[1]] = edt.astype('float32')
     return stack
 
 
@@ -217,7 +224,7 @@ def build_edges_planes(stack, axis_transform):
                                         edges_com_grs,
                                         origin)
 
-    stack["edges_features"]["plane_vectors_grs"] = edges_planes
+    stack["edges_features"]["plane_vectors_grs"] = edges_planes.astype('float32')
     return stack
 
 
@@ -238,9 +245,9 @@ def build_lrs(stack, axis_transformer, group='cell_features'):
 
     lr_axis_3 = compute_local_reference_axis3(lr_axis_1, lr_axis_2)
 
-    stack[group]['lr_axis1_grs'] = lr_axis_1
-    stack[group]['lr_axis2_grs'] = lr_axis_2
-    stack[group]['lr_axis3_grs'] = lr_axis_3
+    stack[group]['lr_axis1_grs'] = lr_axis_1.astype('float32')
+    stack[group]['lr_axis2_grs'] = lr_axis_2.astype('float32')
+    stack[group]['lr_axis3_grs'] = lr_axis_3.astype('float32')
     return stack
 
 
@@ -253,7 +260,7 @@ def build_cell_points_samples(stack, n_points=500, group='cell_samples'):
     return stack
 
 
-def build_edges_points_samples(stack, n_points=50, recompute_rag=True, group='edges_samples'):
+def build_edges_points_samples(stack, n_points=50, recompute_rag=False, group='edges_samples'):
     stack[group] = {}
     if recompute_rag:
         rag_image_ct1 = create_rag_boundary_from_seg(stack['segmentation'],
@@ -274,11 +281,11 @@ def build_pca_features(stack, axis_transformer, group='cell_features'):
     samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples'])
     pca1, pca2, pca3, pca_v = compute_pca(samples_grs, origin_grs)
 
-    stack[group]['pca_axis1_grs'] = pca1
-    stack[group]['pca_axis2_grs'] = pca2
-    stack[group]['pca_axis3_grs'] = pca3
+    stack[group]['pca_axis1_grs'] = pca1.astype('float32')
+    stack[group]['pca_axis2_grs'] = pca2.astype('float32')
+    stack[group]['pca_axis3_grs'] = pca3.astype('float32')
 
-    stack[group]['pca_explained_variance_grs'] = pca_v
+    stack[group]['pca_explained_variance_grs'] = pca_v.astype('float32')
     return stack
 
 
@@ -294,7 +301,7 @@ def build_length_along_local_axis(stack, axis_transformer, group='cell_features'
                                              com_grs,
                                              samples_grs,
                                              origin=origin_grs)
-        stack[group][name_feat] = len_axis
+        stack[group][name_feat] = len_axis.astype('float32')
 
     return stack
 
@@ -304,13 +311,13 @@ def build_cell_dot_features(stack, at, group='cell_features'):
     global_axis = stack['attributes']['global_reference_system_axis']
     cell_com_grs = at.transform_coord(cell_features['com_voxels'])
 
-    stack[group]['com_proj_grs'] = cell_com_grs.dot(global_axis.T)
+    stack[group]['com_proj_grs'] = cell_com_grs.dot(global_axis.T).astype('float32')
 
-    stack[group]['lrs_proj_axis1_grs'] = cell_features['lr_axis1_grs'].dot(global_axis.T)
-    stack[group]['lrs_proj_axis2_grs'] = cell_features['lr_axis2_grs'].dot(global_axis.T)
-    stack[group]['lrs_proj_axis3_grs'] = cell_features['lr_axis3_grs'].dot(global_axis.T)
+    stack[group]['lrs_proj_axis1_grs'] = cell_features['lr_axis1_grs'].dot(global_axis.T).astype('float32')
+    stack[group]['lrs_proj_axis2_grs'] = cell_features['lr_axis2_grs'].dot(global_axis.T).astype('float32')
+    stack[group]['lrs_proj_axis3_grs'] = cell_features['lr_axis3_grs'].dot(global_axis.T).astype('float32')
 
-    stack[group]['pca_proj_axis1_grs'] = cell_features['pca_axis1_grs'].dot(global_axis.T)
-    stack[group]['pca_proj_axis2_grs'] = cell_features['pca_axis2_grs'].dot(global_axis.T)
-    stack[group]['pca_proj_axis3_grs'] = cell_features['pca_axis3_grs'].dot(global_axis.T)
+    stack[group]['pca_proj_axis1_grs'] = cell_features['pca_axis1_grs'].dot(global_axis.T).astype('float32')
+    stack[group]['pca_proj_axis2_grs'] = cell_features['pca_axis2_grs'].dot(global_axis.T).astype('float32')
+    stack[group]['pca_proj_axis3_grs'] = cell_features['pca_axis3_grs'].dot(global_axis.T).astype('float32')
     return stack

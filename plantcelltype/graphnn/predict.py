@@ -32,7 +32,7 @@ for data in test_loader:
 
     print(data.file_path[0])
     create_h5(data.file_path[0],
-              pred.cpu().data.numpy(),
+              pred.cpu().data.numpy().astype('int32'),
               key='cell_predictions', voxel_size=None)
 
     create_h5(data.file_path[0],

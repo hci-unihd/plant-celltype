@@ -10,8 +10,9 @@ from plantcelltype.features.build_features import build_cell_points_samples
 
 
 train_data_voxels_size = [0.25, 0.2, 0.2]
-raw_data_location = "/home/lcerrone/Downloads/tejasvinee/predictions_segmentations/*segmentation.tif"
-export_location = "/home/lcerrone/Downloads/"
+raw_data_location = "/home/lcerrone/data/ovules/ovules-celltype/late_cropped_ds3/**/*.h5"
+export_location = "/home/lcerrone/data/ovules/ovules-celltype-new/"
+os.makedirs(export_location, exist_ok=True)
 default_seg_key = "segmentation"
 files = glob.glob(f'{raw_data_location}')
 
@@ -21,6 +22,9 @@ for i, file in enumerate(files):
     progress = f'{i}/{len(files)}'
     print(f'{progress} - processing: {file}')
 
+    csv_path = file.replace('.h5', '_annotations.csv')
+    csv_path = csv_path if os.path.isfile(csv_path) else None
+
     base, stack_name = os.path.split(file)
     stack_name, _ = os.path.splitext(stack_name)
     export_location = base if export_location is None else export_location
@@ -29,7 +33,7 @@ for i, file in enumerate(files):
 
     stack = import_segmentation(file, key=default_seg_key, out_voxel_size=train_data_voxels_size)
     at = AxisTransformer()
-    stack = build_basic(stack)
+    stack = build_basic(stack, csv_path=csv_path)
     stack = build_basic_cell_features(stack)
     stack = build_es_proposal(stack)
     stack = build_cell_points_samples(stack)

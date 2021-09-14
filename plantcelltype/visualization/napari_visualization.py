@@ -105,6 +105,7 @@ class CellTypeViewer:
             self.update_grs()
 
         self.viewer = viewer
+        napari.run()
 
     def update_grs(self):
         fu_points = self.viewer.layers[-1].data

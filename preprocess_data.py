@@ -6,11 +6,10 @@ from plantcelltype.utils.io import import_segmentation
 from plantcelltype.utils.axis_transforms import AxisTransformer
 from plantcelltype.utils import export_full_stack
 from plantcelltype.features.build_features import build_basic_cell_features, build_basic, build_es_proposal
-from plantcelltype.features.build_features import build_cell_points_samples, build_edges_points_samples
+from plantcelltype.features.build_features import build_cell_points_samples
 
 
 train_data_voxels_size = [0.25, 0.2, 0.2]
-train_data_voxels_size = [0.4, 0.4, 0.4]
 raw_data_location = "/home/lcerrone/Downloads/tejasvinee/predictions_segmentations/*segmentation.tif"
 export_location = "/home/lcerrone/Downloads/"
 default_seg_key = "segmentation"
@@ -33,11 +32,9 @@ for i, file in enumerate(files):
     stack = build_basic(stack)
     stack = build_basic_cell_features(stack)
     stack = build_es_proposal(stack)
-    # stack = build_cell_points_samples(stack)
-    # stack = build_edges_points_samples(stack)
+    stack = build_cell_points_samples(stack)
 
     # export processed files
     export_full_stack(out_file, stack)
     timer += time.time()
     print(f'{progress} - runtime: {timer:.2f}s')
-    break

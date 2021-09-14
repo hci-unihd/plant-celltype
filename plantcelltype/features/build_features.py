@@ -199,7 +199,7 @@ def build_basic_edges_features(stack, axis_transformer, group='edges_features'):
 
 
 # compute global axis
-def build_grs(stack, axis_transformer):
+def build_grs_from_labels(stack, axis_transformer):
     cell_com_um = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
     axis = find_axis_funiculum(stack['cell_labels'], cell_com_um)
     center = find_label_com(stack['cell_labels'], cell_com_um, (7, ))

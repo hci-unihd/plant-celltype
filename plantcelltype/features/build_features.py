@@ -208,6 +208,12 @@ def build_grs_from_labels(stack, axis_transformer):
     return stack
 
 
+def build_naive_grs(stack):
+    stack['attributes']['global_reference_system_origin'] = stack['attributes']['es_com_voxels']
+    stack['attributes']['global_reference_system_axis'] = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    return stack
+
+
 # compute local axis
 def build_edges_planes(stack, axis_transform):
 

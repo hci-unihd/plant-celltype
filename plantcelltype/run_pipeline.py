@@ -11,6 +11,7 @@ from plantcelltype.graphnn.predict import run_predictions
 from plantcelltype.utils import export_full_stack, open_full_stack
 from plantcelltype.utils.io import import_segmentation
 from plantcelltype.utils.utils import load_paths
+import copy
 from plantcelltype.visualization.napari_visualization import CellTypeViewer
 
 
@@ -124,12 +125,13 @@ def main(config, process=None):
 def process_train_data(config):
     _temp_id = 'XXXX'
     for stack in ['2-III', '2-IV', '2-V', '3-I', '3-II', '3-III', '3-IV', '3-V', '3-VI']:
-        config['preprocessing']['file_list'] = config['preprocessing']['file_list'].replace(_temp_id, stack)
-        config['preprocessing']['out_dir'] = config['preprocessing']['out_dir'].replace(_temp_id, stack)
-        files_list = config['grs_step']['file_list'].replace(_temp_id, stack)
+        _config = copy.deepcopy(config)
+        _config['preprocessing']['file_list'] = _config['preprocessing']['file_list'].replace(_temp_id, stack)
+        _config['preprocessing']['out_dir'] = _config['preprocessing']['out_dir'].replace(_temp_id, stack)
+        files_list = _config['grs_step']['file_list'].replace(_temp_id, stack)
 
-        config['grs_step']['file_list'] = files_list
-        config['advanced_features_step']['file_list'] = files_list
-        config['ct_predictions']['loader']['file_list'] = files_list
+        _config['grs_step']['file_list'] = files_list
+        _config['advanced_features_step']['file_list'] = files_list
+        _config['ct_predictions']['loader']['file_list'] = files_list
 
-        main(config)
+        main(_config)

@@ -12,12 +12,12 @@ preprocessing:
   out_dir: &out_dir !join [*home_path, '/data/ovules/ovules-celltype-new/', *mode_grs, '/late_cropped_ds3/XXXX/']
 
 grs_step:
-  state: true
+  state: false
   mode: *mode_grs
   file_list: !join [*out_dir, '*']
 
 advanced_features_step:
-  state: true
+  state: false
   file_list: !join [*out_dir, '*']
 
 ct_predictions:

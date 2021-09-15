@@ -64,6 +64,7 @@ def automatic_grs(files, step=build_naive_grs):
         progress = f'{i+1}/{len(files)}'
         print(f'{progress} - fix-grs: {file}')
         stack, at = open_full_stack(file)
+        at.reset_axis()
         stack = step(stack, at)
         export_full_stack(file, stack)
 
@@ -79,7 +80,7 @@ def fix_grs(config):
         return automatic_grs(files, step=build_grs_from_labels_funiculum)
 
     elif mode == 'label_grs_surface':
-        return automatic_grs(files, step=build_grs_from_labels_funiculum)
+        return automatic_grs(files, step=build_grs_from_labels_surface)
 
     elif mode == 'es_pca_grs':
         return automatic_grs(files, step=build_es_pca_grs)

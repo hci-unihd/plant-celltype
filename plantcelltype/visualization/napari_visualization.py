@@ -29,12 +29,13 @@ def create_prediction_label_image(stack, segmentation=None):
 class CellTypeViewer:
     def __init__(self, path, view_features=True, scale=(1, 1, 1)):
         self.path = path
-        stack, _ = open_full_stack(path)
+        stack, at = open_full_stack(path)
         self.segmentation = stack['segmentation']
         self.voxel_size = stack['attributes']['element_size_um']
         self.update_scaling(scale)
 
         self.stack = stack
+        self.at = at
         self.view_features = view_features
 
     def update_scaling(self, scale=(1, 1, 1)):
@@ -78,9 +79,10 @@ class CellTypeViewer:
         if 'es_com_voxels' not in self.stack['attributes']:
             self.stack['attributes']['es_com_voxels'] = np.array([])
 
-        main_vector, axis_comp = self.compute_pca_es()
         grs_axis = self._build_grs_vectors()
         viewer.add_vectors(grs_axis, name='grs', length=10, edge_color='green', edge_width=1)
+        """
+        main_vector, axis_comp = self.compute_pca_es()
 
         viewer.add_points(self.stack['attributes']['es_com_voxels'] * self.voxel_size,
                           name='es',
@@ -100,7 +102,7 @@ class CellTypeViewer:
                           n_dimensional=True,
                           face_color='red',
                           size=2)
-
+        """
         @viewer.bind_key('U')
         def _update(_viewer):
             """Update axis"""

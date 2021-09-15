@@ -29,6 +29,10 @@ class AxisTransformer:
         self.center = np.array(center)
         self.voxel_size = np.array(voxel_size)
 
+    def reset_axis(self):
+        self.axis = np.array(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
+        self.center = np.array((0, 0, 0))
+
     def transform_coord(self, points_coo, voxel_size=None):
         voxel_size = self.voxel_size if voxel_size is None else voxel_size
         return transform_coord(points_coo, self.axis, self.center, voxel_size)

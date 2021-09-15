@@ -51,5 +51,5 @@ def run_predictions(config):
                   key='cell_net_out', voxel_size=None)
 
         export_predictions_as_csv(data.file_path[0],
-                                  data.cell_ids.cpu().data.numpy(),
+                                  data.cell_ids[0],
                                   cell_predictions)

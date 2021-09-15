@@ -6,13 +6,12 @@ from plantcelltype.features.build_features import build_basic_cell_features, bui
 from plantcelltype.features.build_features import build_basic_edges_features, build_edges_points_samples
 from plantcelltype.features.build_features import build_cell_points_samples
 from plantcelltype.features.build_features import build_edges_planes, build_lrs, build_pca_features
-from plantcelltype.features.build_features import build_length_along_local_axis, build_cell_dot_features
 from plantcelltype.features.build_features import build_grs_from_labels, build_naive_grs
+from plantcelltype.features.build_features import build_length_along_local_axis, build_cell_dot_features
+from plantcelltype.graphnn.predict import run_predictions
 from plantcelltype.utils import export_full_stack, open_full_stack
 from plantcelltype.utils.io import import_segmentation
 from plantcelltype.visualization.napari_visualization import CellTypeViewer
-from plantcelltype.graphnn.predict import run_predictions
-from plantcelltype.utils.io import load_yaml
 
 
 def preprocessing(config):
@@ -52,7 +51,9 @@ def preprocessing(config):
 def manual_grs(config):
     raw_data_location = config['file_list']
     files = glob.glob(f'{raw_data_location}')
-    for file in files:
+    for i, file in enumerate(files):
+        progress = f'{i}/{len(files)}'
+        print(f'{progress} - fix-grs: {file}')
         ct_viewer = CellTypeViewer(file)
         ct_viewer()
 
@@ -60,18 +61,22 @@ def manual_grs(config):
 def automatic_grs(config, step=build_naive_grs):
     raw_data_location = config['file_list']
     files = glob.glob(f'{raw_data_location}')
-    for file in files:
+    for i, file in enumerate(files):
+        progress = f'{i}/{len(files)}'
+        print(f'{progress} - fix-grs: {file}')
         stack, at = open_full_stack(file)
         stack = step(stack)
         export_full_stack(file, stack)
 
 
-def trivial_grs(config):
-    automatic_grs(config)
-
-
-def label_grs(config):
-    automatic_grs(config, step=build_grs_from_labels)
+def fix_grs(config):
+    mode = config.get('mode', 'trivial_grs')
+    if mode == 'trivial_grs':
+        return automatic_grs(config)
+    elif mode == 'label_grs':
+        return automatic_grs(config, step=build_grs_from_labels)
+    elif mode == 'manual_grs':
+        return manual_grs(config)
 
 
 def advanced_preprocessing(config):
@@ -81,7 +86,7 @@ def advanced_preprocessing(config):
     for i, file in enumerate(files):
         timer = - time.time()
         progress = f'{i}/{len(files)}'
-        print(f'{progress} - processing: {file}')
+        print(f'{progress} - advanced-features: {file}')
 
         stack, at = open_full_stack(file)
 
@@ -104,22 +109,15 @@ def advanced_preprocessing(config):
         print(f'{progress} - runtime: {timer:.2f}s')
 
 
-def main(config_path, process=None):
-    config = load_yaml(config_path)
+def main(config, process=None):
 
     if process is None:
         process = {'preprocessing': preprocessing,
-                   'grs_step': manual_grs,
+                   'grs_step': fix_grs,
                    'advanced_features_step': advanced_preprocessing,
                    'ct_predictions': run_predictions}
 
     for process_key, process_func in process.items():
         sub_config = config[process_key]
-        if sub_config.get('stage', False):
+        if sub_config.get('state', False):
             process_func(sub_config)
-
-
-def build_train_data(config_path):
-    main(config_path, {'preprocessing': preprocessing,
-                       'grs_step': label_grs,
-                       'advanced_features_step': advanced_preprocessing})

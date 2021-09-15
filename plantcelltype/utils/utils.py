@@ -74,7 +74,7 @@ def load_paths(path, filter_h5=True):
     if isinstance(path, str) and os.path.isfile(path):
         return [path]
 
-    elif isinstance(path, str) and os.path.isdir(path):
+    elif isinstance(path, str):
         files = glob.glob(f'{path}')
         if filter_h5:
             files = list(filter(lambda _path: os.path.splitext(_path)[1] == '.h5', files))

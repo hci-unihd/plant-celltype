@@ -26,6 +26,7 @@ gt_mapping_wb = {1: 0,
                  8: 7,
                  10: 8,
                  14: 3}
+
 gt_mapping_label = {0: 'ab oi/oi2 / L1',
                     1: 'ad oi/oi1 / L2',
                     2: 'ab ii/ii2 / L3',

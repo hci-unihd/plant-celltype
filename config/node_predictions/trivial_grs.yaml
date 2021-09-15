@@ -1,0 +1,29 @@
+_internal_variables:
+  - &home_path !home_path
+  - &mode_grs trivial_grs
+  - &dataset late_cropped_ds3
+
+mode: train
+
+preprocessing:
+  state: true
+  train_data_voxels_size: [0.25, 0.2, 0.2]
+  default_seg_key: 'segmentation'
+  file_list: !join [*home_path, '/data/ovules/ovules-celltype/', *dataset, '/XXXX/*.h5']
+  out_dir: &out_dir !join [*home_path, '/data/ovules/ovules-celltype-new/', *mode_grs, '/', *dataset, '/XXXX/']
+
+grs_step:
+  state: true
+  mode: *mode_grs
+  file_list: !join [*out_dir, '*']
+
+advanced_features_step:
+  state: true
+  file_list: !join [*out_dir, '*']
+
+ct_predictions:
+  state: false
+  mode: 'NodesClassification'
+
+  loader:
+    files_list: !join [ *out_dir, '*' ]

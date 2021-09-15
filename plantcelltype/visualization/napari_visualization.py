@@ -77,15 +77,15 @@ class CellTypeViewer:
         if 'es_com_voxels' not in self.stack['attributes']:
             self.stack['attributes']['es_com_voxels'] = np.array([])
 
-        main_vector, _ = self.compute_pca_es()
-        viewer.add_vectors(main_vector, length=10, edge_color='green', edge_width=2)
+        main_vector, axis_comp = self.compute_pca_es()
+        viewer.add_vectors(main_vector, length=10, edge_color='green', edge_width=1)
 
         viewer.add_points(self.stack['attributes']['es_com_voxels'] * self.voxel_size,
                           name='es',
                           n_dimensional=True,
                           size=5)
 
-        viewer.add_points([],
+        viewer.add_points(axis_comp,
                           ndim=3,
                           name='Main Symmetry Axis',
                           n_dimensional=True,
@@ -152,9 +152,10 @@ class CellTypeViewer:
         pca.fit(es_samples)
 
         es_com = self.stack['attributes']['es_com_voxels'] * self.voxel_size
+        main_point = [es_com[0] + 10 * pca.components_[0], es_com[0] - 10 * pca.components_[0]]
         main_vector = self._build_vector(es_com, pca.components_[0])
-        secondary_vector = self._build_vector(es_com, pca.components_[1])
-        return main_vector, secondary_vector
+        # secondary_vector = self._build_vector(es_com, pca.components_[1])
+        return main_vector, main_point
 
     @staticmethod
     def _build_vector(es_com, component):

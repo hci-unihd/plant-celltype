@@ -1,9 +1,12 @@
+import csv
+import glob
+
+import torch
+
 from plantcelltype.graphnn.data_loader import create_loaders
 from plantcelltype.graphnn.trainer import get_model
-from plantcelltype.utils.io import load_yaml
 from plantcelltype.utils import create_h5
-import glob
-import torch
+from plantcelltype.utils.io import load_yaml
 
 
 def build_test_loader(config, glob_paths=True):
@@ -12,29 +15,41 @@ def build_test_loader(config, glob_paths=True):
     return create_loaders(**config)
 
 
-config_path = "/home/lcerrone/PycharmProjects/plant-celltype/config/node_predictions/depp_gcn.yaml"
-predict_config = load_yaml(config_path=config_path)
-check_point = predict_config['checkpoint']
-check_point_config = f'{check_point}/config.yaml'
-check_point_weights = f'{check_point}/checkpoints/*ckpt'
-check_point_weights = glob.glob(check_point_weights)[0]
-model_config = load_yaml(check_point_config)
+def export_predictions_as_csv(file_path, cell_ids, cell_predictions):
+    keys = ['label', 'parent_label']
+    file_path = file_path.replace('.h5', '.csv')
+    with open(file_path, "w") as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        for c_id, c_pred in zip(cell_ids, cell_predictions):
+            dict_writer.writerow({keys[0]: c_id, keys[1]: c_pred})
 
 
-test_loader = build_test_loader(predict_config['loader'])
-model = get_model(model_config)
-model = model.load_from_checkpoint(check_point_weights)
+def run_predictions(config):
+    check_point = config['checkpoint']
+    check_point_config = f'{check_point}/config.yaml'
+    check_point_weights = f'{check_point}/checkpoints/*ckpt'
+    check_point_weights = glob.glob(check_point_weights)[0]
+    model_config = load_yaml(check_point_config)
 
-for data in test_loader:
-    data, _ = model.forward(data)
-    logits = torch.log_softmax(data.out, 1)
-    pred = logits.max(1)[1]
+    test_loader = build_test_loader(config['loader'])
+    model = get_model(model_config)
+    model = model.load_from_checkpoint(check_point_weights)
 
-    print(data.file_path[0])
-    create_h5(data.file_path[0],
-              pred.cpu().data.numpy().astype('int32'),
-              key='cell_predictions', voxel_size=None)
+    for data in test_loader:
+        data, _ = model.forward(data)
+        logits = torch.log_softmax(data.out, 1)
+        cell_predictions = logits.max(1)[1]
+        cell_predictions = cell_predictions.cpu().data.numpy().astype('int32')
 
-    create_h5(data.file_path[0],
-              data.out.cpu().data.numpy(),
-              key='cell_net_out', voxel_size=None)
+        create_h5(data.file_path[0],
+                  cell_predictions,
+                  key='cell_predictions', voxel_size=None)
+
+        create_h5(data.file_path[0],
+                  data.out.cpu().data.numpy(),
+                  key='cell_net_out', voxel_size=None)
+
+        export_predictions_as_csv(data.file_path[0],
+                                  data.cell_ids.cpu().data.numpy(),
+                                  cell_predictions)

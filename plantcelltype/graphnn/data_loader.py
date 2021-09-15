@@ -138,6 +138,7 @@ def create_data(file, load_edge_attr=False, as_line_graph=False):
     stage = stack['attributes'].get('stage', 'unknown')
     stack_name = stack['attributes'].get('stack', 'unknown')
     pos = torch.from_numpy(stack['cell_features']['com_voxels'])
+    cell_ids = stack['cell_ids']
 
     if as_line_graph:
         cell_features_tensors, new_edges_ids = to_line_graph(cell_features_tensors,
@@ -150,6 +151,7 @@ def create_data(file, load_edge_attr=False, as_line_graph=False):
                       file_path=file,
                       stage=stage,
                       stack=stack_name,
+                      cell_ids=cell_ids,
                       edge_attr=edges_features_tensors,
                       edge_y=edges_labels,
                       edge_index=new_edges_ids)

@@ -202,7 +202,7 @@ def build_basic_edges_features(stack, axis_transformer, group='edges_features'):
 def build_grs_from_labels(stack, axis_transformer, label=7):
     cell_com_um = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
     axis = find_axis_funiculum(stack['cell_labels'], cell_com_um)
-    center = find_label_com(stack['cell_labels'], cell_com_um, (7, ))
+    center = find_label_com(stack['cell_labels'], cell_com_um, (label, ))
     stack['attributes']['global_reference_system_origin'] = center
     stack['attributes']['global_reference_system_axis'] = axis
     return stack

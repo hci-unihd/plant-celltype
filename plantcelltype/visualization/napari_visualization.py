@@ -1,12 +1,13 @@
+import copy
+
 import napari
 import numpy as np
 from scipy.ndimage import zoom
 from sklearn.decomposition import PCA
-
-from plantcelltype.utils import map_edges_features2rag_boundaries, map_cell_features2segmentation
-from plantcelltype.graphnn.data_loader import gt_mapping_wb
 from skspatial.objects import Line, Vector
-import copy
+
+from plantcelltype.graphnn.data_loader import gt_mapping_wb
+from plantcelltype.utils import map_edges_features2rag_boundaries, map_cell_features2segmentation
 from plantcelltype.utils.io import open_full_stack, export_full_stack
 
 
@@ -78,7 +79,8 @@ class CellTypeViewer:
             self.stack['attributes']['es_com_voxels'] = np.array([])
 
         main_vector, axis_comp = self.compute_pca_es()
-        viewer.add_vectors(main_vector, length=10, edge_color='green', edge_width=1)
+        grs_axis = self._build_grs_vectors()
+        viewer.add_vectors(grs_axis, name='grs', length=10, edge_color='green', edge_width=1)
 
         viewer.add_points(self.stack['attributes']['es_com_voxels'] * self.voxel_size,
                           name='es',
@@ -164,6 +166,19 @@ class CellTypeViewer:
         vector[1, 0] = es_com
         vector[0, 1] = component
         vector[1, 1] = - component
+        return vector
+
+    def _build_grs_vectors(self):
+        axis = self.stack['attributes']['global_reference_system_axis']
+        origin_point = self.stack['attributes']['global_reference_system_origin']
+        vector = np.zeros((3, 2, 3))
+        vector[0, 0] = origin_point
+        vector[1, 0] = origin_point
+        vector[2, 0] = origin_point
+
+        vector[0, 1] = axis[0]
+        vector[1, 1] = axis[1]
+        vector[2, 1] = axis[2]
         return vector
 
 

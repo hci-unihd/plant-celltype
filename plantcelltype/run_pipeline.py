@@ -5,11 +5,12 @@ from plantcelltype.features.build_features import build_basic_cell_features, bui
 from plantcelltype.features.build_features import build_basic_edges_features, build_edges_points_samples
 from plantcelltype.features.build_features import build_cell_points_samples
 from plantcelltype.features.build_features import build_edges_planes, build_lrs, build_pca_features
-from plantcelltype.features.build_features import build_grs_from_labels, build_naive_grs
+from plantcelltype.features.build_features import build_grs_from_labels_funiculum, build_grs_from_labels_surface
+from plantcelltype.features.build_features import build_naive_grs, build_es_pca_grs
 from plantcelltype.features.build_features import build_length_along_local_axis, build_cell_dot_features
 from plantcelltype.graphnn.predict import run_predictions
 from plantcelltype.utils import export_full_stack, open_full_stack
-from plantcelltype.utils.io import import_segmentation
+from plantcelltype.utils.io import import_segmentation, load_axis_transformer
 from plantcelltype.utils.utils import load_paths
 import copy
 from plantcelltype.visualization.napari_visualization import CellTypeViewer
@@ -38,9 +39,11 @@ def preprocessing(config):
 
         stack = import_segmentation(file, key=default_seg_key, out_voxel_size=train_data_voxels_size)
         stack = build_basic(stack, csv_path=csv_path)
+
         stack = build_basic_cell_features(stack)
         stack = build_es_proposal(stack)
         stack = build_cell_points_samples(stack)
+        stack = build_naive_grs(stack, load_axis_transformer(stack['attributes']))
 
         # export processed files
         export_full_stack(out_file, stack)
@@ -71,8 +74,16 @@ def fix_grs(config):
 
     if mode == 'trivial_grs':
         return automatic_grs(files)
-    elif mode == 'label_grs':
-        return automatic_grs(files, step=build_grs_from_labels)
+
+    elif mode == 'label_grs_funiculum':
+        return automatic_grs(files, step=build_grs_from_labels_funiculum)
+
+    elif mode == 'label_grs_surface':
+        return automatic_grs(files, step=build_grs_from_labels_funiculum)
+
+    elif mode == 'es_pca_grs':
+        return automatic_grs(files, step=build_es_pca_grs)
+
     elif mode == 'manual_grs':
         return manual_grs(files)
     else:

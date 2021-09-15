@@ -127,7 +127,7 @@ def open_full_stack(path, keys=None):
             elif isinstance(f[_key], h5py.Dataset):
                 stacks[_key] = f[_key][...]
 
-    return stacks, _load_axis_transformer(stacks['attributes'])
+    return stacks, load_axis_transformer(stacks['attributes'])
 
 
 def export_full_stack(path, stack):
@@ -173,7 +173,7 @@ def import_segmentation(segmentation_path, extra_attr=None, out_voxel_size=None,
     return stack
 
 
-def _load_axis_transformer(attributes):
+def load_axis_transformer(attributes):
     axis = attributes.get('global_reference_system_axis', ((1, 0, 0), (0, 1, 0), (0, 0, 1)))
     center = attributes.get('global_reference_system_origin', (0, 0, 0))
     voxel_size = attributes.get('element_size_um', (1., 1., 1.))

@@ -2,7 +2,7 @@ import numpy as np
 
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface, compute_cell_average_edt
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
-from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca
+from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca, compute_pca_comp_idx
 from plantcelltype.features.cell_vector_features import compute_length_along_axis
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis1
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis2_pair
@@ -199,7 +199,7 @@ def build_basic_edges_features(stack, axis_transformer, group='edges_features'):
 
 
 # compute global axis
-def build_grs_from_labels(stack, axis_transformer):
+def build_grs_from_labels(stack, axis_transformer, label=7):
     cell_com_um = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
     axis = find_axis_funiculum(stack['cell_labels'], cell_com_um)
     center = find_label_com(stack['cell_labels'], cell_com_um, (7, ))
@@ -208,9 +208,27 @@ def build_grs_from_labels(stack, axis_transformer):
     return stack
 
 
+def build_grs_from_labels_funiculum(stack, axis_transformer):
+    return build_grs_from_labels(stack, axis_transformer, 7)
+
+
+def build_grs_from_labels_surface(stack, axis_transformer):
+    return build_grs_from_labels(stack, axis_transformer, 1)
+
+
 def build_naive_grs(stack, axis_transformer):
-    stack['attributes']['global_reference_system_origin'] = stack['attributes']['es_com_voxels']
+    es_com_voxels = axis_transformer.transform_coord(stack['attributes']['es_com_voxels'])
+    stack['attributes']['global_reference_system_origin'] = es_com_voxels
     stack['attributes']['global_reference_system_axis'] = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    return stack
+
+
+def build_es_pca_grs(stack, axis_transformer):
+    es_com_voxels = axis_transformer.transform_coord(stack['attributes']['es_com_voxels'])
+    samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples'])
+    stack['attributes']['global_reference_system_origin'] = es_com_voxels
+    components, _ = compute_pca_comp_idx(samples_grs, stack['attributes']['es_index'][0])
+    stack['attributes']['global_reference_system_axis'] = components
     return stack
 
 

@@ -6,14 +6,14 @@ from sklearn.decomposition import PCA
 from plantcelltype.utils import map_edges_features2rag_boundaries, map_cell_features2segmentation
 from plantcelltype.graphnn.data_loader import gt_mapping_wb
 from skspatial.objects import Line, Vector
+import copy
 from plantcelltype.utils.io import open_full_stack, export_full_stack
 
 
 def create_prediction_label_image(stack, segmentation=None):
     segmentation = segmentation if segmentation is None else stack['segmentation']
-    cell_labels = stack['cell_labels']
+    cell_labels = copy.deepcopy(stack['cell_labels'])
     cell_predictions = stack['cell_predictions']
-
     for i in range(cell_labels.shape[0]):
         # map labels for consistency
         cell_labels[i] = gt_mapping_wb[cell_labels[i]] + 1

@@ -1,5 +1,7 @@
 import argparse
+import glob
 import math
+import os
 
 import numpy as np
 from numba import njit
@@ -66,6 +68,20 @@ def print_config(config, indentation=0):
             print_config(value, indentation + 1)
         else:
             print(f'{spaces}{key}: {value}')
+
+
+def load_paths(path, filter_h5=True):
+    if isinstance(path, str) and os.path.isfile(path):
+        return [path]
+
+    elif isinstance(path, str) and os.path.isdir(path):
+        files = glob.glob(f'{path}')
+        if filter_h5:
+            files = list(filter(lambda _path: os.path.splitext(_path)[1] == '.h5', files))
+        return files
+
+    elif isinstance(path, list):
+        return path
 
 
 def parser():

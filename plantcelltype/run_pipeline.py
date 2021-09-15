@@ -1,4 +1,3 @@
-import glob
 import os
 import time
 
@@ -11,20 +10,21 @@ from plantcelltype.features.build_features import build_length_along_local_axis,
 from plantcelltype.graphnn.predict import run_predictions
 from plantcelltype.utils import export_full_stack, open_full_stack
 from plantcelltype.utils.io import import_segmentation
+from plantcelltype.utils.utils import load_paths
 from plantcelltype.visualization.napari_visualization import CellTypeViewer
 
 
 def preprocessing(config):
+    files = load_paths(config['file_list'], filter_h5=False)
+
     train_data_voxels_size = config.get('train_data_voxels_size', None)
-    raw_data_location = config['file_list']
     export_location = config.get('out_dir', None)
     default_seg_key = config.get('default_seg_key', 'segmentation')
     os.makedirs(export_location, exist_ok=True)
-    files = glob.glob(f'{raw_data_location}')
 
     for i, file in enumerate(files):
         timer = - time.time()
-        progress = f'{i}/{len(files)}'
+        progress = f'{i+1}/{len(files)}'
         print(f'{progress} - processing: {file}')
 
         csv_path = file.replace('.h5', '_annotations.csv')
@@ -48,21 +48,17 @@ def preprocessing(config):
         print(f'{progress} - runtime: {timer:.2f}s')
 
 
-def manual_grs(config):
-    raw_data_location = config['file_list']
-    files = glob.glob(f'{raw_data_location}')
+def manual_grs(files):
     for i, file in enumerate(files):
-        progress = f'{i}/{len(files)}'
+        progress = f'{i+1}/{len(files)}'
         print(f'{progress} - fix-grs: {file}')
         ct_viewer = CellTypeViewer(file)
         ct_viewer()
 
 
-def automatic_grs(config, step=build_naive_grs):
-    raw_data_location = config['file_list']
-    files = glob.glob(f'{raw_data_location}')
+def automatic_grs(files, step=build_naive_grs):
     for i, file in enumerate(files):
-        progress = f'{i}/{len(files)}'
+        progress = f'{i+1}/{len(files)}'
         print(f'{progress} - fix-grs: {file}')
         stack, at = open_full_stack(file)
         stack = step(stack)
@@ -71,21 +67,22 @@ def automatic_grs(config, step=build_naive_grs):
 
 def fix_grs(config):
     mode = config.get('mode', 'trivial_grs')
+    files = load_paths(config['file_list'], filter_h5=True)
+
     if mode == 'trivial_grs':
-        return automatic_grs(config)
+        return automatic_grs(files)
     elif mode == 'label_grs':
-        return automatic_grs(config, step=build_grs_from_labels)
+        return automatic_grs(files, step=build_grs_from_labels)
     elif mode == 'manual_grs':
-        return manual_grs(config)
+        return manual_grs(files)
 
 
 def advanced_preprocessing(config):
-    raw_data_location = config['file_list']
-    files = glob.glob(f'{raw_data_location}')
+    files = load_paths(config['file_list'], filter_h5=True)
 
     for i, file in enumerate(files):
         timer = - time.time()
-        progress = f'{i}/{len(files)}'
+        progress = f'{i+1}/{len(files)}'
         print(f'{progress} - advanced-features: {file}')
 
         stack, at = open_full_stack(file)

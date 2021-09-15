@@ -7,11 +7,12 @@ from plantcelltype.graphnn.data_loader import create_loaders
 from plantcelltype.graphnn.trainer import get_model
 from plantcelltype.utils import create_h5
 from plantcelltype.utils.io import load_yaml
+from plantcelltype.utils.utils import load_paths
 
 
 def build_test_loader(config, glob_paths=True):
     if glob_paths:
-        config['files_list'] = glob.glob(config['files_list'])
+        config['files_list'] = load_paths(config['files_list'])
     return create_loaders(**config)
 
 

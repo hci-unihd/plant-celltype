@@ -123,7 +123,7 @@ def build_degree_centrality(stack, feat_name='degree_centrality', group='cell_fe
     return stack
 
 
-def build_average_cell_edt(stack, label=0, feat_name='edt_um', group='cell_features'):
+def build_average_cell_edt(stack, label=0, feat_name='bg_edt_um', group='cell_features'):
     edt_um = compute_cell_average_edt(stack['cell_ids'],
                                       stack['segmentation'],
                                       voxel_size=stack['attributes']['element_size_um'],

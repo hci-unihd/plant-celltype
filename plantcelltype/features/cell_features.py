@@ -139,8 +139,8 @@ def compute_pca(cell_samples, origin=(0, 0, 0)):
 
     for samples in cell_samples:
         valid_idx, _ = check_valid_idx(samples, origin)
-        cell_samples_ids = cell_samples[valid_idx]
-        components, explained_variance = compute_pca_comp_idx(cell_samples_ids)
+        valid_samples = samples[valid_idx]
+        components, explained_variance = compute_pca_comp_idx(valid_samples)
         pca_axis_1.append(components[0])
         pca_axis_2.append(components[1])
         pca_axis_3.append(components[2])

@@ -136,8 +136,7 @@ def main(config, process=None):
 
 def process_train_data(config):
     _temp_id = 'XXXX'
-    # for stack in ['2-III', '2-IV', '2-V', '3-I', '3-II', '3-III', '3-IV', '3-V', '3-VI']:
-    for stack in ['3-VI']:
+    for stack in ['2-III', '2-IV', '2-V', '3-I', '3-II', '3-III', '3-IV', '3-V', '3-VI']:
         _config = copy.deepcopy(config)
         _config['preprocessing']['file_list'] = _config['preprocessing']['file_list'].replace(_temp_id, stack)
         _config['preprocessing']['out_dir'] = _config['preprocessing']['out_dir'].replace(_temp_id, stack)

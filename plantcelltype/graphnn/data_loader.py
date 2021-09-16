@@ -96,6 +96,7 @@ def collect_cell_features_grs(stack, axis_transform, as_array=True):
                         'length_axis3_grs',
                         'pca_explained_variance_grs',
                         'com_proj_grs',
+                        'bg_edt_um',
                         'rw_centrality',
                         'degree_centrality',
                         ]:
@@ -121,17 +122,21 @@ def collect_cell_features_grs(stack, axis_transform, as_array=True):
     return list_feat
 
 
-def create_data(file, load_edge_attr=False, as_line_graph=False):
-    stack, at = open_full_stack(file, keys=['cell_features',
-                                            'cell_ids',
-                                            'cell_labels',
-                                            'edges_features',
-                                            'edges_ids',
-                                            'edges_labels'])
+def create_data(file, load_edge_attr=False, as_line_graph=False, load_samples=False):
+
+    default_keys = ['cell_ids', 'cell_labels', 'edges_ids', 'edges_labels', 'cell_features']
+    if load_samples:
+        default_keys.append('cell_samples')
+
+    if load_edge_attr:
+        default_keys.append('edges_features')
+
+    stack, at = open_full_stack(file, keys=default_keys)
 
     # cell feat
     cell_features_tensors = torch.from_numpy(collect_cell_features_grs(stack, at)).float()
     edges_features_tensors = torch.from_numpy(collect_edges_features(stack, at)).float() if load_edge_attr else 0
+    cell_samples = at.transform_coord(stack['cell_samples']['random_samples']) if load_samples else 0
 
     new_edges_ids = torch.from_numpy(rectify_rag_names(stack['cell_ids'], stack['edges_ids'])).long()
     new_edges_ids = new_edges_ids.T
@@ -154,6 +159,7 @@ def create_data(file, load_edge_attr=False, as_line_graph=False):
         cell_features_tensors, new_edges_ids = to_line_graph(cell_features_tensors,
                                                              new_edges_ids,
                                                              node_feat_mixing='cat')
+
     # build torch_geometric Data obj
     graph_data = Data(x=cell_features_tensors,
                       y=labels,
@@ -162,6 +168,7 @@ def create_data(file, load_edge_attr=False, as_line_graph=False):
                       stage=stage,
                       stack=stack_name,
                       cell_ids=cell_ids,
+                      cell_samples=cell_samples,
                       edge_attr=edges_features_tensors,
                       edge_y=edges_labels,
                       edge_index=new_edges_ids)

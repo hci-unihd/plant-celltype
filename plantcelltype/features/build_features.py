@@ -245,7 +245,14 @@ def build_es_pca_grs(stack, axis_transformer, es_label=8):
     for _es_ids in es_ids:
         masks.append(stack['segmentation'] == _es_ids)
 
-    samples_voxels = np.stack(np.nonzero(np.logical_or(*masks))).T
+    if len(masks) > 1:
+        masks = np.logical_or(*masks)
+    elif len(masks) == 1:
+        masks = masks[0]
+    else:
+        raise ValueError
+
+    samples_voxels = np.stack(np.nonzero(masks)).T
     samples_grs = axis_transformer.transform_coord(samples_voxels)
     components, _ = compute_pca_comp_idx(samples_grs)
 

@@ -146,14 +146,23 @@ def build_basic_cell_features(stack, group='cell_features'):
     return stack
 
 
-# propose es
-def build_es_proposal(stack):
-    es_index = np.argmax(stack['cell_features']['volume_voxels'])
-    es_label = stack['cell_ids'][es_index]
+def _get_proposed_es(stack, es_label=8):
+    es_index = np.where(stack['cell_labels'] == es_label)[0]
+    if len(es_index) < 1:
+        es_index = [np.argmax(stack['cell_features']['volume_voxels'])]
 
-    stack['attributes']['es_index'] = [es_index]
-    stack['attributes']['es_label'] = [es_label]
-    stack['attributes']['es_com_voxels'] = [stack['cell_features']['com_voxels'][es_index].tolist()]
+    es_ids = stack['cell_ids'][es_index]
+    return es_index, es_ids
+
+
+# propose es
+def build_es_proposal(stack, es_label=8):
+    es_index, es_ids = _get_proposed_es(stack, es_label)
+
+    com_voxels = stack['cell_features']['com_voxels']
+    stack['attributes']['es_index'] = es_index
+    stack['attributes']['es_label'] = es_ids
+    stack['attributes']['es_com_voxels'] = [com_voxels[_es_index].tolist() for _es_index in es_index]
     return stack
 
 
@@ -216,18 +225,31 @@ def build_grs_from_labels_surface(stack, axis_transformer):
     return build_grs_from_labels(stack, axis_transformer, 1)
 
 
-def build_naive_grs(stack, axis_transformer):
-    es_com_voxels = axis_transformer.transform_coord(stack['attributes']['es_com_voxels'])
-    stack['attributes']['global_reference_system_origin'] = es_com_voxels
+def _get_es_com(stack, axis_transformer, es_label=8):
+    cell_com_um = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
+    es_com_voxels = find_label_com(stack['cell_labels'], cell_com_um, (es_label,))
+    if es_com_voxels[0] is None:
+        es_com_voxels = axis_transformer.transform_coord(stack['attributes']['es_com_voxels'][0])
+    return es_com_voxels
+
+
+def build_naive_grs(stack, axis_transformer, es_label=8):
+    stack['attributes']['global_reference_system_origin'] = _get_es_com(stack, axis_transformer, es_label)
     stack['attributes']['global_reference_system_axis'] = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
     return stack
 
 
-def build_es_pca_grs(stack, axis_transformer):
-    es_com_voxels = axis_transformer.transform_coord(stack['attributes']['es_com_voxels'])
-    samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples'])
-    stack['attributes']['global_reference_system_origin'] = es_com_voxels
-    components, _ = compute_pca_comp_idx(samples_grs, stack['attributes']['es_index'][0])
+def build_es_pca_grs(stack, axis_transformer, es_label=8):
+    es_index, es_ids = _get_proposed_es(stack, es_label)
+    masks = []
+    for _es_ids in es_ids:
+        masks.append(stack['segmentation'] == _es_ids)
+
+    samples_voxels = np.stack(np.nonzero(np.logical_or(*masks))).T
+    samples_grs = axis_transformer.transform_coord(samples_voxels)
+    components, _ = compute_pca_comp_idx(samples_grs)
+
+    stack['attributes']['global_reference_system_origin'] = _get_es_com(stack, axis_transformer, es_label)
     stack['attributes']['global_reference_system_axis'] = components
     return stack
 

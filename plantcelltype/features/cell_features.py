@@ -127,10 +127,9 @@ def compute_eigen_vector_centrality(cell_ids, edges_ids):
     return compute_generic_centrality(cell_ids, edges_ids, centrality='eigen_vector', args=None, cell_com=None)
 
 
-def compute_pca_comp_idx(cell_samples, ids):
-    cell_samples_ids = cell_samples[ids]
+def compute_pca_comp_idx(cell_samples):
     pca = PCA()
-    pca.fit(cell_samples_ids)
+    pca.fit(cell_samples)
     return pca.components_, pca.explained_variance_
 
 
@@ -140,7 +139,8 @@ def compute_pca(cell_samples, origin=(0, 0, 0)):
 
     for samples in cell_samples:
         valid_idx, _ = check_valid_idx(samples, origin)
-        components, explained_variance = compute_pca_comp_idx(samples, valid_idx)
+        cell_samples_ids = cell_samples[valid_idx]
+        components, explained_variance = compute_pca_comp_idx(cell_samples_ids)
         pca_axis_1.append(components[0])
         pca_axis_2.append(components[1])
         pca_axis_3.append(components[2])

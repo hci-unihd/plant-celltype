@@ -1,5 +1,6 @@
 import numpy as np
 
+from plantcelltype.features.cell_features import set_label_to_bg
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface, compute_cell_average_edt
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
 from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca, compute_pca_comp_idx
@@ -71,6 +72,13 @@ def build_edges_ids(stack, create_rag_image=True):
         rag_boundaries = rectify_edge_image(rag_boundaries, edges_ids)
         stack['rag_boundaries'] = rag_boundaries
 
+    return stack
+
+
+def build_preprocessing(stack, label=None):
+    if label is None:
+        label = np.unique(stack['segmentation'])[0]
+    stack['segmentation'] = set_label_to_bg(stack['segmentation'], label)
     return stack
 
 
@@ -233,7 +241,13 @@ def _get_es_com(stack, axis_transformer, es_label=8):
     return es_com_voxels
 
 
-def build_naive_grs(stack, axis_transformer, es_label=8):
+def build_trivial_grs(stack, axis_transformer):
+    stack['attributes']['global_reference_system_origin'] = (0, 0, 0)
+    stack['attributes']['global_reference_system_axis'] = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    return stack
+
+
+def build_es_trivial_grs(stack, axis_transformer, es_label=8):
     stack['attributes']['global_reference_system_origin'] = _get_es_com(stack, axis_transformer, es_label)
     stack['attributes']['global_reference_system_axis'] = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
     return stack
@@ -245,13 +259,7 @@ def build_es_pca_grs(stack, axis_transformer, es_label=8):
     for _es_ids in es_ids:
         masks.append(stack['segmentation'] == _es_ids)
 
-    if len(masks) > 1:
-        masks = np.logical_or(*masks)
-    elif len(masks) == 1:
-        masks = masks[0]
-    else:
-        raise ValueError
-
+    masks = np.logical_or.reduce(masks)
     samples_voxels = np.stack(np.nonzero(masks)).T
     samples_grs = axis_transformer.transform_coord(samples_voxels)
     components, _ = compute_pca_comp_idx(samples_grs)

@@ -3,11 +3,11 @@ import copy
 import napari
 import numpy as np
 from scipy.ndimage import zoom
-from sklearn.decomposition import PCA
 from skspatial.objects import Line, Vector
 
 from plantcelltype.graphnn.data_loader import gt_mapping_wb
 from plantcelltype.utils import map_edges_features2rag_boundaries, map_cell_features2segmentation
+from plantcelltype.utils import create_boundaries_image
 from plantcelltype.utils.io import open_full_stack, export_full_stack
 
 
@@ -27,7 +27,7 @@ def create_prediction_label_image(stack, segmentation=None):
 
 
 class CellTypeViewer:
-    def __init__(self, path, view_features=True, scale=(1, 1, 1)):
+    def __init__(self, path, features=None, scale=(1, 1, 1)):
         self.path = path
         stack, at = open_full_stack(path)
         self.segmentation = stack['segmentation']
@@ -36,7 +36,8 @@ class CellTypeViewer:
 
         self.stack = stack
         self.at = at
-        self.view_features = view_features
+        if 'cell_features' in stack:
+            self.view_features = stack['cell_features'].keys() if features is None else features
 
     def update_scaling(self, scale=(1, 1, 1)):
         if np.prod(scale) != 1:
@@ -51,10 +52,10 @@ class CellTypeViewer:
 
         if 'cell_predictions' in self.stack:
             predictions, labels = create_prediction_label_image(self.stack, self.segmentation)
-
-            viewer.add_labels(labels, name='labels', scale=self.voxel_size)
+            viewer.add_labels(labels, name='labels', scale=self.voxel_size, visible=False)
             viewer.add_labels(predictions, name='predictions', scale=self.voxel_size)
             viewer.add_labels(np.where(predictions != labels, 19, 0),
+                              visible=False,
                               name='errors',
                               scale=self.stack['attributes']['element_size_um'])
         else:
@@ -63,8 +64,10 @@ class CellTypeViewer:
                                                     self.stack['cell_labels'])
             viewer.add_labels(labels, name='labels', scale=self.voxel_size)
 
-        if self.view_features and 'cell_features' in self.stack:
-            for key, value in self.stack['cell_features'].items():
+        if 'cell_features' in self.stack:
+            cell_features = self.stack['cell_features']
+            for key in self.view_features:
+                value = cell_features[key]
                 if isinstance(value, np.ndarray):
                     if value.ndim == 1:
                         feat = map_cell_features2segmentation(self.segmentation,

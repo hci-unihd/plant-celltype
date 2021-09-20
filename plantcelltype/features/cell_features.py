@@ -23,6 +23,10 @@ def seg2com(segmentation, cell_ids):
     return label2com(segmentation, cell_ids)
 
 
+def set_label_to_bg(segmentation, label, bg=0):
+    return np.where(segmentation == label, bg, segmentation)
+
+
 def shortest_distance_to_label(cell_ids, edges_ids, label=0, not_bg=False):
     if not_bg:
         edges_ids = remove_bg_from_edges_ids(edges_ids)

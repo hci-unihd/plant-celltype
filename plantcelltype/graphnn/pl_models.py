@@ -26,7 +26,6 @@ def load_model(name, model_kwargs=None):
 class NodesClassification(pl.LightningModule):
     def __init__(self, model, optimizer, logger=None):
         super(NodesClassification, self).__init__()
-
         self.net = load_model(model['name'], model['kwargs'])
         self.optimizer = {} if optimizer is None else optimizer
 

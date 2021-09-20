@@ -3,6 +3,7 @@ import glob
 import os
 
 import numpy as np
+import tqdm
 import torch
 from skspatial.objects import Vector
 from torch.utils.data import DataLoader as TorchDataLoader
@@ -16,7 +17,8 @@ from plantcelltype.graphnn.line_graph import to_line_graph
 from plantcelltype.utils import open_full_stack
 from plantcelltype.utils.utils import filter_bg_from_edges
 
-gt_mapping_wb = {1: 0,
+gt_mapping_wb = {0: -1,
+                 1: 0,
                  2: 1,
                  3: 2,
                  4: 3,
@@ -178,7 +180,7 @@ def create_data(file, load_edge_attr=False, as_line_graph=False, load_samples=Fa
 def create_loaders(files_list, batch_size=1, load_edge_attr=False, as_line_graph=False, shuffle=True):
     data = [create_data(file,
                         load_edge_attr=load_edge_attr,
-                        as_line_graph=as_line_graph) for file in files_list]
+                        as_line_graph=as_line_graph) for file in tqdm.tqdm(files_list)]
 
     loader = DataLoader(data, batch_size=batch_size, shuffle=shuffle, num_workers=8)
     return loader

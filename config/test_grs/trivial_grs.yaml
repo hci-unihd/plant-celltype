@@ -1,0 +1,11 @@
+_internal_variables:
+  template: !update 'config/test_grs/template.yaml'
+  model_name: &grs 'trivial_grs'
+  home_path: &home_path !home_path
+
+logs:
+  save_dir: !join [*home_path, /results/plant-ct-logs/best_deepGCN/]
+  name: *grs
+
+loader:
+  path: !join [*home_path, /data/ovules/ovules-celltype-new/, *grs, /late_cropped_ds3/]

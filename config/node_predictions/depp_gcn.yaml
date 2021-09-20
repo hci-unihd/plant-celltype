@@ -2,27 +2,27 @@ _internal_variables:
   - &home_path !home_path
 
 preprocessing:
-  state: true
+  state: false
   train_data_voxels_size: [0.25, 0.2, 0.2]
   default_seg_key: 'segmentation'
-  file_list: !join [*home_path, '/data/ovules/ovules-celltype/late_cropped_ds3/XXXX/*.h5']
-  out_dir: &out_dir !join [*home_path, '/data/ovules/ovules-celltype-new/trivial_grs/late_cropped_ds3/XXXX/']
+  file_list: !join [*home_path, '/Downloads/tejasvinee/predictions_segmentations/1135_segmentation.tiff']
+  out_dir: &out_dir !join [*home_path, '/Downloads/test_ct/']
 
 grs_step:
-  state: true
-  mode: label_grs
+  state: false
+  mode: trivial_grs
   file_list: !join [*out_dir, '*']
 
 advanced_features_step:
-  state: true
+  state: false
   file_list: !join [*out_dir, '*']
 
 ct_predictions:
-  state: false
+  state: true
   mode: 'NodesClassification'
 
   loader:
     files_list: !join [*out_dir, '*']
     load_edge_attr: true
 
-  checkpoint: !join [*home_path, '/hci/results/plant-ct-logs/grid_search/DeeperGCN_base_lr:1e-2_wd:0_hidden_feat:32_num_layers:4_dropout:0.0_batch:5_split0/version_0/']
+  checkpoint: !join [*home_path, '/hci/results/plant-ct-logs/best_deepGCN/trivial_grs/version_0/']

@@ -1,12 +1,13 @@
 import os
 import time
 
+from plantcelltype.features.build_features import build_preprocessing
 from plantcelltype.features.build_features import build_basic_cell_features, build_basic, build_es_proposal
 from plantcelltype.features.build_features import build_basic_edges_features, build_edges_points_samples
 from plantcelltype.features.build_features import build_cell_points_samples
 from plantcelltype.features.build_features import build_edges_planes, build_lrs, build_pca_features
 from plantcelltype.features.build_features import build_grs_from_labels_funiculum, build_grs_from_labels_surface
-from plantcelltype.features.build_features import build_naive_grs, build_es_pca_grs
+from plantcelltype.features.build_features import build_trivial_grs, build_es_trivial_grs, build_es_pca_grs
 from plantcelltype.features.build_features import build_length_along_local_axis, build_cell_dot_features
 from plantcelltype.graphnn.predict import run_predictions
 from plantcelltype.utils import export_full_stack, open_full_stack
@@ -21,29 +22,33 @@ def preprocessing(config):
     train_data_voxels_size = config.get('train_data_voxels_size', None)
     export_location = config.get('out_dir', None)
     default_seg_key = config.get('default_seg_key', 'segmentation')
-    os.makedirs(export_location, exist_ok=True)
+    if export_location is not None:
+        os.makedirs(export_location, exist_ok=True)
 
     for i, file in enumerate(files):
         timer = - time.time()
         progress = f'{i+1}/{len(files)}'
         print(f'{progress} - processing: {file}')
 
-        csv_path = file.replace('.h5', '_annotations.csv')
-
-        csv_path = csv_path if os.path.isfile(csv_path) else None
         base, stack_name = os.path.split(file)
-        stack_name, _ = os.path.splitext(stack_name)
+        stack_name, ext = os.path.splitext(stack_name)
         export_location = base if export_location is None else export_location
         assert os.path.isdir(export_location)
+
+        csv_path = file.replace(ext, '_annotations.csv')
+        csv_path = csv_path if os.path.isfile(csv_path) else None
+
         out_file = os.path.join(export_location, f'{stack_name}_ct.h5')
 
         stack = import_segmentation(file, key=default_seg_key, out_voxel_size=train_data_voxels_size)
+
+        stack = build_preprocessing(stack)
         stack = build_basic(stack, csv_path=csv_path)
 
         stack = build_basic_cell_features(stack)
         stack = build_es_proposal(stack)
         stack = build_cell_points_samples(stack)
-        stack = build_naive_grs(stack, load_axis_transformer(stack['attributes']))
+        stack = build_trivial_grs(stack, load_axis_transformer(stack['attributes']))
 
         # export processed files
         export_full_stack(out_file, stack)
@@ -59,7 +64,7 @@ def manual_grs(files):
         ct_viewer()
 
 
-def automatic_grs(files, step=build_naive_grs):
+def automatic_grs(files, step=build_trivial_grs):
     for i, file in enumerate(files):
         progress = f'{i+1}/{len(files)}'
         print(f'{progress} - fix-grs: {file}')
@@ -76,17 +81,21 @@ def fix_grs(config):
     if mode == 'trivial_grs':
         return automatic_grs(files)
 
+    elif mode == 'es_trivial_grs':
+        return automatic_grs(files, step=build_es_trivial_grs)
+
+    elif mode == 'es_pca_grs':
+        return automatic_grs(files, step=build_es_pca_grs)
+
     elif mode == 'label_grs_funiculum':
         return automatic_grs(files, step=build_grs_from_labels_funiculum)
 
     elif mode == 'label_grs_surface':
         return automatic_grs(files, step=build_grs_from_labels_surface)
 
-    elif mode == 'es_pca_grs':
-        return automatic_grs(files, step=build_es_pca_grs)
-
     elif mode == 'manual_grs':
         return manual_grs(files)
+
     else:
         raise NotImplementedError
 

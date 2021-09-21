@@ -1,19 +1,19 @@
+import copy
 import os
 import time
 
-from plantcelltype.features.build_features import build_preprocessing
 from plantcelltype.features.build_features import build_basic_cell_features, build_basic, build_es_proposal
 from plantcelltype.features.build_features import build_basic_edges_features, build_edges_points_samples
 from plantcelltype.features.build_features import build_cell_points_samples
 from plantcelltype.features.build_features import build_edges_planes, build_lrs, build_pca_features
 from plantcelltype.features.build_features import build_grs_from_labels_funiculum, build_grs_from_labels_surface
-from plantcelltype.features.build_features import build_trivial_grs, build_es_trivial_grs, build_es_pca_grs
 from plantcelltype.features.build_features import build_length_along_local_axis, build_cell_dot_features
+from plantcelltype.features.build_features import build_preprocessing
+from plantcelltype.features.build_features import build_trivial_grs, build_es_trivial_grs, build_es_pca_grs
 from plantcelltype.graphnn.predict import run_predictions
 from plantcelltype.utils import export_full_stack, open_full_stack
 from plantcelltype.utils.io import import_segmentation, load_axis_transformer
 from plantcelltype.utils.utils import load_paths
-import copy
 from plantcelltype.visualization.napari_visualization import CellTypeViewer
 
 

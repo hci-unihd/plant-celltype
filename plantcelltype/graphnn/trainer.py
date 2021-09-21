@@ -1,9 +1,11 @@
-import pytorch_lightning as pl
-from pytorch_lightning import loggers as pl_loggers
-import os
-import yaml
-import itertools
 import copy
+import itertools
+import os
+
+import pytorch_lightning as pl
+import yaml
+from pytorch_lightning import loggers as pl_loggers
+
 from plantcelltype.graphnn.data_loader import build_geometric_loaders, get_n_splits
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
 from plantcelltype.utils.utils import print_config

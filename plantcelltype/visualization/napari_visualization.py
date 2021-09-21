@@ -7,7 +7,6 @@ from skspatial.objects import Line, Vector
 
 from plantcelltype.graphnn.data_loader import gt_mapping_wb
 from plantcelltype.utils import map_edges_features2rag_boundaries, map_cell_features2segmentation
-from plantcelltype.utils import create_boundaries_image
 from plantcelltype.utils.io import open_full_stack, export_full_stack
 
 

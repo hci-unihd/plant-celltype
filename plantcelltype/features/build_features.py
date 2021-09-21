@@ -1,9 +1,9 @@
 import numpy as np
 
-from plantcelltype.features.cell_features import set_label_to_bg, size_filter_bg_preserving
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface, compute_cell_average_edt
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
 from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca, compute_pca_comp_idx
+from plantcelltype.features.cell_features import set_label_to_bg, size_filter_bg_preserving
 from plantcelltype.features.cell_vector_features import compute_length_along_axis
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis1
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis2_pair

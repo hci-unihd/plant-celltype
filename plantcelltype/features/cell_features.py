@@ -2,13 +2,13 @@ import numpy as np
 from elf.segmentation.watershed import apply_size_filter
 from networkx.algorithms.centrality import current_flow_betweenness_centrality
 from networkx.algorithms.centrality import degree_centrality, betweenness_centrality, eigenvector_centrality
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import shortest_path
-from sklearn.decomposition import PCA
-from scipy.ndimage import distance_transform_edt
 from numba import njit
 from numba import types
 from numba.typed import Dict
+from scipy.ndimage import distance_transform_edt
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import shortest_path
+from sklearn.decomposition import PCA
 
 from plantcelltype.features.rag import build_nx_graph, remove_bg_from_edges_ids
 from plantcelltype.features.sampling import farthest_points_sampling

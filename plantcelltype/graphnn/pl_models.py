@@ -1,8 +1,7 @@
-import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
-from torchmetrics import Accuracy, BinnedAveragePrecision, ConfusionMatrix, Precision, Recall, F1
+from torchmetrics import Accuracy, Precision, Recall, F1
 
 from egmodels.graph_base_models import GCN2, GCN3, GAT2, GAT3, TransformerGCN2, TransformerGCN3
 from plantcelltype.graphnn.edge_models import LineGCN2, LineTGCN2, EGCN2, ETGCN2

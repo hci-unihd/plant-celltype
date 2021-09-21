@@ -3,8 +3,8 @@ import glob
 import os
 
 import numpy as np
-import tqdm
 import torch
+import tqdm
 from skspatial.objects import Vector
 from torch.utils.data import DataLoader as TorchDataLoader
 from torch.utils.data import Dataset as TorchDataset

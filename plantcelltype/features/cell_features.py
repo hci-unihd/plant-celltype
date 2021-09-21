@@ -1,4 +1,5 @@
 import numpy as np
+from elf.segmentation.watershed import apply_size_filter
 from networkx.algorithms.centrality import current_flow_betweenness_centrality
 from networkx.algorithms.centrality import degree_centrality, betweenness_centrality, eigenvector_centrality
 from scipy.sparse import csr_matrix
@@ -25,6 +26,16 @@ def seg2com(segmentation, cell_ids):
 
 def set_label_to_bg(segmentation, label, bg=0):
     return np.where(segmentation == label, bg, segmentation)
+
+
+def size_filter_bg_preserving(segmentation, size_filter):
+    if size_filter > 0:
+        segmentation += 1
+        segmentation, _ = apply_size_filter(segmentation.astype('uint32'),
+                                            np.zeros_like(segmentation).astype('float32'),
+                                            size_filter=size_filter)
+        segmentation -= 1
+    return segmentation
 
 
 def shortest_distance_to_label(cell_ids, edges_ids, label=0, not_bg=False):
@@ -142,7 +153,7 @@ def compute_pca(cell_samples, origin=(0, 0, 0)):
     pca_explained_variance = []
 
     for samples in cell_samples:
-        valid_idx, _ = check_valid_idx(samples, origin)
+        valid_idx, counts = check_valid_idx(samples, origin)
         valid_samples = samples[valid_idx]
         components, explained_variance = compute_pca_comp_idx(valid_samples)
         pca_axis_1.append(components[0])

@@ -12,6 +12,7 @@ def edges2com(rag_boundaries, edges_ids):
 
 def compute_edges_labels(cell_ids, edges_ids, cell_labels):
     edges_labels = np.zeros(edges_ids.shape[0])
+
     labels_mapping = create_cell_mapping(cell_ids, cell_labels)
     labels_mapping[0] = 0
     for i, (e1, e2) in enumerate(edges_ids):

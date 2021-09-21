@@ -1,6 +1,6 @@
 import numpy as np
 
-from plantcelltype.features.cell_features import set_label_to_bg
+from plantcelltype.features.cell_features import set_label_to_bg, size_filter_bg_preserving
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface, compute_cell_average_edt
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
 from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca, compute_pca_comp_idx
@@ -75,10 +75,15 @@ def build_edges_ids(stack, create_rag_image=True):
     return stack
 
 
-def build_preprocessing(stack, label=None):
+def build_preprocessing(stack, size_filter=50, label=None):
+    segmentation = stack['segmentation']
     if label is None:
-        label = np.unique(stack['segmentation'])[0]
-    stack['segmentation'] = set_label_to_bg(stack['segmentation'], label)
+        label = np.unique(segmentation)[0]
+
+    segmentation = set_label_to_bg(segmentation, label)
+    segmentation = size_filter_bg_preserving(segmentation, size_filter)
+
+    stack['segmentation'] = segmentation
     return stack
 
 

@@ -4,7 +4,6 @@ _internal_variables:
   home_path: &home_path !home_path
 
 logs:
-  save_dir: !join [*home_path, /results/plant-ct-logs/best_deepGCN/]
   name: *grs
 
 loader:

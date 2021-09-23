@@ -5,6 +5,7 @@ from torchmetrics import Accuracy, Precision, Recall, F1
 
 from egmodels.graph_base_models import GCN2, GCN3, GAT2, GAT3, TransformerGCN2, TransformerGCN3
 from plantcelltype.graphnn.edge_models import LineGCN2, LineTGCN2, EGCN2, ETGCN2
+from plantcelltype.graphnn.edge_models import LineEDeeperGCN, LineEGCNII, EDeeperGCN, EGCNII
 from plantcelltype.graphnn.graph_models import GCNII, DeeperGCN
 
 models_pool = {'GCN3': GCN3, 'GCN2': GCN2,
@@ -14,8 +15,12 @@ models_pool = {'GCN3': GCN3, 'GCN2': GCN2,
                'TransformerGCN2': TransformerGCN2,
                'LineGCN2': LineGCN2,
                'LineTGCN2': LineTGCN2,
+               'LineEDeeperGCN': LineEDeeperGCN,
+               'LineEGCNII': LineEGCNII,
                'EGCN2': EGCN2,
-               'ETGCN2': ETGCN2}
+               'ETGCN2': ETGCN2,
+               'EDeeperGCN': EDeeperGCN,
+               'EGCNII': EGCNII}
 
 
 def load_model(name, model_kwargs=None):
@@ -176,9 +181,13 @@ class EdgesClassification(NodesClassification, pl.LightningModule):
         logits = torch.sigmoid(logits)
         pred = logits > 0.5
         loss = F.binary_cross_entropy(logits, batch.edge_y.float())
-        acc = pred.eq(batch.edge_y).sum().item() / batch.edge_y.shape[0]
+
+        glob_acc = self.micro_accuracy(pred, batch.edge_y)
+        class_acc = self.macro_accuracy(pred, batch.edge_y)
+
         self.log('train_loss', loss)
-        self.log('train_acc', acc)
+        self.log('train_global_acc', glob_acc)
+        self.log('train_class_acc', class_acc)
         return loss
 
     def validation_step(self, val_batch, batch_idx):
@@ -188,7 +197,16 @@ class EdgesClassification(NodesClassification, pl.LightningModule):
         logits = torch.sigmoid(logits)
         pred = logits > 0.5
         loss = F.binary_cross_entropy(logits, val_batch.edge_y.float())
-        acc = pred.eq(val_batch.edge_y).sum().item() / val_batch.edge_y.shape[0]
+
+        full_metrics = self.compute_metrics(pred.cpu(), val_batch.edge_y.cpu())
+
+        if self.log_points:
+            self._log_points(val_batch.pos, pred, batch_idx)
+
         self.log('val_loss', loss)
-        self.log('val_acc', acc)
-        return loss
+        self.log('val_global_acc', full_metrics['accuracy_micro'])
+        self.log('val_class_acc', full_metrics['accuracy_macro'])
+
+        metrics = {'hp_metric': full_metrics['accuracy_micro']}
+        self.log_dict(metrics)
+        return full_metrics, val_batch.file_path, val_batch.stage, val_batch.stack

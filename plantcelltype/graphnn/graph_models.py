@@ -18,7 +18,9 @@ class DeeperGCN(torch.nn.Module):
         super(DeeperGCN, self).__init__()
 
         self.node_encoder = Linear(in_features, hidden_feat)
-        self.edge_encoder = Linear(in_edges, hidden_feat)
+        self.in_edges = in_edges
+        if self.in_edges is not None:
+            self.edge_encoder = Linear(in_edges, hidden_feat)
         self.dropout = dropout
 
         self.layers = torch.nn.ModuleList()
@@ -37,7 +39,10 @@ class DeeperGCN(torch.nn.Module):
     @tg_dispatch()
     def forward(self, x, edge_index, edge_attr):
         x = self.node_encoder(x)
-        edge_attr = self.edge_encoder(edge_attr)
+        if self.in_edges is not None:
+            edge_attr = self.edge_encoder(edge_attr)
+        else:
+            edge_attr = None
 
         x = self.layers[0].conv(x, edge_index, edge_attr)
 

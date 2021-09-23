@@ -4,7 +4,7 @@ import time
 
 from plantcelltype.features.build_features import build_basic_cell_features, build_basic, build_es_proposal
 from plantcelltype.features.build_features import build_basic_edges_features, build_edges_points_samples
-from plantcelltype.features.build_features import build_cell_points_samples
+from plantcelltype.features.build_features import build_cell_points_samples, build_es_features
 from plantcelltype.features.build_features import build_edges_planes, build_lrs, build_pca_features
 from plantcelltype.features.build_features import build_grs_from_labels_funiculum, build_grs_from_labels_surface
 from plantcelltype.features.build_features import build_length_along_local_axis, build_cell_dot_features
@@ -47,6 +47,7 @@ def preprocessing(config):
 
         stack = build_basic_cell_features(stack)
         stack = build_es_proposal(stack)
+        stack = build_es_features(stack)
         stack = build_cell_points_samples(stack)
         stack = build_trivial_grs(stack, load_axis_transformer(stack['attributes']))
 
@@ -130,7 +131,6 @@ def advanced_preprocessing(config):
 
 
 def main(config, process=None):
-
     if process is None:
         process = {'preprocessing': preprocessing,
                    'grs_step': fix_grs,

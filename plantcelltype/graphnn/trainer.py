@@ -45,6 +45,7 @@ def get_logger(config):
 def simple_train(config):
     pl.seed_everything(42, workers=True)
     test_loader, train_loader, config = get_loaders(config)
+
     model = get_model(config)
     config = get_logger(config)
     trainer = pl.Trainer(**config['trainer'])

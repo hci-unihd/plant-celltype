@@ -1,5 +1,5 @@
 import numpy as np
-from elf.segmentation.watershed import apply_size_filter
+
 from networkx.algorithms.centrality import current_flow_betweenness_centrality
 from networkx.algorithms.centrality import degree_centrality, betweenness_centrality, eigenvector_centrality
 from numba import njit
@@ -24,20 +24,6 @@ def seg2com(segmentation, cell_ids):
     return label2com(segmentation, cell_ids)
 
 
-def set_label_to_bg(segmentation, label, bg=0):
-    return np.where(segmentation == label, bg, segmentation)
-
-
-def size_filter_bg_preserving(segmentation, size_filter):
-    if size_filter > 0:
-        segmentation += 1
-        segmentation, _ = apply_size_filter(segmentation.astype('uint32'),
-                                            np.zeros_like(segmentation).astype('float32'),
-                                            size_filter=size_filter)
-        segmentation -= 1
-    return segmentation
-
-
 def shortest_distance_to_label(cell_ids, edges_ids, label=0, not_bg=False):
     if not_bg:
         edges_ids = remove_bg_from_edges_ids(edges_ids)
@@ -47,6 +33,9 @@ def shortest_distance_to_label(cell_ids, edges_ids, label=0, not_bg=False):
                      shape=(cell_ids.max() + 1, cell_ids.max() + 1))
     adj = adj + adj.T
     distance = shortest_path(adj, indices=label)
+    if distance.ndim == 2:
+        distance = np.min(distance, axis=0)
+
     return distance[cell_ids]
 
 

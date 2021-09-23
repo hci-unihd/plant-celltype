@@ -20,6 +20,7 @@ if __name__ == '__main__':
                     'surface_voxels',
                     'bg_edt_um',
                     'hops_to_bg')
+    #minimal_keys = []
 
     if os.path.isfile(_args.stack):
         ct_viewer = CellTypeViewer(_args.stack, features=minimal_keys)

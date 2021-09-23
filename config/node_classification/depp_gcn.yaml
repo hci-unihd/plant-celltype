@@ -8,7 +8,7 @@ logs:
   name: *model_name
 
 loader:
-  load_edge_attr: true
+  load_edge_attr: false
 
 module:
   optimizer:

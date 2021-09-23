@@ -2,6 +2,7 @@ import csv
 import glob
 import os
 
+from plantcelltype.features.build_features import build_es_features
 import numpy as np
 import torch
 import tqdm
@@ -86,11 +87,10 @@ def collect_edges_features(stack, axis_transform, as_array=True):
 
 def collect_cell_features_grs(stack, axis_transform, as_array=True):
     cell_features = stack['cell_features']
-
     list_feat = [quantile_zscore(axis_transform.transform_coord(cell_features['com_voxels'])),
                  quantile_zscore(axis_transform.scale_volumes(cell_features['volume_voxels'])),
                  quantile_zscore(axis_transform.scale_volumes(cell_features['surface_voxels'])),
-                 feat_to_bg_onehot(cell_features['hops_to_bg'], max_channel=5, extreme=(-1, 1))
+                 feat_to_bg_onehot(cell_features['hops_to_bg'], max_channel=5, extreme=(-1, 1)),
                  ]
 
     for zscore_feat in ['length_axis1_grs',
@@ -267,11 +267,13 @@ def build_geometric_loaders(path,
                             mode='stage_random',
                             load_edge_attr=False,
                             as_line_graph=False):
+
     if mode == 'stage_random':
         files_test, files_train = get_stage_random_split(path, test_ratio=test_ratio, seed=seed)
     elif mode == 'random':
         files_test, files_train = get_random_split(path, test_ratio=test_ratio, seed=seed)
     elif mode == 'split':
+        print('ok')
         files_test, files_train = path['test'], path['train']
     else:
         raise NotImplemented

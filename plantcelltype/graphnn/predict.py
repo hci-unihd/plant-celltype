@@ -13,6 +13,7 @@ from plantcelltype.utils.utils import load_paths
 def build_test_loader(config, glob_paths=True):
     if glob_paths:
         config['files_list'] = load_paths(config['files_list'])
+
     return create_loaders(**config)
 
 

@@ -3,13 +3,15 @@ Cell type classification
 
 ## Installation
 ```
-conda create -n plant-ct -c rusty1s -c pytorch -c nvidia -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml
-jupyterlab tqdm scikit-spatial elf nifty pytorch torchvision cudatoolkit=111 pytorch-lightning pytorch-geometric
+conda create -n plant-ct -c rusty1s -c pytorch -c nvidia -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml jupyterlab tqdm scikit-spatial elf nifty pytorch torchvision cudatoolkit=11.1 pytorch-lightning pytorch-geometric
 ```
 
 ```
-conda create -n plant-ct -c rusty1s -c pytorch -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml
-jupyterlab tqdm scikit-spatial elf nifty pytorch torchvision cudatoolkit=10.2 pytorch-lightning pytorch-geometric
+conda create -n plant-ct -c rusty1s -c pytorch -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml jupyterlab tqdm scikit-spatial elf nifty pytorch torchvision cudatoolkit=10.2 pytorch-lightning pytorch-geometric
+```
+
+```
+conda create -n plant-ct -c rusty1s -c pytorch -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml jupyterlab tqdm scikit-spatial elf nifty pytorch torchvision cpuonly pytorch-lightning pytorch-geometric napari plotly python=3.9 
 ```
 
 ```

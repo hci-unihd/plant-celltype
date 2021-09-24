@@ -1,15 +1,14 @@
 import numpy as np
 
-from scipy import ndimage
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface, compute_cell_average_edt
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
 from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca, compute_pca_comp_idx
-from plantcelltype.features.clean_segmentation import set_label_to_bg, size_filter_bg_preserving
-from plantcelltype.features.clean_segmentation import remove_disconnected_components
 from plantcelltype.features.cell_vector_features import compute_length_along_axis
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis1
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis2_pair
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis3
+from plantcelltype.features.clean_segmentation import remove_disconnected_components
+from plantcelltype.features.clean_segmentation import set_label_to_bg, size_filter_bg_preserving
 from plantcelltype.features.edges_features import compute_edges_labels, compute_edges_length
 from plantcelltype.features.edges_vector_features import compute_edges_planes
 from plantcelltype.features.rag import rag_from_seg, get_edges_com_voxels

@@ -25,7 +25,7 @@ def label2com(label_image, label_ids):
                     com_vector[_ids][2] += float(k)
                     counts_vector[_ids] += 1
 
-    for i, _ids in enumerate(label_ids):
+    for i in range(label_ids.shape[0]):
         com_vector[i] /= counts_vector[i]
 
     return com_vector
@@ -40,10 +40,5 @@ def make_seg_hollow(segmentation, rag_boundaries):
 
 def check_valid_idx(samples, zeros=(0, 0, 0)):
     zeros = np.array(zeros)
-    counts = 0
-    _valid_idx = []
-    for i, _point in enumerate(samples):
-        if not np.allclose(_point, zeros):
-            counts += 1
-            _valid_idx.append(i)
-    return _valid_idx, counts
+    valid_idx = [i for i, _point in enumerate(samples) if not np.allclose(_point, zeros)]
+    return valid_idx, len(valid_idx)

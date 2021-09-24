@@ -1,5 +1,4 @@
 import numpy as np
-
 from networkx.algorithms.centrality import current_flow_betweenness_centrality
 from networkx.algorithms.centrality import degree_centrality, betweenness_centrality, eigenvector_centrality
 from numba import njit

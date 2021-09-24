@@ -7,7 +7,6 @@ from plantcelltype.utils.utils import create_edge_mapping, create_cell_mapping, 
 
 
 def compute_local_reference_axis1(cell_ids, edges_ids, cell_hops_to_bg, edges_plane_vectors):
-
     nx_graph = build_nx_graph(cell_ids, edges_ids)
     cell_hops_to_bg_mapping = create_cell_mapping(cell_ids, cell_hops_to_bg)
     edges_pv_mapping = create_edge_mapping(edges_ids, edges_plane_vectors)

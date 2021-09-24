@@ -51,11 +51,9 @@ def get_edges_com_voxels(rag):
 
 
 def rectify_rag_names(cell_ids, edges_ids):
-    new_edges_ids = []
     cell_ids_mapping = create_cell_mapping(cell_ids, np.arange(cell_ids.shape[0]))
 
     edges_ids = remove_bg_from_edges_ids(edges_ids)
-    for e1, e2 in edges_ids:
-        new_edges_ids.append([cell_ids_mapping[e1], cell_ids_mapping[e2]])
+    new_edges_ids = [[cell_ids_mapping[e1], cell_ids_mapping[e2]] for e1, e2 in edges_ids]
     return np.array(new_edges_ids)
 

@@ -1,7 +1,6 @@
 import numpy as np
-
-from scipy import ndimage
 from elf.segmentation.watershed import apply_size_filter
+from scipy import ndimage
 
 
 def set_label_to_bg(segmentation, label, bg=0):

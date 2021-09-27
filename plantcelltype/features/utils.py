@@ -38,7 +38,19 @@ def make_seg_hollow(segmentation, rag_boundaries):
     return hollow_segmentation
 
 
+@njit()
+def _check_valid_idx(samples, zeros=(0, 0, 0)):
+    # pure python version is much slower
+    # zeros = np.array(zeros)
+    # valid_idx = [i for i, _point in enumerate(samples) if not np.allclose(_point, zeros)]
+    valid_idx = []
+    for i, _point in enumerate(samples):
+        d = np.sqrt(np.sum((_point - zeros)**2))
+        if d > 0:
+            valid_idx.append(i)
+    return valid_idx
+
+
 def check_valid_idx(samples, zeros=(0, 0, 0)):
-    zeros = np.array(zeros)
-    valid_idx = [i for i, _point in enumerate(samples) if not np.allclose(_point, zeros)]
-    return valid_idx, len(valid_idx)
+    valid_idx = _check_valid_idx(samples, zeros)
+    return samples[valid_idx], len(valid_idx)

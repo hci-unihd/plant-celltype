@@ -45,7 +45,7 @@ def preprocessing(config):
         stack = build_preprocessing(stack)
         stack = build_basic(stack, csv_path=csv_path)
 
-        stack = build_basic_cell_features(stack)
+        # stack = build_basic_cell_features(stack)
         stack = build_es_proposal(stack)
         stack = build_es_features(stack)
         stack = build_cell_points_samples(stack)
@@ -55,6 +55,11 @@ def preprocessing(config):
         export_full_stack(out_file, stack)
         timer += time.time()
         print(f'{progress} - runtime: {timer:.2f}s')
+
+
+from line_profiler import LineProfiler
+profile_pre = LineProfiler()
+preprocessing = profile_pre(preprocessing)
 
 
 def manual_grs(files):
@@ -141,6 +146,7 @@ def main(config, process=None):
         sub_config = config[process_key]
         if sub_config.get('state', False):
             process_func(sub_config)
+    print(profile_pre.print_stats())
 
 
 def process_train_data(config):

@@ -104,18 +104,18 @@ def compute_cell_average_edt(cell_ids, segmentation, voxel_size=(1, 1, 1), label
     return _cell_average_edt(segmentation, dt_mask, cell_ids)
 
 
-def compute_generic_centrality(cell_ids, edges_ids, centrality='degree', cell_com=None, args=()):
+def compute_generic_centrality(cell_ids, edges_ids, centrality='degree', cell_com=None, kwargs=None):
     nx_graph = build_nx_graph(cell_ids, edges_ids, cell_com)
-    centrality_mapping = _supported_centrality[centrality](nx_graph, *args)
+    kwargs = {} if kwargs is None else kwargs
+    centrality_mapping = _supported_centrality[centrality](nx_graph, **kwargs)
     centrality = np.zeros(cell_ids.shape[0])
     for i, _idx in enumerate(cell_ids):
         centrality[i] = centrality_mapping[_idx]
-
     return centrality
 
 
 def compute_degree_centrality(cell_ids, edges_ids):
-    return compute_generic_centrality(cell_ids, edges_ids, centrality='degree', cell_com=None)
+    return compute_generic_centrality(cell_ids, edges_ids, centrality='degree')
 
 
 def compute_rw_betweenness_centrality(cell_ids, edges_ids, cell_com=None):
@@ -123,11 +123,11 @@ def compute_rw_betweenness_centrality(cell_ids, edges_ids, cell_com=None):
 
 
 def compute_betweenness_centrality(cell_ids, edges_ids):
-    return compute_generic_centrality(cell_ids, edges_ids, centrality='betweenness', cell_com=None)
+    return compute_generic_centrality(cell_ids, edges_ids, centrality='betweenness')
 
 
 def compute_eigen_vector_centrality(cell_ids, edges_ids):
-    return compute_generic_centrality(cell_ids, edges_ids, centrality='eigen_vector', args=None, cell_com=None)
+    return compute_generic_centrality(cell_ids, edges_ids, centrality='eigen_vector')
 
 
 def compute_pca_comp_idx(cell_samples):
@@ -141,8 +141,7 @@ def compute_pca(cell_samples, origin=(0, 0, 0)):
     pca_explained_variance = []
 
     for samples in cell_samples:
-        valid_idx, counts = check_valid_idx(samples, origin)
-        valid_samples = samples[valid_idx]
+        valid_samples, _ = check_valid_idx(samples, origin)
         components, explained_variance = compute_pca_comp_idx(valid_samples)
         pca_axis_1.append(components[0])
         pca_axis_2.append(components[1])

@@ -17,32 +17,9 @@ def compute_edges_labels(cell_ids, edges_ids, cell_labels):
     labels_mapping[0] = 0
     for i, (e1, e2) in enumerate(edges_ids):
         l1, l2 = labels_mapping[e1], labels_mapping[e2]
-        if l1 == l2:
-            edges_labels[i] = 1
-        else:
-            edges_labels[i] = 0
+        edges_labels[i] = 1 if l1 == l2 else 0
 
     return edges_labels
-
-
-def compute_boundaries_com_angles(cell_ids, edges_ids, cell_com, edges_sample):
-    cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
-
-    angles = np.zeros(edges_ids.shape[0])
-    for i, (samples, (e1, e2)) in enumerate(zip(edges_sample, edges_ids)):
-        if e1 > 0 and e2 > 0:
-            try:
-                plane = Plane.best_fit(samples)
-                vector = Vector.from_points(cell_com_mapping[e1], cell_com_mapping[e2])
-                projection = plane.project_vector(vector)
-                _angle = projection.unit().dot(vector.unit())
-                angles[i] = _angle
-            except:
-                angles[i] = 0
-
-        else:
-            angles[i] = 0
-    return angles
 
 
 def compute_edges_length(cell_ids, edges_ids, cell_com):
@@ -57,23 +34,3 @@ def compute_edges_length(cell_ids, edges_ids, cell_com):
             com_distance[i] = 0
 
     return com_distance
-
-
-def compute_edges_angles(cell_ids, edges_ids, cell_com, edges_com):
-    com_mapping = create_cell_mapping(cell_ids, cell_com)
-    com_angle = np.zeros(edges_ids.shape[0])
-    for i, (e1, e2) in enumerate(edges_ids):
-        if e1 > 0 and e2 > 0:
-            try:
-                x1, x2 = com_mapping[e1], com_mapping[e2]
-                e_com = edges_com[i]
-                vector1 = Vector.from_points(x1, e_com).unit()
-                vector2 = Vector.from_points(x2, e_com).unit()
-                _angle = vector1.dot(vector2)
-                com_angle[i] = abs(_angle)
-            except:
-                com_angle[i] = 0
-        else:
-            com_angle[i] = 0
-
-    return com_angle

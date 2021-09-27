@@ -29,9 +29,18 @@ class AxisTransformer:
         self.center = np.array(center)
         self.voxel_size = np.array(voxel_size)
 
-    def reset_axis(self):
+    def reset_axis(self, reset_center=True):
         self.axis = np.array(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
-        self.center = np.array((0, 0, 0))
+        if reset_center:
+            self.center = np.array((0, 0, 0))
+
+    def randomize_axis(self, randomize_center=True, rand_ranges=((0, 1), (0, 1), (0, 1))):
+        axis1 = Vector(np.random.randn(3)).unit()
+        axis2 = Vector(np.random.randn(3)).cross(axis1).unit()
+        axis3 = axis2.cross(axis1).unit()
+        self.axis = np.array((axis1, axis2, axis3))
+        if randomize_center:
+            self.center = np.array([(_max - _min) * np.random.rand() + _min for _min, _max in rand_ranges])
 
     def transform_coord(self, points_coo, voxel_size=None):
         voxel_size = self.voxel_size if voxel_size is None else voxel_size

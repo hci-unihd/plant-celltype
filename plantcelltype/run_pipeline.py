@@ -8,6 +8,9 @@ from plantcelltype.features.build_features import build_cell_points_samples, bui
 from plantcelltype.features.build_features import build_edges_planes, build_lrs, build_pca_features
 from plantcelltype.features.build_features import build_grs_from_labels_funiculum, build_grs_from_labels_surface
 from plantcelltype.features.build_features import build_length_along_local_axis, build_cell_dot_features
+from plantcelltype.features.build_features import build_edges_dot_features
+from plantcelltype.features.build_features import build_cell_transformed_voxels_features
+from plantcelltype.features.build_features import build_edges_transformed_voxels_features
 from plantcelltype.features.build_features import build_preprocessing
 from plantcelltype.features.build_features import build_trivial_grs, build_es_trivial_grs, build_es_pca_grs
 from plantcelltype.graphnn.predict import run_predictions
@@ -45,7 +48,7 @@ def preprocessing(config):
         stack = build_preprocessing(stack)
         stack = build_basic(stack, csv_path=csv_path)
 
-        # stack = build_basic_cell_features(stack)
+        stack = build_basic_cell_features(stack)
         stack = build_es_proposal(stack)
         stack = build_es_features(stack)
         stack = build_cell_points_samples(stack)
@@ -55,11 +58,6 @@ def preprocessing(config):
         export_full_stack(out_file, stack)
         timer += time.time()
         print(f'{progress} - runtime: {timer:.2f}s')
-
-
-from line_profiler import LineProfiler
-profile_pre = LineProfiler()
-preprocessing = profile_pre(preprocessing)
 
 
 def manual_grs(files):
@@ -127,7 +125,14 @@ def advanced_preprocessing(config):
         # advanced
         stack = build_pca_features(stack, at)
         stack = build_length_along_local_axis(stack, at)
+
+        # dot
         stack = build_cell_dot_features(stack, at)
+        stack = build_edges_dot_features(stack, at)
+
+        # transforms
+        stack = build_cell_transformed_voxels_features(stack, at)
+        stack = build_edges_transformed_voxels_features(stack, at)
 
         # export processed files
         export_full_stack(file, stack)
@@ -146,7 +151,6 @@ def main(config, process=None):
         sub_config = config[process_key]
         if sub_config.get('state', False):
             process_func(sub_config)
-    print(profile_pre.print_stats())
 
 
 def process_train_data(config):

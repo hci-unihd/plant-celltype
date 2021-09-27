@@ -1,4 +1,5 @@
 import numpy as np
+from skspatial.objects import Vector
 
 from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface, compute_cell_average_edt
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
@@ -22,7 +23,8 @@ from plantcelltype.utils.rag_image import rectify_edge_image
 
 
 # Base features
-def update_labels_from_csv(stack, csv_path, create_labels_image=True):
+def build_labels_from_csv(stack, csv_path, create_labels_image=True):
+    """update labels from csv and optionally creat a gt image"""
     cell_ids, cell_labels = stack['cell_ids'], stack['cell_labels']
 
     csv_cell_ids, csv_cell_labels = import_labels_csv(csv_path)
@@ -36,8 +38,9 @@ def update_labels_from_csv(stack, csv_path, create_labels_image=True):
             label = 0
 
         cell_labels[i] = label
-
     stack['cell_labels'] = cell_labels
+
+    # create label image
     if create_labels_image:
         labels = map_cell_features2segmentation(stack['segmentation'], cell_ids, cell_labels)
         labels = labels.astype('int32')
@@ -46,16 +49,18 @@ def update_labels_from_csv(stack, csv_path, create_labels_image=True):
 
 
 def build_cell_ids(stack, csv_path=None, create_labels_image=True):
+    """create ids and labels (if available)"""
     stack['cell_ids'] = np.unique(stack['segmentation'])[1:]
     stack['cell_labels'] = np.zeros_like(stack['cell_ids'])
 
     if csv_path is not None:
-        stack = update_labels_from_csv(stack, csv_path, create_labels_image=create_labels_image)
+        stack = build_labels_from_csv(stack, csv_path, create_labels_image=create_labels_image)
 
     return stack
 
 
 def build_edges_ids(stack, create_rag_image=True):
+    """create graph and edges labels (if available)"""
     _, edges_ids = rag_from_seg(stack['segmentation'])
     edges_ids = edges_ids.astype('int32')
     stack['edges_ids'] = edges_ids
@@ -151,11 +156,9 @@ def build_basic_cell_features(stack, group='cell_features'):
                        build_rw_centrality,
                        build_degree_centrality,
                        build_average_cell_edt]
-    import time
+
     for feat in feat_to_compute:
-        timer = time.time()
         stack = feat(stack)
-        print(feat.__name__, time.time() - timer)
     return stack
 
 
@@ -357,73 +360,102 @@ def build_pca_features(stack, axis_transformer, group='cell_features'):
 
 
 # compute length along axis
-def build_length_along_local_axis(stack, axis_transformer, group='cell_features'):
+def build_length_along_axis(stack,
+                            axis_transformer,
+                            group='cell_features',
+                            axis_name=('lr_axis1_grs', 'lr_axis2_grs', 'lr_axis3_grs'),
+                            feat_name=('length_axis1_grs', 'length_axis2_grs', 'length_axis3_grs')):
     origin_grs = axis_transformer.transform_coord((0, 0, 0))
     com_grs = axis_transformer.transform_coord(stack[group]['com_voxels'])
     samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples'])
 
-    for name_axis, name_feat in zip(['lr_axis1_grs', 'lr_axis2_grs', 'lr_axis3_grs'],
-                                    ['length_axis1_grs', 'length_axis2_grs', 'length_axis3_grs']):
-        len_axis = compute_length_along_axis(stack[group][name_axis],
+    for _axis, _feat in zip(axis_name, feat_name):
+        len_axis = compute_length_along_axis(stack[group][_axis],
                                              com_grs.astype('float32'),
                                              samples_grs.astype('float32'),
                                              origin=origin_grs)
-        stack[group][name_feat] = len_axis.astype('float32')
+        stack[group][_feat] = len_axis.astype('float32')
 
     return stack
 
 
-def build_cell_dot_features(stack, at, group='cell_features'):
-    cell_features = stack[group]
-    global_axis = stack['attributes']['global_reference_system_axis']
-    cell_com_grs = at.transform_coord(cell_features['com_voxels'])
+def build_length_along_local_axis(stack, axis_transformer, group='cell_features'):
+    return build_length_along_axis(stack, axis_transformer, group)
 
+
+def build_length_along_pca_axis(stack, axis_transformer, group='cell_features'):
+    stack = build_length_along_axis(stack,
+                                    axis_transformer,
+                                    group,
+                                    axis_name=('pca_axis1_grs', 'pca_axis2_grs', 'pca_axis3_grs'),
+                                    feat_name=('pca_length_axis1_grs', 'pca_length_axis2_grs', 'pca_length_axis3_grs'))
+    return stack
+
+
+def build_cell_dot_features(stack, axis_transformer, group='cell_features'):
+    cell_features, global_axis = stack['cell_features'], axis_transformer.axis
+
+    cell_com_grs = axis_transformer.transform_coord(cell_features['com_voxels'])
+
+    # proj cell com proj on the global axis
     stack[group]['com_proj_grs'] = cell_com_grs.dot(global_axis.T).astype('float32')
 
+    # proj cell lrs axis proj on the global axis
     stack[group]['lrs_proj_axis1_grs'] = cell_features['lr_axis1_grs'].dot(global_axis.T).astype('float32')
     stack[group]['lrs_proj_axis2_grs'] = cell_features['lr_axis2_grs'].dot(global_axis.T).astype('float32')
     stack[group]['lrs_proj_axis3_grs'] = cell_features['lr_axis3_grs'].dot(global_axis.T).astype('float32')
 
+    # proj cell pca axis proj on the global axis
     stack[group]['pca_proj_axis1_grs'] = cell_features['pca_axis1_grs'].dot(global_axis.T).astype('float32')
     stack[group]['pca_proj_axis2_grs'] = cell_features['pca_axis2_grs'].dot(global_axis.T).astype('float32')
     stack[group]['pca_proj_axis3_grs'] = cell_features['pca_axis3_grs'].dot(global_axis.T).astype('float32')
     return stack
 
 
-from skspatial.objects import Vector
+def build_edges_dot_features(stack, axis_transformer, group='edges_features'):
+    cell_features, global_axis = stack['cell_features'], axis_transformer.axis
+    cell_com_grs = axis_transformer.transform_coord(cell_features['com_voxels'])
 
+    # create mapping
+    cell_com_grs = create_cell_mapping(stack['cell_ids'], cell_com_grs)
+    cell_axis1_grs = create_cell_mapping(stack['cell_ids'], cell_features['lr_axis1_grs'])
+    cell_axis2_grs = create_cell_mapping(stack['cell_ids'], cell_features['lr_axis2_grs'])
+    cell_axis3_grs = create_cell_mapping(stack['cell_ids'], cell_features['lr_axis3_grs'])
 
-def build_edges_dot_features(stack, at, group='cell_features'):
-    cell_features = stack['cell_features']
-    global_axis = stack['attributes']['global_reference_system_axis']
+    # init feat
+    lrs_dot_axis1_grs = np.zeros(stack['edges_ids'].shape[0])
+    lrs_dot_axis2_grs = np.zeros(stack['edges_ids'].shape[0])
+    lrs_dot_axis3_grs = np.zeros(stack['edges_ids'].shape[0])
+    lrs_proj_grs = np.zeros((stack['edges_ids'].shape[0], 3))
 
-    edges_vectors = edges_cosine_features = [], []
-    cell_com_grs = cell_features['com_grs']
     for i, (e1, e2) in enumerate(stack['edges_ids']):
         if e1 > 0 and e2 > 0:
+            # proj between lrs
+            e1_axis1 = cell_axis1_grs[e1]
+            e2_axis1 = cell_axis1_grs[e2]
+            lrs_dot_axis1_grs[i] = np.dot(e1_axis1, e2_axis1)
+
+            e1_axis2 = cell_axis2_grs[e1]
+            e2_axis2 = cell_axis2_grs[e2]
+            lrs_dot_axis2_grs[i] = np.dot(e1_axis2, e2_axis2)
+
+            e1_axis3 = cell_axis3_grs[e1]
+            e2_axis3 = cell_axis3_grs[e2]
+            lrs_dot_axis3_grs[i] = np.dot(e1_axis3, e2_axis3)
+
+            # proj edges axis to the global axis
             e_v = Vector.from_points(cell_com_grs[e1], cell_com_grs[e2]).unit()
+            lrs_proj_grs[i] = np.dot(e_v, global_axis.T)
 
-            e1_axis1 = cell_features['lr_axis1_grs'][e1]
-            e2_axis1 = cell_features['lr_axis1_grs'][e2]
-
-            e1_axis2 = cell_features['lr_axis2_grs'][e1]
-            e2_axis2 = cell_features['lr_axis2_grs'][e2]
-
-            e1_axis3 = cell_features['lr_axis3_grs'][e1]
-            e2_axis3 = cell_features['lr_axis3_grs'][e2]
-
-            _cosine_features = [np.dot(e1_axis1, e2_axis1),
-                                np.dot(e1_axis2, e2_axis2),
-                                np.dot(e1_axis3, e2_axis3)]
-            _cosine_features += list(np.dot(e_v, global_axis.T))
-        else:
-            _cosine_features = [0, 0, 0, 0, 0, 0]
-
-        edges_cosine_features.append(_cosine_features)
-
+    # create attr
+    stack[group]['lrs_dot_axis1_grs'] = lrs_dot_axis1_grs.astype('float32')
+    stack[group]['lrs_dot_axis2_grs'] = lrs_dot_axis2_grs.astype('float32')
+    stack[group]['lrs_dot_axis3_grs'] = lrs_dot_axis3_grs.astype('float32')
+    stack[group]['lrs_proj_grs'] = lrs_proj_grs.astype('float32')
     return stack
 
 
+# precompute grs features
 def build_cell_transformed_voxels_features(stack, axis_transform, group='cell_features'):
     stack[group]['com_grs'] = axis_transform.transform_coord(stack[group]['com_voxels'])
     stack[group]['volume_um'] = axis_transform.scale_volumes(stack[group]['volume_voxels'])

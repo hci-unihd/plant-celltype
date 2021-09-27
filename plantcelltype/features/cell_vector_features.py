@@ -105,8 +105,9 @@ def compute_local_reference_axis2_pair(cell_ids,
         lr_axis_2_mapping[n] = lr_vector
         lr_axis_2_angle[idx] = min_dot
 
-    lr_axis_2_mapping = local_vectors_alignment(nx_graph, lr_axis_2_mapping)
-    lr_axis_2_mapping = local_vectors_averaging(nx_graph, lr_axis_2_mapping)
+    # removed for consistency
+    # lr_axis_2_mapping = local_vectors_alignment(nx_graph, lr_axis_2_mapping, iteration=10)
+    # lr_axis_2_mapping = local_vectors_averaging(nx_graph, lr_axis_2_mapping)
     lr_axis_2 = np.array([lr_axis_2_mapping[idx] for idx in cell_ids])
     return lr_axis_2, lr_axis_2_angle
 
@@ -153,8 +154,3 @@ def compute_length_along_axis(cell_axis, cell_com, cell_samples, origin=(0, 0, 0
         lengths[i] = np.sqrt(np.sum((min_point - max_point) ** 2))
 
     return lengths
-
-
-#from line_profiler import LineProfiler
-#profile = LineProfiler()
-#compute_length_along_axis = profile(compute_length_along_axis)

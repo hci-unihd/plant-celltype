@@ -1,9 +1,9 @@
 import numpy as np
 from skspatial.objects import Vector
 
-from numba import njit
+from numba import njit, prange
 from plantcelltype.features.rag import build_nx_graph
-from plantcelltype.features.utils import check_valid_idx
+from plantcelltype.features.utils import check_valid_idx, fibonacci_sphere
 from plantcelltype.utils.utils import create_edge_mapping, create_cell_mapping, cantor_sym_pair
 
 
@@ -66,11 +66,11 @@ def local_vectors_averaging(nx_graph, vectors_mapping, iteration=10, alpha=0.1):
     return vectors_mapping
 
 
-def compute_local_reference_axis2_pair(cell_ids,
-                                       edges_ids,
-                                       cell_com,
-                                       cell_hops_to_bg,
-                                       global_axis=(1, 0, 0)):
+def compute_local_reference_axis2(cell_ids,
+                                  edges_ids,
+                                  cell_com,
+                                  cell_hops_to_bg,
+                                  global_axis=(1, 0, 0)):
     global_axis = Vector(global_axis)
     nx_graph = build_nx_graph(cell_ids, edges_ids)
     cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
@@ -117,8 +117,12 @@ def compute_local_reference_axis3(cell_axis1, cell_axis2):
     for i, (ax1, ax2) in enumerate(zip(cell_axis1, cell_axis2)):
         ax3 = Vector(ax1).cross(ax2)
         cell_axis3[i] = ax3
-
     return cell_axis3
+
+
+@njit
+def _l2_distance(p1, p2):
+    return np.sqrt(np.sum((p1 - p2) ** 2))
 
 
 @njit
@@ -128,6 +132,7 @@ def _test_angles(valid_samples, cell_com_i, vector):
     min_value, max_value = 0, 0
     for sample in valid_samples:
         test_vector = sample - cell_com_i
+        test_vector /= np.sqrt(np.sum(test_vector**2))
         value = np.dot(vector, test_vector)
 
         if value < min_value:
@@ -139,18 +144,55 @@ def _test_angles(valid_samples, cell_com_i, vector):
     return min_point, max_point
 
 
-def compute_length_along_axis(cell_axis, cell_com, cell_samples, origin=(0, 0, 0)):
-    lengths = np.zeros(cell_com.shape[0])
-    for i, vector in enumerate(cell_axis):
+@njit(parallel=True)
+def compute_length_along_axis(cell_com, cell_samples, axis, origin=(0, 0, 0)):
+    n_samples = cell_com.shape[0]
+    lengths = np.zeros(n_samples)
+    for i in prange(n_samples):
         # create axis vector
         cell_com_i = cell_com[i]
+        sample = cell_samples[i]
 
         # remove empty samples
-        valid_samples, _ = check_valid_idx(cell_samples[i], origin)
+        valid_samples, _ = check_valid_idx(sample, origin)
 
         # find min and max point along the axis
-        min_point, max_point = _test_angles(valid_samples, cell_com_i, vector)
+        _, max_point = _test_angles(valid_samples, cell_com_i, axis)
         # evaluate length
-        lengths[i] = np.sqrt(np.sum((min_point - max_point) ** 2))
+        lengths[i] = _l2_distance(cell_com_i, max_point)
 
     return lengths
+
+
+def compute_proj_length_on_sphere(cell_com, cell_samples, n_samples=64, origin=(0, 0, 0)):
+    sample_on_unit_sphere = np.array(fibonacci_sphere(n_samples)).astype('float32')
+    origin = np.array(origin).astype('float32')
+
+    length = np.zeros((cell_com.shape[0], sample_on_unit_sphere.shape[0]))
+    for i, axis in enumerate(sample_on_unit_sphere):
+        length[:, i] = compute_length_along_axis(cell_com, cell_samples, axis, origin=origin)
+    return length
+
+
+def compute_sym_length_along_cell_axis(cell_axis, cell_com, cell_samples, origin=(0, 0, 0)):
+    lengths = np.zeros(cell_com.shape[0])
+    for i, (com_i, sample_i, axis_i) in enumerate(zip(cell_com, cell_samples, cell_axis)):
+        # remove empty samples
+        valid_samples, _ = check_valid_idx(sample_i, origin)
+
+        # find min and max point along the axis
+        min_point, max_point = _test_angles(valid_samples, com_i, axis_i)
+        # evaluate length
+        lengths[i] = _l2_distance(com_i, max_point)
+
+    return lengths
+
+
+def get_vectors_orientation_mapping(vectors_array):
+    orientation_vectors_array = np.zeros((vectors_array.shape[0], 6))
+    orientation_vectors_array[:, :3] = vectors_array**2
+    # additional
+    orientation_vectors_array[:, 3] = vectors_array[:, 0] * vectors_array[:, 1]
+    orientation_vectors_array[:, 4] = vectors_array[:, 1] * vectors_array[:, 2]
+    orientation_vectors_array[:, 5] = vectors_array[:, 2] * vectors_array[:, 0]
+    return orientation_vectors_array.astype('float32')

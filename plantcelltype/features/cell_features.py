@@ -12,6 +12,7 @@ from sklearn.decomposition import PCA
 from plantcelltype.features.rag import build_nx_graph, remove_bg_from_edges_ids
 from plantcelltype.features.sampling import farthest_points_sampling
 from plantcelltype.features.utils import label2com, make_seg_hollow, check_valid_idx
+from plantcelltype.utils.axis_transforms import find_label_com
 
 _supported_centrality = {'degree': degree_centrality,
                          'betweenness': betweenness_centrality,
@@ -155,3 +156,20 @@ def compute_pca(cell_samples, origin=(0, 0, 0)):
 
     pca_explained_variance = np.array(pca_explained_variance)
     return pca_axis_1, pca_axis_2, pca_axis_3, pca_explained_variance
+
+
+def get_es_com(stack, axis_transformer, es_label=8):
+    cell_com_um = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
+    es_com_voxels = find_label_com(stack['cell_labels'], cell_com_um, (es_label,))
+    if es_com_voxels[0] is None:
+        es_com_voxels = axis_transformer.transform_coord(stack['attributes']['es_com_voxels'][0])
+    return es_com_voxels
+
+
+def get_proposed_es(stack, es_label=8):
+    es_index = np.where(stack['cell_labels'] == es_label)[0]
+    if len(es_index) < 1:
+        es_index = [np.argmax(stack['cell_features']['volume_voxels'])]
+
+    es_ids = stack['cell_ids'][es_index]
+    return es_index, es_ids

@@ -105,11 +105,12 @@ def entropy_points_sampling(segmentation, cell_ids, n_points=10, n_random_points
     return _entropy_points_sampling(segmentation, cell_ids, entropy_points)
 
 
-def random_points_samples(segmentation, cell_ids, n_points=10):
+def random_points_samples(segmentation, cell_ids, n_points=10, seed=0):
     segmentation = segmentation.astype('int64')
     cell_ids = cell_ids.astype('int64')
     seg_points = np.nonzero(segmentation)
     random_sampling = np.arange(len(seg_points[0]))
+    np.random.seed(seed)
     np.random.shuffle(random_sampling)
     cell_random_sampling = _random_points_samples(segmentation, cell_ids, seg_points, random_sampling, n_points)
 

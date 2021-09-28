@@ -4,7 +4,7 @@ _internal_variables:
 # trivial_grs, es_trivial_grs, es_pca_gr, label_grs_surface, label_grs_funiculum
 
 preprocessing:
-  state: true
+  state: false
   train_data_voxels_size: [0.25, 0.2, 0.2]
   default_seg_key: 'segmentation'
   file_list: !join [*home_path, '/data/ovules/tejasvinee_samples/cell_segmentation/1137*']
@@ -16,7 +16,7 @@ grs_step:
   file_list: !join [*out_dir, '/*']
 
 advanced_features_step:
-  state: false
+  state: true
   file_list: !join [*out_dir, '/*']
 
 ct_predictions:

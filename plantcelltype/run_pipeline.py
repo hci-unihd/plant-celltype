@@ -3,8 +3,13 @@ import os
 import time
 
 from plantcelltype.features.build_features import build_basic_cell_features, build_basic, build_es_proposal
-from plantcelltype.features.build_features import build_basic_edges_features, build_edges_points_samples
-from plantcelltype.features.build_features import build_cell_points_samples, build_es_features
+from plantcelltype.features.build_features import build_basic_edges_features, build_es_features
+from plantcelltype.features.build_features import build_hollow_cell_points_fps_samples
+from plantcelltype.features.build_features import build_hollow_cell_points_random_samples
+from plantcelltype.features.build_features import build_cell_points_random_samples
+from plantcelltype.features.build_features import build_cell_points_fps_samples
+from plantcelltype.features.build_features import build_edges_points_fps_samples
+from plantcelltype.features.build_features import build_edges_points_random_samples
 from plantcelltype.features.build_features import build_edges_planes, build_lrs, build_pca_features
 from plantcelltype.features.build_features import build_grs_from_labels_funiculum, build_grs_from_labels_surface
 from plantcelltype.features.build_features import build_length_along_local_axis
@@ -64,7 +69,7 @@ def preprocessing(config):
         stack = build_basic_cell_features(stack)
         stack = build_es_proposal(stack)
         stack = build_es_features(stack)
-        stack = build_cell_points_samples(stack)
+
         stack = build_trivial_grs(stack, load_axis_transformer(stack['attributes']))
 
         # export processed files
@@ -121,7 +126,16 @@ def advanced_preprocessing(config):
 
         # basics
         stack = build_basic_edges_features(stack, at)
-        stack = build_edges_points_samples(stack)
+
+        # random samples
+        stack = build_hollow_cell_points_random_samples(stack)
+        stack = build_cell_points_random_samples(stack)
+        stack = build_edges_points_random_samples(stack)
+
+        # compute fps samples
+        stack = build_hollow_cell_points_fps_samples(stack, at)
+        stack = build_cell_points_fps_samples(stack, at)
+        stack = build_edges_points_fps_samples(stack, at)
 
         # lrs
         stack = build_edges_planes(stack, at)
@@ -143,7 +157,7 @@ def advanced_preprocessing(config):
         stack = build_edges_transformed_voxels_features(stack, at)
 
         # proj on sphere
-        # stack = build_proj_length_on_sphere(stack, at)
+        stack = build_proj_length_on_sphere(stack, at)
 
         # export processed files
         export_full_stack(file, stack)

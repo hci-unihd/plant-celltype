@@ -1,12 +1,9 @@
 import numpy as np
 from numba import njit
 from numba import types
-from numba.typed import Dict
-
-
-@njit(fastmath=True)
-def l2_distance(x0, x1, x2, y):
-    return np.sqrt((x0 - y[0]) ** 2 + (x1 - y[1]) ** 2 + (x2 - y[2]) ** 2)
+from numba.typed import Dict, List
+import torch
+from torch_geometric.nn import fps
 
 
 @njit()
@@ -17,104 +14,6 @@ def create_trivial_mapping_jit(cell_ids):
         cell_mapping[_ids] = i
 
     return cell_mapping
-
-
-def create_trivial_mapping(cell_ids):
-    cell_mapping = {}
-    # create a cell_idx:array_idx
-    for i, _ids in enumerate(cell_ids):
-        cell_mapping[_ids] = i
-    return cell_mapping
-
-
-@njit(fastmath=True)
-def farthest_points_sampling(segmentation, cell_ids, cell_com, n_points=10):
-    shape = segmentation.shape
-    cell_fps = np.zeros((cell_com.shape[0], n_points + 1, 3))
-
-    # create a cell_idx:array_idx
-    cell_mapping = create_trivial_mapping_jit(cell_ids)
-    # initialize com as first point
-    for i, _ids in enumerate(cell_ids):
-        cell_fps[i, 0] = cell_com[i]
-
-    # swipe the volume for each point
-    for point in range(1, n_points + 1):
-        distance_array = np.zeros(cell_ids.shape[0])
-
-        for i in range(0, shape[0]):
-            for j in range(0, shape[1]):
-                for k in range(0, shape[2]):
-                    _label = segmentation[i, j, k]
-                    if _label != 0:  # avoid bg
-                        _ids = cell_mapping[_label]
-                        distance = 0
-                        # compute distance to all other points
-                        for _point in range(0, point):
-                            distance += l2_distance(i, j, k, cell_fps[_ids, _point])
-
-                        # update if distance is the larges
-                        if distance > distance_array[_ids]:
-                            distance_array[_ids] = distance
-                            cell_fps[_ids, point, 0] = i
-                            cell_fps[_ids, point, 1] = j
-                            cell_fps[_ids, point, 2] = k
-    return cell_fps
-
-
-@njit(fastmath=True)
-def _entropy_points_sampling(segmentation, cell_ids, cell_sampling_guess):
-    shape = segmentation.shape
-    # create a cell_idx:array_idx
-    cell_mapping = create_trivial_mapping_jit(cell_ids)
-
-    # check for
-    start = 0
-    for k in range(cell_sampling_guess.shape[1]):
-        if cell_sampling_guess[0, k, 0] == 0:
-            start = k
-            break
-
-    for point in range(start, cell_sampling_guess.shape[1]):
-        distance_array = np.zeros(cell_ids.shape[0])
-        temp_distance_array = np.zeros(point)
-        for i in range(0, shape[0]):
-            for j in range(0, shape[1]):
-                for k in range(0, shape[2]):
-                    _label = segmentation[i, j, k]
-                    if _label != 0:
-                        _ids = cell_mapping[_label]
-                        for _point in range(0, point):
-                            temp_distance_array[_point] = l2_distance(i, j, k, cell_sampling_guess[_ids, _point])
-
-                        entropy = temp_distance_array / np.sum(temp_distance_array)
-                        distance = - np.sum(entropy * np.log(entropy + 1e-10))
-
-                        if distance > distance_array[_ids]:
-                            distance_array[_ids] = distance
-                            cell_sampling_guess[_ids, point, 0] = i
-                            cell_sampling_guess[_ids, point, 1] = j
-                            cell_sampling_guess[_ids, point, 2] = k
-    return cell_sampling_guess
-
-
-def entropy_points_sampling(segmentation, cell_ids, n_points=10, n_random_points=5):
-    random_points = random_points_samples(segmentation, cell_ids, n_points=n_random_points)
-    empty_points = np.zeros((random_points.shape[0], n_points - n_random_points, 3))
-    entropy_points = np.concatenate([random_points, empty_points], axis=1)
-    return _entropy_points_sampling(segmentation, cell_ids, entropy_points)
-
-
-def random_points_samples(segmentation, cell_ids, n_points=10, seed=0):
-    segmentation = segmentation.astype('int64')
-    cell_ids = cell_ids.astype('int64')
-    seg_points = np.nonzero(segmentation)
-    random_sampling = np.arange(len(seg_points[0]))
-    np.random.seed(seed)
-    np.random.shuffle(random_sampling)
-    cell_random_sampling = _random_points_samples(segmentation, cell_ids, seg_points, random_sampling, n_points)
-
-    return cell_random_sampling
 
 
 @njit()
@@ -130,3 +29,68 @@ def _random_points_samples(segmentation, cell_ids, seg_points, random_sampling, 
             counts[_idx] += 1
 
     return cell_random_sampling
+
+
+def compute_random_points_samples(segmentation, cell_ids, n_points=10, seed=0):
+    segmentation = segmentation.astype('int64')
+    cell_ids = cell_ids.astype('int64')
+    seg_points = np.nonzero(segmentation)
+    random_sampling = np.arange(len(seg_points[0]))
+    np.random.seed(seed)
+    np.random.shuffle(random_sampling)
+    cell_random_sampling = _random_points_samples(segmentation, cell_ids, seg_points, random_sampling, n_points)
+
+    return cell_random_sampling
+
+
+@njit
+def _sort_points_by_cell_type(cell_idx, seg, pos):
+    """ sort the position by cell_idx"""
+    list_pos = List()
+
+    for query_idx in cell_idx:
+        query_pos_list = List()
+
+        for j, idx in enumerate(seg):
+            if idx == query_idx:
+                query_pos_list.append(pos[j])
+
+        list_pos.append(query_pos_list)
+    return list_pos
+
+
+def compute_farthest_points_samples(segmentation, cell_ids, n_points=10, seed=0, pos_transform=None, min_num_points=3):
+    x_seg, y_seg, z_seg = np.nonzero(segmentation)
+    idx_seg = segmentation[x_seg, y_seg, z_seg].astype('int64')
+    seg_points = np.array([x_seg, y_seg, z_seg]).T
+
+    # transform points
+    origin = np.zeros(3)
+    if pos_transform is not None:
+        seg_points = pos_transform(seg_points)
+        origin = pos_transform(origin)
+
+    # sample ids using fps
+    torch.manual_seed(seed)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    # sort points by cell_ids
+    sorted_by_id_points = _sort_points_by_cell_type(cell_ids, idx_seg, seg_points)
+
+    fps_array = np.zeros((cell_ids.shape[0], n_points, 3))
+    for i, id_points in enumerate(sorted_by_id_points):
+        # this is required because some samples are empty or too small to be meaningfully sample
+        if len(id_points) > min_num_points:
+            points_tensor = torch.from_numpy(np.array(id_points)).float()
+            points_tensor = points_tensor.to(device)
+            idx_samples = fps(points_tensor, ratio=(n_points + 1) / points_tensor.shape[0])
+
+            # :n_points is necessary to get consistent size
+            idx_samples = idx_samples[:n_points]
+            id_points_samples = points_tensor[idx_samples].cpu().numpy()
+
+            if points_tensor.shape[0] < n_points:
+                id_points_samples[points_tensor.shape[0]:, :] = origin
+
+            fps_array[i] = id_points_samples
+    return fps_array

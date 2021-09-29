@@ -1,8 +1,8 @@
 import numpy as np
 from skspatial.objects import Vector
 
-from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface, compute_cell_average_edt, \
-    get_es_com, get_proposed_es
+from plantcelltype.features.cell_features import compute_cell_volume, compute_cell_surface
+from plantcelltype.features.cell_features import compute_cell_average_edt, get_es_com, get_proposed_es
 from plantcelltype.features.cell_features import compute_rw_betweenness_centrality, compute_degree_centrality
 from plantcelltype.features.cell_features import seg2com, shortest_distance_to_label, compute_pca, compute_pca_comp_idx
 from plantcelltype.features.cell_vector_features import get_vectors_orientation_mapping
@@ -11,12 +11,13 @@ from plantcelltype.features.cell_vector_features import compute_proj_length_on_s
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis1
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis2
 from plantcelltype.features.cell_vector_features import compute_local_reference_axis3
-from plantcelltype.features.clean_segmentation import remove_disconnected_components
+from plantcelltype.features.clean_segmentation import remove_disconnected_components, unique_seg
 from plantcelltype.features.clean_segmentation import set_label_to_bg, size_filter_bg_preserving
 from plantcelltype.features.edges_features import compute_edges_labels, compute_edges_length
 from plantcelltype.features.edges_vector_features import compute_edges_planes
 from plantcelltype.features.rag import rag_from_seg, get_edges_com_voxels
-from plantcelltype.features.sampling import random_points_samples
+from plantcelltype.features.sampling import compute_random_points_samples
+from plantcelltype.features.sampling import compute_farthest_points_samples
 from plantcelltype.features.utils import make_seg_hollow
 from plantcelltype.utils import cantor_sym_pair
 from plantcelltype.utils import create_cell_mapping, map_cell_features2segmentation, create_rag_boundary_from_seg
@@ -53,7 +54,7 @@ def build_labels_from_csv(stack, csv_path, create_labels_image=True):
 
 def build_cell_ids(stack, csv_path=None, create_labels_image=True):
     """create ids and labels (if available)"""
-    stack['cell_ids'] = np.unique(stack['segmentation'])[1:]
+    stack['cell_ids'], _ = unique_seg(stack['segmentation'])
     stack['cell_labels'] = np.zeros_like(stack['cell_ids'])
 
     if csv_path is not None:
@@ -82,6 +83,7 @@ def build_edges_ids(stack, create_rag_image=True):
 def build_preprocessing(stack, size_filter=50, label=None):
     segmentation = stack['segmentation']
     if label is None:
+        # here numpy unique is required to ensure the bg is correctly set
         label = np.unique(segmentation)[0]
 
     segmentation = set_label_to_bg(segmentation, label)
@@ -265,7 +267,7 @@ def build_es_pca_grs(stack, axis_transformer, es_label=8):
 
 # compute local axis
 def build_edges_planes(stack, axis_transform):
-    edge_sampling_grs = axis_transform.transform_coord(stack['edges_samples']['random_samples'])
+    edge_sampling_grs = stack['edges_samples']['hollow_fps_samples_grs']
     cell_com_grs = axis_transform.transform_coord(stack['cell_features']['com_voxels'])
     edges_com_grs = axis_transform.transform_coord(stack['edges_features']['com_voxels'])
     origin = axis_transform.transform_coord([0, 0, 0])
@@ -308,33 +310,85 @@ def build_lrs(stack, axis_transformer, global_axis=0, group='cell_features'):
 
 
 # compute samples
-def build_cell_points_samples(stack, n_points=500, seed=0, group='cell_samples'):
-    stack[group] = {}
+def build_abstract_random_samples(stack, segmentation, cell_ids,
+                                  n_points=500, seed=0,
+                                  feat_name='random_samples', group='cell_samples'):
+    if group not in stack:
+        stack[group] = {}
+
+    samples = compute_random_points_samples(segmentation,
+                                            cell_ids,
+                                            n_points=n_points,
+                                            seed=seed)
+    stack[group][feat_name] = samples
+    return stack
+
+
+def build_hollow_cell_points_random_samples(stack, n_points=500, seed=0, group='cell_samples'):
     hollow_seg = make_seg_hollow(stack['segmentation'], stack['rag_boundaries'])
-    edge_sampling = random_points_samples(hollow_seg, stack['cell_ids'], n_points=n_points, seed=seed)
-    stack[group]['random_samples'] = edge_sampling
-    return stack
+    return build_abstract_random_samples(stack, hollow_seg, stack['cell_ids'],
+                                         n_points=n_points, seed=seed,
+                                         feat_name='hollow_random_samples_voxels', group=group)
 
 
-def build_edges_points_samples(stack, n_points=50, min_counts=1, seed=0, recompute_rag=False, group='edges_samples'):
-    stack[group] = {}
-    if recompute_rag:
-        rag_image_ct1 = create_rag_boundary_from_seg(stack['segmentation'],
-                                                     stack['edges_ids'],
-                                                     min_counts=min_counts)
-    else:
-        rag_image_ct1 = stack['rag_boundaries']
+def build_cell_points_random_samples(stack, n_points=500, seed=0, group='cell_samples'):
+    return build_abstract_random_samples(stack, stack['segmentation'], stack['cell_ids'],
+                                         n_points=n_points, seed=seed,
+                                         feat_name='random_samples_voxels', group=group)
 
+
+def build_edges_points_random_samples(stack, n_points=500, seed=0, group='edges_samples'):
     cantor_ids = np.array([cantor_sym_pair(e1, e2) for e1, e2 in stack['edges_ids']])
-    edge_sampling = random_points_samples(rag_image_ct1, cantor_ids, n_points=n_points, seed=seed)
-    stack[group]['random_samples'] = edge_sampling
+    return build_abstract_random_samples(stack, stack['rag_boundaries'], cantor_ids,
+                                         n_points=n_points, seed=seed,
+                                         feat_name='random_samples_voxels', group=group)
+
+
+def build_abstract_fps_samples(stack, segmentation, cell_ids,
+                               axis_transformer=None, n_points=500, seed=0,
+                               feat_name='random_samples', group='cell_samples'):
+    if group not in stack:
+        stack[group] = {}
+
+    if axis_transformer is None:
+        grs_key, pos_transform = 'voxels', None
+    else:
+        grs_key, pos_transform = 'grs', axis_transformer.transform_coord
+
+    samples = compute_farthest_points_samples(segmentation,
+                                              cell_ids,
+                                              n_points=n_points,
+                                              seed=seed,
+                                              pos_transform=pos_transform)
+
+    stack[group][f'{feat_name}_{grs_key}'] = samples
     return stack
+
+
+def build_hollow_cell_points_fps_samples(stack, axis_transformer=None, n_points=500, seed=0, group='cell_samples'):
+    hollow_seg = make_seg_hollow(stack['segmentation'], stack['rag_boundaries'])
+    return build_abstract_fps_samples(stack, hollow_seg, stack['cell_ids'],
+                                      axis_transformer=axis_transformer, n_points=n_points, seed=seed,
+                                      feat_name='hollow_fps_samples', group=group)
+
+
+def build_cell_points_fps_samples(stack, axis_transformer=None, n_points=500, seed=0, group='cell_samples'):
+    return build_abstract_fps_samples(stack, stack['segmentation'], stack['cell_ids'],
+                                      axis_transformer=axis_transformer, n_points=n_points, seed=seed,
+                                      feat_name='fps_samples', group=group)
+
+
+def build_edges_points_fps_samples(stack, axis_transformer=None, n_points=500, seed=0, group='edges_samples'):
+    cantor_ids = np.array([cantor_sym_pair(e1, e2) for e1, e2 in stack['edges_ids']])
+    return build_abstract_fps_samples(stack, stack['rag_boundaries'], cantor_ids,
+                                      axis_transformer=axis_transformer, n_points=n_points, seed=seed,
+                                      feat_name='fps_samples', group=group)
 
 
 # compute PCA along axis
 def build_pca_features(stack, axis_transformer, group='cell_features'):
     origin_grs = axis_transformer.transform_coord((0, 0, 0))
-    samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples'])
+    samples_grs = stack['cell_samples']['hollow_fps_samples_grs']
     pca1, pca2, pca3, pca_v = compute_pca(samples_grs, origin_grs)
 
     stack[group]['pca_axis1_grs'] = pca1.astype('float32')
@@ -353,7 +407,7 @@ def build_length_along_axis(stack,
                             feat_name=('length_axis1_grs', 'length_axis2_grs', 'length_axis3_grs')):
     origin_grs = axis_transformer.transform_coord((0, 0, 0)).astype('float32')
     com_grs = axis_transformer.transform_coord(stack[group]['com_voxels']).astype('float32')
-    samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples']).astype('float32')
+    samples_grs = stack['cell_samples']['hollow_fps_samples_grs'].astype('float32')
 
     for _axis, _feat in zip(axis_name, feat_name):
         in_feat = stack[group][_axis]
@@ -384,6 +438,7 @@ def build_cell_dot_features(stack, axis_transformer, group='cell_features'):
 
     # proj cell com proj on the global axis
     cell_com_grs = axis_transformer.transform_coord(cell_features['com_voxels'])
+    cell_com_grs = cell_com_grs
     stack[group]['com_proj_grs'] = cell_com_grs.dot(global_axis.T).astype('float32')
 
     # proj cell lrs axis proj on the global axis
@@ -467,7 +522,7 @@ def build_proj_length_on_sphere(stack,
                                 group='cell_features'):
     origin_grs = axis_transformer.transform_coord((0, 0, 0)).astype('float32')
     com_grs = axis_transformer.transform_coord(stack[group]['com_voxels']).astype('float32')
-    samples_grs = axis_transformer.transform_coord(stack['cell_samples']['random_samples']).astype('float32')
+    samples_grs = stack['cell_samples']['hollow_fps_samples_grs'].astype('float32')
     stack[group]['proj_length_unit_sphere'] = compute_proj_length_on_sphere(com_grs,
                                                                             samples_grs,
                                                                             n_samples=n_samples,

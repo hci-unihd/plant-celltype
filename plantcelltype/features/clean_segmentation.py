@@ -35,3 +35,8 @@ def remove_disconnected_components(segmentation):
     fg_mask = get_largest_object(fg_mask)
     segmentation[~fg_mask] = 0
     return segmentation
+
+
+def unique_seg(segmentation):
+    x_seg, y_seg, z_seg = np.nonzero(segmentation)
+    return np.unique(segmentation[x_seg, y_seg, z_seg], return_counts=True)

@@ -10,7 +10,7 @@ from scipy.sparse.csgraph import shortest_path
 from sklearn.decomposition import PCA
 
 from plantcelltype.features.rag import build_nx_graph, remove_bg_from_edges_ids
-from plantcelltype.features.sampling import farthest_points_sampling
+from plantcelltype.features.clean_segmentation import unique_seg
 from plantcelltype.features.utils import label2com, make_seg_hollow, check_valid_idx
 from plantcelltype.utils.axis_transforms import find_label_com
 
@@ -39,23 +39,15 @@ def shortest_distance_to_label(cell_ids, edges_ids, label=0, not_bg=False):
     return distance[cell_ids]
 
 
-def compute_max_diameter(segmentation, cell_ids, cell_com, rag_boundaries=None):
-    if rag_boundaries is not None:
-        segmentation = make_seg_hollow(segmentation, rag_boundaries)
-    edges_samples = farthest_points_sampling(segmentation, cell_ids, cell_com, n_points=2)
-    distance = np.sqrt(np.sum((edges_samples[:, 1] - edges_samples[:, 2])**2, axis=1))
-    return distance
-
-
 def compute_cell_volume(segmentation, cell_ids):
-    _cell_id, volumes = np.unique(segmentation, return_counts=True)
-    assert np.allclose(_cell_id[1:], cell_ids)
-    return volumes[1:]
+    _cell_id, volumes = unique_seg(segmentation)
+    assert np.allclose(_cell_id, cell_ids)
+    return volumes
 
 
 def compute_cell_surface(segmentation, rag_boundaries, cell_ids):
     h_seg = make_seg_hollow(segmentation, rag_boundaries)
-    h_idx, h_counts = np.unique(h_seg, return_counts=True)
+    h_idx, h_counts = unique_seg(h_seg)
     surface_mapping = {}
     for _key, _value in zip(h_idx, h_counts):
         surface_mapping[_key] = _value

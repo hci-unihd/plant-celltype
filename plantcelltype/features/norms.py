@@ -1,5 +1,17 @@
 import numpy as np
+from numba import njit
 from scipy.stats import median_abs_deviation
+
+
+def vector_array_unit_norm(vector, eps=1e-16):
+    vector = vector / (np.sqrt(np.sum(vector ** 2, 1))[:, None] + eps)
+    return vector
+
+
+@njit
+def vector_unit_norm(vector, eps=1e-16):
+    vector = vector / (np.sqrt(np.sum(vector ** 2)) + eps)
+    return vector
 
 
 def clip_quantile(feat, q=(0.01, 0.95)):

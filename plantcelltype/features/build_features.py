@@ -267,7 +267,7 @@ def build_es_pca_grs(stack, axis_transformer, es_label=8):
 
 # compute local axis
 def build_edges_planes(stack, axis_transform):
-    edge_sampling_grs = stack['edges_samples']['hollow_fps_samples_grs']
+    edge_sampling_grs = stack['edges_samples']['fps_samples_grs']
     cell_com_grs = axis_transform.transform_coord(stack['cell_features']['com_voxels'])
     edges_com_grs = axis_transform.transform_coord(stack['edges_features']['com_voxels'])
     origin = axis_transform.transform_coord([0, 0, 0])

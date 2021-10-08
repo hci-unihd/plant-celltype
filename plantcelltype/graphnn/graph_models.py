@@ -4,9 +4,202 @@ from torch.nn import Linear, LayerNorm, ReLU
 from torch_geometric.nn import GCN2Conv
 from torch_geometric.nn import GENConv, DeepGCNLayer
 from torch_geometric.nn.conv.gcn_conv import gcn_norm
+from plantcelltype.graphnn.layers.graph_conv_blocks import GCNLayer, GATLayer, TransformerGCNLayer
 from torch_sparse.tensor import SparseTensor
 
-from egmodels import tg_dispatch
+
+class GCN2(torch.nn.Module):
+    def __init__(self, in_features, out_features,
+                 hidden_feat=256,
+                 layer1_kwargs=None,
+                 layer2_kwargs=None):
+        super(GCN2, self).__init__()
+
+        _layer1_kwargs = {'batch_norm': True}
+        _layer2_kwargs = {'activation': 'none'}
+
+        if layer1_kwargs is not None:
+            _layer1_kwargs.update(layer1_kwargs)
+
+        if layer2_kwargs is not None:
+            _layer2_kwargs.update(layer2_kwargs)
+
+        self.gcn1 = GCNLayer(in_features, hidden_feat, **_layer1_kwargs)
+        self.gcn2 = GCNLayer(hidden_feat, out_features, **_layer2_kwargs)
+
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+        x = self.gcn1(x, edge_index)
+        x = self.gcn2(x, edge_index)
+        data.out = x
+        return data
+
+
+class GCN3(torch.nn.Module):
+    def __init__(self, in_features, out_features,
+                 hidden_feat=(256, 256),
+                 layer1_kwargs=None,
+                 layer2_kwargs=None,
+                 layer3_kwargs=None):
+        super(GCN3, self).__init__()
+
+        _layer1_kwargs = {'batch_norm': True}
+        _layer2_kwargs = {'batch_norm': True}
+        _layer3_kwargs = {'activation': 'none'}
+
+        if layer1_kwargs is not None:
+            _layer1_kwargs.update(layer1_kwargs)
+
+        if layer2_kwargs is not None:
+            _layer2_kwargs.update(layer2_kwargs)
+
+        if layer3_kwargs is not None:
+            _layer3_kwargs.update(layer3_kwargs)
+
+        self.gcn1 = GCNLayer(in_features, hidden_feat[0], **_layer1_kwargs)
+        self.gcn2 = GCNLayer(hidden_feat[0], hidden_feat[1], **_layer2_kwargs)
+        self.gcn3 = GCNLayer(hidden_feat[1], out_features, **_layer3_kwargs)
+
+    def forward(self, x, edge_index):
+        x = self.gcn1(x, edge_index)
+        x = self.gcn2(x, edge_index)
+        x = self.gcn3(x, edge_index)
+        return x
+
+
+class GAT2(torch.nn.Module):
+    def __init__(self, in_features, out_features,
+                 hidden_feat=256,
+                 layer1_kwargs=None,
+                 layer2_kwargs=None):
+        super(GAT2, self).__init__()
+
+        _layer1_kwargs = {'batch_norm': True, 'concat': True, 'heads': 3}
+        _layer2_kwargs = {'activation': 'none', 'concat': True, 'heads': 1}
+
+        if layer1_kwargs is not None:
+            _layer1_kwargs.update(layer1_kwargs)
+
+        if layer2_kwargs is not None:
+            _layer2_kwargs.update(layer2_kwargs)
+
+        self.gat1 = GATLayer(in_features, hidden_feat, **_layer1_kwargs)
+
+        in_features_2 = _layer1_kwargs['heads'] if _layer1_kwargs['concat'] and _layer1_kwargs['heads'] > 1 else 1
+        in_features_2 *= hidden_feat
+        self.gat2 = GATLayer(in_features_2, out_features, **_layer2_kwargs)
+
+    def forward(self, x, edge_index):
+        x = self.gat1(x, edge_index)
+        x = self.gat2(x, edge_index)
+        return x
+
+
+class GAT3(torch.nn.Module):
+    def __init__(self, in_features, out_features,
+                 hidden_feat=(256, 256),
+                 layer1_kwargs=None,
+                 layer2_kwargs=None,
+                 layer3_kwargs=None):
+        super(GAT3, self).__init__()
+
+        _layer1_kwargs = {'batch_norm': True, 'concat': True, 'heads': 3}
+        _layer2_kwargs = {'batch_norm': True, 'concat': True, 'heads': 3}
+        _layer3_kwargs = {'activation': 'none', 'concat': True, 'heads': 1}
+
+        if layer1_kwargs is not None:
+            _layer1_kwargs.update(layer1_kwargs)
+
+        if layer2_kwargs is not None:
+            _layer2_kwargs.update(layer2_kwargs)
+
+        if layer3_kwargs is not None:
+            _layer3_kwargs.update(layer3_kwargs)
+
+        self.gat1 = GATLayer(in_features, hidden_feat[0], **_layer1_kwargs)
+
+        in_features_2 = _layer1_kwargs['heads'] if _layer1_kwargs['concat'] and _layer1_kwargs['heads'] > 1 else 1
+        in_features_2 *= hidden_feat[0]
+        self.gat2 = GATLayer(in_features_2, hidden_feat[1], **_layer2_kwargs)
+
+        in_features_3 = _layer2_kwargs['heads'] if _layer2_kwargs['concat'] and _layer2_kwargs['heads'] > 1 else 1
+        in_features_3 *= hidden_feat[1]
+        self.gat3 = GATLayer(in_features_3, out_features, **_layer3_kwargs)
+
+    def forward(self, x, edge_index):
+        x = self.gat1(x, edge_index)
+        x = self.gat2(x, edge_index)
+        x = self.gat3(x, edge_index)
+        return x
+
+
+class TransformerGCN2(torch.nn.Module):
+    def __init__(self, in_features, out_features, in_edges=None,
+                 hidden_feat=256,
+                 layer1_kwargs=None,
+                 layer2_kwargs=None):
+        super(TransformerGCN2, self).__init__()
+
+        _layer1_kwargs = {'batch_norm': True, 'concat': True, 'heads': 3}
+        _layer2_kwargs = {'activation': 'none', 'concat': True, 'heads': 1}
+
+        if layer1_kwargs is not None:
+            _layer1_kwargs.update(layer1_kwargs)
+
+        if layer2_kwargs is not None:
+            _layer2_kwargs.update(layer2_kwargs)
+
+        self.in_edges = in_edges
+        self.t_gcn1 = TransformerGCNLayer(in_features, hidden_feat, in_edges, **_layer1_kwargs)
+
+        in_features_2 = _layer1_kwargs['heads'] if _layer1_kwargs['concat'] and _layer1_kwargs['heads'] > 1 else 1
+        in_features_2 *= hidden_feat
+        self.t_gcn2 = TransformerGCNLayer(in_features_2, out_features, in_edges, **_layer2_kwargs)
+
+    def forward(self, x, edge_index, edge_attr):
+        edge_attr = None if self.in_edges is None else edge_attr
+        x = self.t_gcn1(x, edge_index, edge_attr=edge_attr)
+        x = self.t_gcn2(x, edge_index, edge_attr=edge_attr)
+        return x
+
+
+class TransformerGCN3(torch.nn.Module):
+    def __init__(self, in_features, out_features, in_edges=None,
+                 hidden_feat=(256, 256),
+                 layer1_kwargs=None,
+                 layer2_kwargs=None,
+                 layer3_kwargs=None):
+        super(TransformerGCN3, self).__init__()
+
+        _layer1_kwargs = {'batch_norm': True, 'concat': True, 'heads': 3}
+        _layer2_kwargs = {'batch_norm': True, 'concat': True, 'heads': 3}
+        _layer3_kwargs = {'activation': 'none', 'concat': True, 'heads': 1}
+
+        if layer1_kwargs is not None:
+            _layer1_kwargs.update(layer1_kwargs)
+
+        if layer2_kwargs is not None:
+            _layer2_kwargs.update(layer2_kwargs)
+
+        if layer3_kwargs is not None:
+            _layer3_kwargs.update(layer3_kwargs)
+
+        self.in_edges = in_edges
+        self.t_gcn1 = TransformerGCNLayer(in_features, hidden_feat[0], in_edges, **_layer1_kwargs)
+
+        in_features_2 = _layer1_kwargs['heads'] if _layer1_kwargs['concat'] and _layer1_kwargs['heads'] > 1 else 1
+        in_features_2 *= hidden_feat[0]
+        self.t_gcn2 = TransformerGCNLayer(in_features_2, out_features[1], in_edges, **_layer2_kwargs)
+
+        in_features_3 = _layer2_kwargs['heads'] if _layer2_kwargs['concat'] and _layer2_kwargs['heads'] > 1 else 1
+        in_features_3 *= hidden_feat[1]
+        self.t_gcn3 = TransformerGCNLayer(in_features_3, out_features, in_edges, **_layer3_kwargs)
+
+    def forward(self, x, edge_index):
+        x = self.t_gcn1(x, edge_index)
+        x = self.t_gcn2(x, edge_index)
+        x = self.t_gcn3(x, edge_index)
+        return x
 
 
 class DeeperGCN(torch.nn.Module):
@@ -36,7 +229,6 @@ class DeeperGCN(torch.nn.Module):
 
         self.lin = Linear(hidden_feat, out_features)
 
-    @tg_dispatch()
     def forward(self, x, edge_index, edge_attr):
         x = self.node_encoder(x)
         if self.in_edges is not None:
@@ -72,7 +264,6 @@ class GCNII(torch.nn.Module):
 
         self.dropout = dropout
 
-    @tg_dispatch()
     def forward(self, x, edge_index):
         (row, col), values = gcn_norm(edge_index=edge_index)
         adj = SparseTensor(row=row, col=col, value=values)

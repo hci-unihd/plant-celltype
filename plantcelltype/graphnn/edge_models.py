@@ -5,11 +5,9 @@ from torch_geometric.nn import GCN2Conv
 from torch_geometric.nn import GENConv, DeepGCNLayer
 from torch_geometric.nn.conv.gcn_conv import gcn_norm
 from torch_sparse.tensor import SparseTensor
-
-from egmodels import tg_dispatch
-from egmodels.classifier import ClassifierMLP2
-from egmodels.layers.graph_conv_blocks import GCNLayer, TransformerGCNLayer
+from plantcelltype.graphnn.layers.classifier import ClassifierMLP2
 from plantcelltype.graphnn.line_graph import to_line_graph, mix_node_features
+from plantcelltype.graphnn.layers.graph_conv_blocks import GCNLayer, TransformerGCNLayer
 
 
 class LineGCN2(torch.nn.Module):
@@ -21,7 +19,6 @@ class LineGCN2(torch.nn.Module):
 
         self.gcn_line = GCNLayer(2*hidden_feat, out_features, **{'activation': 'none'})
 
-    @tg_dispatch()
     def forward(self, x, edge_index):
         x = self.gcn1(x, edge_index)
         x = self.gcn2(x, edge_index)
@@ -39,7 +36,6 @@ class EGCN2(torch.nn.Module):
 
         self.mlp = ClassifierMLP2(2*hidden_feat, out_features)
 
-    @tg_dispatch()
     def forward(self, x, edge_index):
         x = self.gcn1(x, edge_index)
         x = self.gcn2(x, edge_index)
@@ -61,7 +57,6 @@ class ETGCN2(torch.nn.Module):
 
         self.mlp = ClassifierMLP2(2 * hidden_feat, out_features)
 
-    @tg_dispatch()
     def forward(self, x, edge_index):
         x = self.t_gcn1(x, edge_index)
         x = self.t_gcn2(x, edge_index)
@@ -82,7 +77,6 @@ class LineTGCN2(torch.nn.Module):
                                                                            })
         self.lt_gcn1 = TransformerGCNLayer(2 * hidden_feat, out_features, **{'activation': 'none'})
 
-    @tg_dispatch()
     def forward(self, x, edge_index):
         x = self.t_gcn1(x, edge_index)
         x = self.t_gcn2(x, edge_index)
@@ -118,7 +112,6 @@ class EDeeperGCN(torch.nn.Module):
 
         self.mlp = ClassifierMLP2(2 * hidden_feat, out_features, hidden_feat=hidden_feat)
 
-    @tg_dispatch()
     def forward(self, x, edge_index, edge_attr):
         x = self.node_encoder(x)
         if self.in_edges is not None:
@@ -155,7 +148,6 @@ class EGCNII(torch.nn.Module):
         self.dropout = dropout
         self.mlp = ClassifierMLP2(2 * hidden_feat, out_features, hidden_feat=hidden_feat)
 
-    @tg_dispatch()
     def forward(self, x, edge_index):
         (row, col), values = gcn_norm(edge_index=edge_index)
         adj = SparseTensor(row=row, col=col, value=values)
@@ -202,7 +194,6 @@ class LineEDeeperGCN(torch.nn.Module):
 
         self.lin = Linear(hidden_feat, out_features)
 
-    @tg_dispatch()
     def forward(self, x, edge_index, edge_attr):
         x = self.node_encoder(x)
 
@@ -235,7 +226,6 @@ class LineEGCNII(torch.nn.Module):
 
         self.dropout = dropout
 
-    @tg_dispatch()
     def forward(self, x, edge_index):
         x = F.dropout(x, self.dropout, training=self.training)
         x = x_0 = self.lins[0](x).relu()

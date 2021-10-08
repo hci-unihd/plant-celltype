@@ -6,9 +6,13 @@ import pytorch_lightning as pl
 import yaml
 from pytorch_lightning import loggers as pl_loggers
 
-from plantcelltype.graphnn.data_loader import build_geometric_loaders, get_n_splits
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
+from pctg_benchmark.loaders.torch_loader import PCTGSimpleSplit, PCTGCrossValidationSplit
 from plantcelltype.utils.utils import print_config
+
+
+loaders = {'PCTGSimpleSplit': PCTGSimpleSplit,
+           'PCTGCrossValidationSplit': PCTGCrossValidationSplit}
 
 
 def add_home_path(path):
@@ -16,7 +20,7 @@ def add_home_path(path):
     return f"{home_dir}{path}"
 
 
-def get_model(config):
+def get_model(config, in_features, in_edges_attr):
     if config['mode'] == 'NodesClassification':
         return NodesClassification(**config['module'])
     elif config['mode'] == 'EdgesClassification':
@@ -26,15 +30,12 @@ def get_model(config):
 
 
 def get_loaders(config):
-    (test_loader,
-     train_loader,
-     in_features,
-     in_edges) = build_geometric_loaders(**config['loader'])
-
-    config['module']['model']['kwargs']['in_features'] = in_features
-    if in_edges is not None:
-        config['module']['model']['kwargs']['in_edges'] = in_edges
-    return test_loader, train_loader, config
+    name = config['name']
+    test_loader = loaders[name](**config['test'])
+    train_loader = loaders['name'](**config['train'])
+    in_edges_attr = train_loader.in_edges_attr
+    in_features = train_loader.in_features
+    return test_loader, train_loader, in_features, in_edges_attr
 
 
 def get_logger(config):
@@ -44,9 +45,9 @@ def get_logger(config):
 
 def simple_train(config):
     pl.seed_everything(42, workers=True)
-    test_loader, train_loader, config = get_loaders(config)
+    test_loader, train_loader, in_features, in_edges_attr = get_loaders(config)
 
-    model = get_model(config)
+    model = get_model(config, in_features, in_edges_attr)
     config = get_logger(config)
     trainer = pl.Trainer(**config['trainer'])
     trainer.fit(model, train_loader, test_loader)
@@ -73,7 +74,6 @@ def setup_cross_validation(config):
     list_path = f'{data_location}/list_data.csv'
     split = config['cross_validation'].get('split', 5)
     seed = config['cross_validation'].get('seed', 0)
-    splits = get_n_splits(data_location, list_path, number_split=split, seed=seed)
 
     config['loader']['mode'] = 'split'
     return config, splits

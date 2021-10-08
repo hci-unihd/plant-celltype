@@ -3,7 +3,6 @@ import glob
 
 import torch
 
-from plantcelltype.graphnn.data_loader import create_loaders
 from plantcelltype.graphnn.trainer import get_model
 from plantcelltype.utils import create_h5
 from plantcelltype.utils.io import load_yaml

@@ -60,11 +60,13 @@ class GCN3(torch.nn.Module):
         self.gcn2 = GCNLayer(hidden_feat[0], hidden_feat[1], **_layer2_kwargs)
         self.gcn3 = GCNLayer(hidden_feat[1], out_features, **_layer3_kwargs)
 
-    def forward(self, x, edge_index):
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
         x = self.gcn1(x, edge_index)
         x = self.gcn2(x, edge_index)
         x = self.gcn3(x, edge_index)
-        return x
+        data.out = x
+        return data
 
 
 class GAT2(torch.nn.Module):
@@ -89,10 +91,12 @@ class GAT2(torch.nn.Module):
         in_features_2 *= hidden_feat
         self.gat2 = GATLayer(in_features_2, out_features, **_layer2_kwargs)
 
-    def forward(self, x, edge_index):
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
         x = self.gat1(x, edge_index)
         x = self.gat2(x, edge_index)
-        return x
+        data.out = x
+        return data
 
 
 class GAT3(torch.nn.Module):
@@ -126,11 +130,13 @@ class GAT3(torch.nn.Module):
         in_features_3 *= hidden_feat[1]
         self.gat3 = GATLayer(in_features_3, out_features, **_layer3_kwargs)
 
-    def forward(self, x, edge_index):
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
         x = self.gat1(x, edge_index)
         x = self.gat2(x, edge_index)
         x = self.gat3(x, edge_index)
-        return x
+        data.out = x
+        return data
 
 
 class TransformerGCN2(torch.nn.Module):
@@ -156,11 +162,13 @@ class TransformerGCN2(torch.nn.Module):
         in_features_2 *= hidden_feat
         self.t_gcn2 = TransformerGCNLayer(in_features_2, out_features, in_edges, **_layer2_kwargs)
 
-    def forward(self, x, edge_index, edge_attr):
+    def forward(self, data):
+        x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
         edge_attr = None if self.in_edges is None else edge_attr
         x = self.t_gcn1(x, edge_index, edge_attr=edge_attr)
         x = self.t_gcn2(x, edge_index, edge_attr=edge_attr)
-        return x
+        data.out = x
+        return data
 
 
 class TransformerGCN3(torch.nn.Module):
@@ -195,11 +203,13 @@ class TransformerGCN3(torch.nn.Module):
         in_features_3 *= hidden_feat[1]
         self.t_gcn3 = TransformerGCNLayer(in_features_3, out_features, in_edges, **_layer3_kwargs)
 
-    def forward(self, x, edge_index):
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
         x = self.t_gcn1(x, edge_index)
         x = self.t_gcn2(x, edge_index)
         x = self.t_gcn3(x, edge_index)
-        return x
+        data.out = x
+        return data
 
 
 class DeeperGCN(torch.nn.Module):
@@ -229,7 +239,8 @@ class DeeperGCN(torch.nn.Module):
 
         self.lin = Linear(hidden_feat, out_features)
 
-    def forward(self, x, edge_index, edge_attr):
+    def forward(self, data):
+        x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
         x = self.node_encoder(x)
         if self.in_edges is not None:
             edge_attr = self.edge_encoder(edge_attr)
@@ -243,8 +254,9 @@ class DeeperGCN(torch.nn.Module):
 
         x = self.layers[0].act(self.layers[0].norm(x))
         x = F.dropout(x, p=self.dropout, training=self.training)
-
-        return self.lin(x)
+        x = self.lin(x)
+        data.out = x
+        return data
 
 
 class GCNII(torch.nn.Module):
@@ -264,7 +276,8 @@ class GCNII(torch.nn.Module):
 
         self.dropout = dropout
 
-    def forward(self, x, edge_index):
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
         (row, col), values = gcn_norm(edge_index=edge_index)
         adj = SparseTensor(row=row, col=col, value=values)
         x = F.dropout(x, self.dropout, training=self.training)
@@ -277,4 +290,5 @@ class GCNII(torch.nn.Module):
 
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.lins[1](x)
-        return x
+        data.out = x
+        return data

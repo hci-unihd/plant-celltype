@@ -3,22 +3,21 @@ import torch
 import torch.nn.functional as F
 from torchmetrics import Accuracy, Precision, Recall, F1
 
-from egmodels.graph_base_models import GCN2, GCN3, GAT2, GAT3, TransformerGCN2, TransformerGCN3
-from plantcelltype.graphnn.edge_models import LineGCN2, LineTGCN2, EGCN2, ETGCN2
-from plantcelltype.graphnn.edge_models import LineEDeeperGCN, LineEGCNII, EDeeperGCN, EGCNII
+from plantcelltype.graphnn.graph_models import GCN2, GCN3
+from plantcelltype.graphnn.graph_models import GAT2, GAT3
+from plantcelltype.graphnn.graph_models import TransformerGCN2, TransformerGCN3
 from plantcelltype.graphnn.graph_models import GCNII, DeeperGCN
+from plantcelltype.graphnn.edge_models import EGCN2, EGAT2, ETransformerGCN2
+from plantcelltype.graphnn.edge_models import EDeeperGCN, EGCNII
 
 models_pool = {'GCN3': GCN3, 'GCN2': GCN2,
                'GAT3': GAT3, 'GAT2': GAT2,
                'GCNII': GCNII, 'DeeperGCN': DeeperGCN,
                'TransformerGCN3': TransformerGCN3,
                'TransformerGCN2': TransformerGCN2,
-               'LineGCN2': LineGCN2,
-               'LineTGCN2': LineTGCN2,
-               'LineEDeeperGCN': LineEDeeperGCN,
-               'LineEGCNII': LineEGCNII,
                'EGCN2': EGCN2,
-               'ETGCN2': ETGCN2,
+               'EGAT2': EGAT2,
+               'ETransformerGCN2': ETransformerGCN2,
                'EDeeperGCN': EDeeperGCN,
                'EGCNII': EGCNII}
 
@@ -64,6 +63,8 @@ class NodesClassification(pl.LightningModule):
                            'f1_class': F1(num_classes=out_class, average=None),
                            # 'confusion_matrix': ConfusionMatrix(num_classes=out_class)
                            }
+
+        self.config = config
         self.save_hyperparameters()
 
     def configure_optimizers(self):
@@ -163,7 +164,7 @@ class NodesClassification(pl.LightningModule):
 
         config_pc = {'material': {'cls': 'PointsMaterial', 'size': 5}}
 
-        tensorboard.add_mesh(f'test_mesh_{batch_idx}', pos,
+        tensorboard.add_mesh(f'val_mesh_{batch_idx}', pos,
                              colors=color,
                              config_dict=config_pc, global_step=self.global_step)
 

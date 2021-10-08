@@ -3,6 +3,7 @@ import itertools
 import os
 
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks import Callback
 import yaml
 from pytorch_lightning import loggers as pl_loggers
 
@@ -15,12 +16,37 @@ loaders = {'PCTGSimpleSplit': PCTGSimpleSplit,
            'PCTGCrossValidationSplit': PCTGCrossValidationSplit}
 
 
+class LogConfigCallback(Callback):
+    def __init__(self, config):
+        self.config = config
+
+    def on_validation_end(self, trainer, model) -> None:
+        config = copy.deepcopy(self.config)
+        version = f'version_{trainer.logger.version}'
+        checkpoint_path = os.path.join(trainer.logger.save_dir,
+                                       trainer.logger.name,
+                                       version)
+
+        config['run'] = {'save_dir': trainer.logger.save_dir,
+                         'name': trainer.logger.name,
+                         'version': trainer.logger.version,
+                         'results': model.saved_metrics}
+
+        del config['trainer']['logger']
+        with open(os.path.join(checkpoint_path, 'config.yaml'), 'w') as outfile:
+            yaml.dump(config, outfile)
+
+
 def add_home_path(path):
     home_dir = os.path.expanduser('~')
     return f"{home_dir}{path}"
 
 
 def get_model(config, in_features, in_edges_attr):
+    config['module']['model']['kwargs']['in_features'] = in_features
+    if 'in_edges_attr' in config['module']['model']['kwargs']:
+        config['module']['model']['kwargs']['in_edges_attr'] = in_edges_attr
+
     if config['mode'] == 'NodesClassification':
         return NodesClassification(**config['module'])
     elif config['mode'] == 'EdgesClassification':
@@ -31,11 +57,12 @@ def get_model(config, in_features, in_edges_attr):
 
 def get_loaders(config):
     name = config['name']
-    test_loader = loaders[name](**config['test'])
-    train_loader = loaders['name'](**config['train'])
+    val_loader = loaders[name](**config['val_loader'])
+    train_loader = loaders['name'](**config['train_loader'])
+
     in_edges_attr = train_loader.in_edges_attr
     in_features = train_loader.in_features
-    return test_loader, train_loader, in_features, in_edges_attr
+    return val_loader, train_loader, in_features, in_edges_attr
 
 
 def get_logger(config):
@@ -45,12 +72,12 @@ def get_logger(config):
 
 def simple_train(config):
     pl.seed_everything(42, workers=True)
-    test_loader, train_loader, in_features, in_edges_attr = get_loaders(config)
+    val_loader, train_loader, in_features, in_edges_attr = get_loaders(config)
 
     model = get_model(config, in_features, in_edges_attr)
     config = get_logger(config)
     trainer = pl.Trainer(**config['trainer'])
-    trainer.fit(model, train_loader, test_loader)
+    trainer.fit(model, train_loader, val_loader)
 
     version = f'version_{trainer.logger.version}'
     checkpoint_path = os.path.join(trainer.logger.save_dir,
@@ -69,23 +96,12 @@ def simple_train(config):
     return checkpoint_path
 
 
-def setup_cross_validation(config):
-    data_location = config['loader']['path']
-    list_path = f'{data_location}/list_data.csv'
-    split = config['cross_validation'].get('split', 5)
-    seed = config['cross_validation'].get('seed', 0)
-
-    config['loader']['mode'] = 'split'
-    return config, splits
-
-
 def cross_validation_train(config):
-    config, splits = setup_cross_validation(config)
+    n_splits = config['loader']['n_splits']
     run_name = config['logs']['name']
-    for key, split in splits.items():
-        config['logs']['name'] = f'{run_name}_split{key}'
-        config['loader']['path'] = split
-        config['split_id'] = key
+    for split in range(n_splits):
+        config['logs']['name'] = f'{run_name}_split{split}'
+        config['split_id'] = split
         simple_train(config)
 
 

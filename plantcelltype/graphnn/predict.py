@@ -7,13 +7,32 @@ from plantcelltype.graphnn.trainer import get_model
 from plantcelltype.utils import create_h5
 from pctg_benchmark.utils.io import load_yaml
 from plantcelltype.utils.utils import load_paths
+from plantcelltype.graphnn.trainer import datasets
+from torch_geometric.loader import DataLoader
+from pctg_benchmark.loaders.build_dataset import default_build_torch_geometric_data
 
 
-def build_test_loader(config, glob_paths=True):
-    if glob_paths:
-        config['files_list'] = load_paths(config['files_list'])
+def get_test_loaders(config):
+    test_dataset = datasets[config['mode']](**config['val_dataset'])
+    test_loader = DataLoader(test_dataset,
+                             batch_size=config['val_batch_size'],
+                             num_workers=config['num_workers'],
+                             shuffle=False)
 
-    return create_loaders(**config)
+    in_edges_attr = test_loader.in_edges_attr
+    in_features = test_dataset.in_features
+    return test_loader, in_features, in_edges_attr
+
+
+def get_files_loader(config):
+    paths = load_paths(config['files_list'])
+    all_data, data = [], None
+    for file in paths:
+        data = default_build_torch_geometric_data(file, config)
+        all_data.append(data)
+
+    in_features, in_edges_attr = data.num_features, data.num_edge_features
+    return all_data, in_features, in_edges_attr
 
 
 def export_predictions_as_csv(file_path, cell_ids, cell_predictions):
@@ -33,8 +52,16 @@ def run_predictions(config):
     check_point_weights = glob.glob(check_point_weights)[0]
     model_config = load_yaml(check_point_config)
 
-    test_loader = build_test_loader(config['loader'])
-    model = get_model(model_config)
+    if config['loader']['mode'] == 'test':
+        test_loader, in_features, in_edges_attr = get_test_loaders(config['loader'])
+    elif config['loader']['mode'] == 'files':
+        test_loader, in_features, in_edges_attr = get_files_loader(config['loader'])
+    else:
+        raise NotImplementedError
+
+    save_h5_predictions = config['save_h5_predictions']
+
+    model = get_model(model_config, in_features=in_features, in_edges_attr=in_edges_attr)
     model = model.load_from_checkpoint(check_point_weights)
 
     for data in test_loader:
@@ -43,13 +70,14 @@ def run_predictions(config):
         cell_predictions = logits.max(1)[1]
         cell_predictions = cell_predictions.cpu().data.numpy().astype('int32')
 
-        create_h5(data.file_path[0],
-                  cell_predictions,
-                  key='cell_predictions', voxel_size=None)
+        if save_h5_predictions:
+            create_h5(data.file_path[0],
+                      cell_predictions,
+                      key='cell_predictions', voxel_size=None)
 
-        create_h5(data.file_path[0],
-                  data.out.cpu().data.numpy(),
-                  key='cell_net_out', voxel_size=None)
+            create_h5(data.file_path[0],
+                      data.out.cpu().data.numpy(),
+                      key='cell_net_out', voxel_size=None)
 
         export_predictions_as_csv(data.file_path[0],
                                   data.cell_ids[0],

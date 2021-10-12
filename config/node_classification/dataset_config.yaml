@@ -10,6 +10,7 @@ node_features:
   # grs dependent
   - name: com_grs
     pre_transform:
+      - name: ComputeClipQuantile
       - name: ComputeZscore
       - name: ComputeToTensor
   - name: lrs_axis1_grs

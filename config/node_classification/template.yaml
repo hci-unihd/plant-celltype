@@ -5,7 +5,6 @@ _internal_variables:
   - &num_workers 4
   - &raw_transform_config !load 'config/node_classification/dataset_config.yaml'
 
-
 mode: NodesClassification
 seed: 0
 
@@ -13,21 +12,25 @@ logs:
   save_dir: !join [*home_path, '/results/plant-ct-logs/baseline/']
 
 trainer:
-  # gpus: 1
+  gpus: 1
   # max_steps: 15000
-  max_epochs: 5
+  max_epochs: 100
 
 loader:
   mode: simple # simple or cross_validation
   train_dataset:
     root: *root
     phase: train
+    ratio: [0.7, 0.3, 0]
+    grs: [label_grs_surface]
     force_process: *force_process
     raw_transform_config: *raw_transform_config
 
   val_dataset:
     root: *root
     phase: val
+    ratio: [0.7, 0.3, 0]
+    grs: [label_grs_surface]
     force_process: *force_process
     raw_transform_config: *raw_transform_config
 

@@ -7,9 +7,6 @@ logs:
   save_dir: !join [*home_path, /results/plant-ct-logs/best/]
   name: *model_name
 
-loader:
-  load_edge_attr: false
-
 module:
   optimizer:
     lr: 1e-2

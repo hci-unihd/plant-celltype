@@ -1,5 +1,5 @@
 from plantcelltype.run_pipeline import main, process_train_data
-from plantcelltype.utils.io import load_yaml
+from pctg_benchmark.utils.io import load_yaml
 
 from plantcelltype.utils.utils import parser
 

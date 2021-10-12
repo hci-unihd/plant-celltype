@@ -5,7 +5,7 @@ import torch
 
 from plantcelltype.graphnn.trainer import get_model
 from plantcelltype.utils import create_h5
-from plantcelltype.utils.io import load_yaml
+from pctg_benchmark.utils.io import load_yaml
 from plantcelltype.utils.utils import load_paths
 
 

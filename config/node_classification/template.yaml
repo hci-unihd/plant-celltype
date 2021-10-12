@@ -1,21 +1,39 @@
 _internal_variables:
   - &home_path !home_path
+  - &root !join [*home_path, '/data/ovules/ovules-celltype-dataset/']
+  - &force_process false
+  - &num_workers 4
+  - &raw_transform_config !load 'config/node_classification/dataset_config.yaml'
+
 
 mode: NodesClassification
+seed: 0
 
 logs:
-  save_dir: !join [*home_path, /results/plant-ct-logs/baseline/]
+  save_dir: !join [*home_path, '/results/plant-ct-logs/baseline/']
 
 trainer:
-  gpus: 1
+  # gpus: 1
   # max_steps: 15000
   max_epochs: 5
 
 loader:
-  path: !join [*home_path, /data/ovules/ovules-celltype-new/label_grs_surface/late_cropped_ds3/]
-  load_edge_attr: false
-  batch: 1
-  test_batch: 1
+  mode: simple # simple or cross_validation
+  train_dataset:
+    root: *root
+    phase: train
+    force_process: *force_process
+    raw_transform_config: *raw_transform_config
+
+  val_dataset:
+    root: *root
+    phase: val
+    force_process: *force_process
+    raw_transform_config: *raw_transform_config
+
+  num_workers: *num_workers
+  train_batch_size: 1
+  val_batch_size: 1
 
 module:
   logger:

@@ -64,7 +64,6 @@ class NodesClassification(pl.LightningModule):
                            # 'confusion_matrix': ConfusionMatrix(num_classes=out_class)
                            }
 
-        self.config = config
         self.save_hyperparameters()
 
     def configure_optimizers(self):
@@ -111,14 +110,15 @@ class NodesClassification(pl.LightningModule):
 
         metrics = {'hp_metric': full_metrics['accuracy_micro']}
         self.log_dict(metrics)
-        return full_metrics, val_batch.file_path, val_batch.stage, val_batch.stack
+        # , val_batch.stage, val_batch.stack
+        return full_metrics, val_batch.file_path
 
     def validation_epoch_end(self, outputs):
         epoch_acc = [val_sample[0][self.reference_metric] for val_sample in outputs]
         epoch_acc = sum(epoch_acc) / len(outputs)
         mode = self.saved_metrics['val'][self.reference_metric]['mode']
         check = self.saved_metrics['val'][self.reference_metric]['value'] - epoch_acc
-        keys = ['results', 'file_path', 'stage', 'stack']
+        keys = ['results', 'file_path', 'meta']
         results = []
         for val_sample in outputs:
             _results = {key: value for key, value in zip(keys, val_sample)}
@@ -210,4 +210,5 @@ class EdgesClassification(NodesClassification, pl.LightningModule):
 
         metrics = {'hp_metric': full_metrics['accuracy_micro']}
         self.log_dict(metrics)
-        return full_metrics, val_batch.file_path, val_batch.stage, val_batch.stack
+        # , val_batch.stage, val_batch.stack
+        return full_metrics, val_batch.file_path

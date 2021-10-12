@@ -1,5 +1,5 @@
 from plantcelltype.graphnn.trainer import train
-from plantcelltype.utils.io import load_yaml
+from pctg_benchmark.utils.io import load_yaml
 
 from plantcelltype.utils.utils import parser
 

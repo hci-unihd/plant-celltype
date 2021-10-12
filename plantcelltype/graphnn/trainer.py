@@ -6,14 +6,14 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import Callback
 import yaml
 from pytorch_lightning import loggers as pl_loggers
-
+from torch_geometric.loader import DataLoader
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
 from pctg_benchmark.loaders.torch_loader import PCTGSimpleSplit, PCTGCrossValidationSplit
 from plantcelltype.utils.utils import print_config
 
 
-loaders = {'PCTGSimpleSplit': PCTGSimpleSplit,
-           'PCTGCrossValidationSplit': PCTGCrossValidationSplit}
+datasets = {'simple': PCTGSimpleSplit,
+            'cross_validation': PCTGCrossValidationSplit}
 
 
 class LogConfigCallback(Callback):
@@ -37,11 +37,6 @@ class LogConfigCallback(Callback):
             yaml.dump(config, outfile)
 
 
-def add_home_path(path):
-    home_dir = os.path.expanduser('~')
-    return f"{home_dir}{path}"
-
-
 def get_model(config, in_features, in_edges_attr):
     config['module']['model']['kwargs']['in_features'] = in_features
     if 'in_edges_attr' in config['module']['model']['kwargs']:
@@ -56,12 +51,20 @@ def get_model(config, in_features, in_edges_attr):
 
 
 def get_loaders(config):
-    name = config['name']
-    val_loader = loaders[name](**config['val_loader'])
-    train_loader = loaders['name'](**config['train_loader'])
+    val_dataset = datasets[config['mode']](**config['val_dataset'])
+    train_dataset = datasets[config['mode']](**config['train_dataset'])
+    val_loader = DataLoader(val_dataset,
+                            batch_size=config['val_batch_size'],
+                            num_workers=config['num_workers'],
+                            shuffle=False)
 
-    in_edges_attr = train_loader.in_edges_attr
-    in_features = train_loader.in_features
+    train_loader = DataLoader(train_dataset,
+                              batch_size=config['train_batch_size'],
+                              num_workers=config['num_workers'],
+                              shuffle=True)
+
+    in_edges_attr = train_dataset.in_edges_attr
+    in_features = train_dataset.in_features
     return val_loader, train_loader, in_features, in_edges_attr
 
 
@@ -71,28 +74,20 @@ def get_logger(config):
 
 
 def simple_train(config):
-    pl.seed_everything(42, workers=True)
-    val_loader, train_loader, in_features, in_edges_attr = get_loaders(config)
+    pl.seed_everything(config.get('seed', 42), workers=True)
+    val_loader, train_loader, in_features, in_edges_attr = get_loaders(config['loader'])
 
     model = get_model(config, in_features, in_edges_attr)
     config = get_logger(config)
-    trainer = pl.Trainer(**config['trainer'])
+    trainer = pl.Trainer(**config['trainer'],
+                         callbacks=[LogConfigCallback(config)])
+
     trainer.fit(model, train_loader, val_loader)
 
     version = f'version_{trainer.logger.version}'
     checkpoint_path = os.path.join(trainer.logger.save_dir,
                                    trainer.logger.name,
                                    version)
-
-    config['run'] = {'save_dir': trainer.logger.save_dir,
-                     'name': trainer.logger.name,
-                     'version': trainer.logger.version,
-                     'results': model.saved_metrics}
-    
-    del config['trainer']['logger']
-    with open(os.path.join(checkpoint_path, 'config.yaml'), 'w') as outfile:
-        yaml.dump(config, outfile)
-
     return checkpoint_path
 
 
@@ -137,7 +132,9 @@ def grid_search_train(config, kwargs):
 
 def train(config):
     print_config(config)
-    if 'cross_validation' in config:
+    if config['loader']['mode'] == 'cross_validation':
         cross_validation_train(config)
-    else:
+    elif config['loader']['mode'] == 'simple':
         simple_train(config)
+    else:
+        raise NotImplementedError

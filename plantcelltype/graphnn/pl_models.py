@@ -81,14 +81,19 @@ class NodesClassification(pl.LightningModule):
         self.log('train_class_acc', class_acc)
         return loss
 
-    def validation_step(self, val_batch, batch_idx):
+    def _val_forward(self, val_batch):
         # to generalize
         val_batch = self.net(val_batch)
         logits = torch.log_softmax(val_batch.out, 1)
         pred = logits.max(1)[1]
         loss = F.nll_loss(logits, val_batch.y)
+        return pred, loss
 
-        full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(), val_batch.y.cpu())
+    def validation_step(self, val_batch, batch_idx):
+        pred, loss = self._val_forward(val_batch)
+        full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(),
+                                                                      val_batch.y.cpu(),
+                                                                      self.global_step)
 
         if self.log_points:
             self._log_points(val_batch.pos, pred, batch_idx)
@@ -99,7 +104,6 @@ class NodesClassification(pl.LightningModule):
 
         metrics = {'hp_metric': full_metrics['accuracy_micro']}
         self.log_dict(metrics)
-        # , val_batch.stage, val_batch.stack
         return full_metrics, val_batch.file_path
 
     def validation_epoch_end(self, outputs):
@@ -159,24 +163,11 @@ class EdgesClassification(NodesClassification, pl.LightningModule):
         self.log('train_class_acc', class_acc)
         return loss
 
-    def validation_step(self, val_batch, batch_idx):
+    def _val_forward(self, val_batch):
         # to generalize
         val_batch = self.net(val_batch)
         logits = val_batch.out[:, 0]
         logits = torch.sigmoid(logits)
         pred = logits > 0.5
         loss = F.binary_cross_entropy(logits, val_batch.edge_y.float())
-
-        full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(), val_batch.edge_y.cpu())
-
-        if self.log_points:
-            self._log_points(val_batch.pos, pred, batch_idx)
-
-        self.log('val_loss', loss)
-        self.log('val_global_acc', full_metrics['accuracy_micro'])
-        self.log('val_class_acc', full_metrics['accuracy_macro'])
-
-        metrics = {'hp_metric': full_metrics['accuracy_micro']}
-        self.log_dict(metrics)
-        # , val_batch.stage, val_batch.stack
-        return full_metrics, val_batch.file_path
+        return pred, loss

@@ -20,7 +20,7 @@ class LogConfigCallback(Callback):
     def __init__(self, config):
         self.config = config
 
-    def on_validation_end(self, trainer, model) -> None:
+    def _save(self, trainer, model) -> None:
         config = copy.deepcopy(self.config)
         version = f'version_{trainer.logger.version}'
         checkpoint_path = os.path.join(trainer.logger.save_dir,
@@ -35,6 +35,12 @@ class LogConfigCallback(Callback):
         del config['trainer']['logger']
         with open(os.path.join(checkpoint_path, 'config.yaml'), 'w') as outfile:
             yaml.dump(config, outfile)
+
+    def on_validation_end(self, trainer, model) -> None:
+        self._save(trainer, model)
+
+    def on_test_end(self, trainer, model) -> None:
+        self._save(trainer, model)
 
 
 def get_model(config, in_features, in_edges_attr):
@@ -73,6 +79,15 @@ def get_logger(config):
     return config
 
 
+def run_test(trainer, model, config):
+    test_dataset = datasets[config['mode']](**config['test_dataset'])
+    test_loader = DataLoader(test_dataset,
+                             batch_size=config['val_batch_size'],
+                             num_workers=config['num_workers'],
+                             shuffle=False)
+    trainer.test(model, test_loader)
+
+
 def simple_train(config):
     pl.seed_everything(config.get('seed', 42), workers=True)
     val_loader, train_loader, in_features, in_edges_attr = get_loaders(config['loader'])
@@ -83,6 +98,7 @@ def simple_train(config):
                          callbacks=[LogConfigCallback(config)])
 
     trainer.fit(model, train_loader, val_loader)
+    run_test(trainer, model, config['loader'])
 
     version = f'version_{trainer.logger.version}'
     checkpoint_path = os.path.join(trainer.logger.save_dir,

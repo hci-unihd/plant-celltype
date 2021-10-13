@@ -12,27 +12,27 @@ node_features:
     pre_transform:
       - name: ComputeZscore
       - name: ComputeToTensor
-  - name: lrs_axis1_grs
+  - name: lrs_orientation_axis1_grs
     pre_transform:
       - name: ComputeZscore
       - name: ComputeToTensor
-  - name: lrs_axis2_grs
+  - name: lrs_orientation_axis2_grs
     pre_transform:
       - name: ComputeZscore
       - name: ComputeToTensor
-  - name: lrs_axis3_grs
+  - name: lrs_orientation_axis3_grs
     pre_transform:
       - name: ComputeZscore
       - name: ComputeToTensor
-  - name: pca_axis1_grs
+  - name: pca_orientation_axis1_grs
     pre_transform:
       - name: ComputeZscore
       - name: ComputeToTensor
-  - name: pca_axis3_grs
+  - name: pca_orientation_axis3_grs
     pre_transform:
       - name: ComputeZscore
       - name: ComputeToTensor
-  - name: pca_axis3_grs
+  - name: pca_orientation_axis3_grs
     pre_transform:
       - name: ComputeZscore
       - name: ComputeToTensor

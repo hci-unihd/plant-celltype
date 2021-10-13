@@ -1,9 +1,9 @@
 _internal_variables:
-  template: !update 'config/features/gcn/template.yaml'
+  template: !update 'config/features/template.yaml'
   model_name: &model_name 'GCN2'
 
 logs:
-  name: !join [*model_name, _base]
+  name: *model_name
 
 module:
   model:

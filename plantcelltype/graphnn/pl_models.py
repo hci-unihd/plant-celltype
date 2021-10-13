@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
-from torchmetrics import Accuracy, Precision, Recall, F1
+from torchmetrics import Accuracy
 
 from pctg_benchmark.evaluation.metrics import NodeClassificationMetrics
 from plantcelltype.graphnn.graph_models import GCN2, GCN3
@@ -43,6 +43,12 @@ class NodesClassification(pl.LightningModule):
                                                               'mode': reference_mode},
                                       'results': [],
                                       'results_last': []},
+                              'test': {'loss': {'value': 1e16, 'step': 0, 'mode': 'min'},
+                                       self.reference_metric: {'value': reference_default,
+                                                               'step': 0,
+                                                               'mode': reference_mode},
+                                       'results': [],
+                                       'results_last': []},
                               'train': {'loss': {'value': 1e16, 'step': 0, 'mode': 'min'},
                                         self.reference_metric: {'value': reference_default,
                                                                 'step': 0,
@@ -106,11 +112,11 @@ class NodesClassification(pl.LightningModule):
         self.log_dict(metrics)
         return full_metrics, val_batch.file_path
 
-    def validation_epoch_end(self, outputs):
+    def save_results_epoch(self, outputs, phase='val'):
         epoch_acc = [val_sample[0][self.reference_metric] for val_sample in outputs]
         epoch_acc = sum(epoch_acc) / len(outputs)
-        mode = self.saved_metrics['val'][self.reference_metric]['mode']
-        check = self.saved_metrics['val'][self.reference_metric]['value'] - epoch_acc
+        mode = self.saved_metrics[phase][self.reference_metric]['mode']
+        check = self.saved_metrics[phase][self.reference_metric]['value'] - epoch_acc
         keys = ['results', 'file_path', 'meta']
         results = []
         for val_sample in outputs:
@@ -119,11 +125,26 @@ class NodesClassification(pl.LightningModule):
             results.append(_results)
 
         if (mode == 'min' and check > 0) or (mode == 'max' and check < 0):
-            self.saved_metrics['val']['results'] = results
-            self.saved_metrics['val'][self.reference_metric]['value'] = epoch_acc
-            self.saved_metrics['val'][self.reference_metric]['step'] = self.global_step
-        self.saved_metrics['val']['results_last'] = results
-        self.log('val_epoch_acc', epoch_acc)
+            self.saved_metrics[phase]['results'] = results
+            self.saved_metrics[phase][self.reference_metric]['value'] = epoch_acc
+            self.saved_metrics[phase][self.reference_metric]['step'] = self.global_step
+
+        self.saved_metrics[phase]['results_last'] = results
+        if phase == 'val':
+            self.log(f'{phase}_epoch_acc', epoch_acc)
+
+    def validation_epoch_end(self, outputs):
+        self.save_results_epoch(outputs, phase='val')
+
+    def test_step(self, batch, batch_idx):
+        pred, loss = self._val_forward(batch)
+        full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(),
+                                                                      batch.y.cpu(),
+                                                                      self.global_step)
+        return full_metrics, batch.file_path
+
+    def test_epoch_end(self, outputs):
+        self.save_results_epoch(outputs, phase='test')
 
     def _log_points(self, pos, cor_pred, batch_idx):
         tensorboard = self.logger.experiment

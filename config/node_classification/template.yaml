@@ -23,6 +23,7 @@ loader:
     phase: train
     ratio: [0.7, 0.3, 0]
     grs: [label_grs_surface]
+    seed: 2
     force_process: *force_process
     raw_transform_config: *raw_transform_config
 
@@ -31,6 +32,7 @@ loader:
     phase: val
     ratio: [0.7, 0.3, 0]
     grs: [label_grs_surface]
+    seed: 2
     force_process: *force_process
     raw_transform_config: *raw_transform_config
 

@@ -126,11 +126,11 @@ node_features:
       - name: ComputeZscore
       - name: ComputeToTensor
   # not invariant but only because of permutations
-  #- name: proj_length_unit_sphere
-  #  pre_transform:
-  #    - name: ComputeClipQuantile
-  #    - name: ComputeZscore
-  #    - name: ComputeToTensor
+  - name: proj_length_unit_sphere
+    pre_transform:
+      - name: ComputeClipQuantile
+      - name: ComputeZscore
+      - name: ComputeToTensor
 edges_features:
   - name: surface_um
     pre_transform:

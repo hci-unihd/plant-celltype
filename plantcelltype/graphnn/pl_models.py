@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 from torchmetrics import Accuracy, Precision, Recall, F1
 
+from pctg_benchmark.evaluation.metrics import NodeClassificationMetrics
 from plantcelltype.graphnn.graph_models import GCN2, GCN3
 from plantcelltype.graphnn.graph_models import GAT2, GAT3
 from plantcelltype.graphnn.graph_models import TransformerGCN2, TransformerGCN3
@@ -49,21 +50,9 @@ class NodesClassification(pl.LightningModule):
                               }
 
         out_class = model['kwargs']['out_features']
+        self.classification_evaluation = NodeClassificationMetrics(out_class)
         self.micro_accuracy = Accuracy(average='micro')
         self.macro_accuracy = Accuracy(num_classes=out_class, average='macro')
-
-        self.pl_metrics = {'accuracy_micro': Accuracy(average='micro'),
-                           'accuracy_macro': Accuracy(num_classes=out_class, average='macro'),
-                           'accuracy_class': Accuracy(num_classes=out_class, average=None),
-                           'precision_micro': Precision(average='micro'),
-                           'precision_class': Precision(num_classes=out_class, average=None),
-                           'recall_micro': Recall(average='micro'),
-                           'recall_class': Recall(num_classes=out_class, average=None),
-                           'f1_micro': F1(average='micro'),
-                           'f1_class': F1(num_classes=out_class, average=None),
-                           # 'confusion_matrix': ConfusionMatrix(num_classes=out_class)
-                           }
-
         self.save_hyperparameters()
 
     def configure_optimizers(self):
@@ -99,7 +88,7 @@ class NodesClassification(pl.LightningModule):
         pred = logits.max(1)[1]
         loss = F.nll_loss(logits, val_batch.y)
 
-        full_metrics = self.compute_metrics(pred.cpu(), val_batch.y.cpu())
+        full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(), val_batch.y.cpu())
 
         if self.log_points:
             self._log_points(val_batch.pos, pred, batch_idx)
@@ -131,27 +120,6 @@ class NodesClassification(pl.LightningModule):
             self.saved_metrics['val'][self.reference_metric]['step'] = self.global_step
         self.saved_metrics['val']['results_last'] = results
         self.log('val_epoch_acc', epoch_acc)
-
-    def compute_metrics(self, pred, target):
-        results = {}
-        for key, metric in self.pl_metrics.items():
-            value = metric(pred, target)
-            results[key] = value
-            if value.ndim == 0:
-                value = value.item()
-
-            elif value.ndim == 1:
-                value = [v.item() for v in value]
-
-            elif value.ndim == 2:
-                value = [[v1.item() for v1 in v2] for v2 in value]
-
-            else:
-                raise NotImplementedError
-
-            results[key] = value
-        results['step'] = self.global_step
-        return results
 
     def _log_points(self, pos, cor_pred, batch_idx):
         tensorboard = self.logger.experiment
@@ -199,7 +167,7 @@ class EdgesClassification(NodesClassification, pl.LightningModule):
         pred = logits > 0.5
         loss = F.binary_cross_entropy(logits, val_batch.edge_y.float())
 
-        full_metrics = self.compute_metrics(pred.cpu(), val_batch.edge_y.cpu())
+        full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(), val_batch.edge_y.cpu())
 
         if self.log_points:
             self._log_points(val_batch.pos, pred, batch_idx)

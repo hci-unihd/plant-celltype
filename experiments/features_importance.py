@@ -4,9 +4,10 @@ from plantcelltype.graphnn.trainer import train
 import copy
 
 
-template_config_paths = (# './features_importance/deeper_gcn.yaml',
+template_config_paths = ('./features_importance/deeper_gcn.yaml',
                          './features_importance/gcn.yaml',
                          )
+
 template_perturbations = ({'name': 'SetToRandom'},
                           {'name': 'RandomShuffle'})
 
@@ -39,7 +40,6 @@ features_groups = (('baseline', ),  # nothing will be changed compared to the de
 
 for template_config_path in template_config_paths:
     template_config = load_yaml(template_config_path)
-    print(template_config)
     dataset_config = get_basic_loader_config('dataset')
     for template_perturbation in template_perturbations:
         for group in features_groups:

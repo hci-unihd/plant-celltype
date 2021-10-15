@@ -14,7 +14,7 @@ logs:
 
 trainer:
   gpus: 1
-  max_epochs: 5
+  max_epochs: 100
 
 loader:
   mode: simple # simple or cross_validation

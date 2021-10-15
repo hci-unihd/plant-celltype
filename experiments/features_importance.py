@@ -4,7 +4,7 @@ from plantcelltype.graphnn.trainer import train
 import copy
 
 
-template_config_paths = ('./features_importance/deeper_gcn.yaml',
+template_config_paths = (# './features_importance/deeper_gcn.yaml',
                          './features_importance/gcn.yaml',
                          )
 template_perturbations = ({'name': 'SetToRandom'},

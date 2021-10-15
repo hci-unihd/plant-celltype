@@ -3,7 +3,7 @@ import itertools
 import os
 
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import Callback
+from pytorch_lightning.callbacks import Callback, ModelCheckpoint
 import yaml
 from pytorch_lightning import loggers as pl_loggers
 from torch_geometric.loader import DataLoader
@@ -14,6 +14,16 @@ from plantcelltype.utils.utils import print_config
 
 datasets = {'simple': PCTGSimpleSplit,
             'cross_validation': PCTGCrossValidationSplit}
+
+base_checkpoint = ModelCheckpoint(filename="last_{epoch:03d}_{val_acc:.2f}")
+
+acc_checkpoint = ModelCheckpoint(monitor='val_acc',
+                                 filename="best_acc_{epoch:03d}_{val_acc:.2f}",
+                                 mode='max')
+
+acc_class_checkpoint = ModelCheckpoint(monitor='val_class_acc',
+                                       filename="best_class_acc_{epoch:03d}_{val_class_acc:.2f}",
+                                       mode='max')
 
 
 class LogConfigCallback(Callback):
@@ -79,13 +89,16 @@ def get_logger(config):
     return config
 
 
-def run_test(trainer, model, config):
+def run_test(trainer, model, config, checkpoint_path=None):
     test_dataset = datasets[config['mode']](**config['test_dataset'])
+    acc_checkpoint_path = acc_checkpoint.best_model_path
+    model = model.load_from_checkpoint(acc_checkpoint_path)
+    model.eval()
     test_loader = DataLoader(test_dataset,
                              batch_size=config['val_batch_size'],
                              num_workers=config['num_workers'],
                              shuffle=False)
-    trainer.test(model, test_loader)
+    trainer.test(model, test_loader, ckpt_path=checkpoint_path)
 
 
 def simple_train(config):
@@ -95,10 +108,13 @@ def simple_train(config):
     model = get_model(config, in_features, in_edges_attr)
     config = get_logger(config)
     trainer = pl.Trainer(**config['trainer'],
-                         callbacks=[LogConfigCallback(config)])
+                         callbacks=[LogConfigCallback(config),
+                                    base_checkpoint,
+                                    acc_checkpoint,
+                                    acc_class_checkpoint])
 
     trainer.fit(model, train_loader, val_loader)
-    run_test(trainer, model, config['loader'])
+    run_test(trainer, model, config['loader'], acc_checkpoint.best_model_path)
 
     version = f'version_{trainer.logger.version}'
     checkpoint_path = os.path.join(trainer.logger.save_dir,

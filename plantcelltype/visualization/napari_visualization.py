@@ -5,7 +5,7 @@ import numpy as np
 from scipy.ndimage import zoom
 from skspatial.objects import Line, Vector
 
-from plantcelltype.graphnn.data_loader import gt_mapping_wb
+from pctg_benchmark import gt_mapping
 from plantcelltype.utils import map_edges_features2rag_boundaries, map_cell_features2segmentation
 from plantcelltype.utils.io import open_full_stack, export_full_stack
 
@@ -16,7 +16,7 @@ def create_prediction_label_image(stack, segmentation=None):
     cell_predictions = stack['cell_predictions']
     for i in range(cell_labels.shape[0]):
         # map labels for consistency
-        cell_labels[i] = gt_mapping_wb[cell_labels[i]] + 1
+        cell_labels[i] = gt_mapping[cell_labels[i]] + 1
         cell_predictions[i] += 1
 
     predictions = map_cell_features2segmentation(segmentation, stack['cell_ids'], cell_predictions)

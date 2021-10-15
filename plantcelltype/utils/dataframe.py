@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import tqdm
 
-from plantcelltype.graphnn.data_loader import collect_cell_features_grs
 from plantcelltype.utils import open_full_stack
 
 

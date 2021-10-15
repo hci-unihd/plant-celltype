@@ -28,6 +28,19 @@ from plantcelltype.visualization.napari_visualization import CellTypeViewer
 
 
 def nice_enumerate(files, message='Message here', timer_message='runtime', max_length=100):
+    """
+
+    Parameters
+    ----------
+    files
+    message
+    timer_message
+    max_length
+
+    Returns
+    -------
+
+    """
     for i, file in enumerate(files):
         timer = - time.time()
         progress = f'{i + 1}/{len(files)}'

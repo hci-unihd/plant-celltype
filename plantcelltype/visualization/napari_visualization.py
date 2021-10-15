@@ -166,7 +166,7 @@ def visualize_all_edges_features(stack):
     viewer = napari.Viewer()
     viewer.add_labels(stack['rag_boundaries'], name='rag_boundaries')
 
-    print("edges features:")
+    print("edges features_importance:")
     for key, value in stack['edges_features'].items():
         if isinstance(value, np.ndarray):
             if value.ndim == 1:

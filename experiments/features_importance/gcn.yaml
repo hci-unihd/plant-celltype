@@ -1,11 +1,15 @@
 _internal_variables:
-  template: !update 'experiments/features/template.yaml'
+  template: !update 'features_importance/template.yaml'
   model_name: &model_name 'GCN2'
 
 logs:
   name: *model_name
 
 module:
+  optimizer:
+    lr: 1e-3
+    wd: 0
+
   model:
     name: *model_name
     kwargs:
@@ -13,3 +17,4 @@ module:
       layer1_kwargs:
         batch_norm: false
         drop_out: 0.5
+      out_features: 9

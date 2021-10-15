@@ -64,7 +64,7 @@ node_features:
       - name: ComputeClipQuantile
       - name: ComputeZscore
       - name: ComputeToTensor
-  # -- length features
+  # -- length features_importance
   - name: length_axis1_grs
     pre_transform:
       - name: ComputeClipQuantile
@@ -80,7 +80,7 @@ node_features:
       - name: ComputeClipQuantile
       - name: ComputeZscore
       - name: ComputeToTensor
-  # -- dot features
+  # -- dot features_importance
   - name: lrs_axis12_dot_grs
     pre_transform:
       - name: ComputeAbs
@@ -121,7 +121,7 @@ node_features:
       - name: ComputeAbs
       - name: ComputeZscore
       - name: ComputeToTensor
-  # pca features
+  # pca features_importance
   - name: pca_explained_variance_grs
     pre_transform:
       - name: ComputeZscore

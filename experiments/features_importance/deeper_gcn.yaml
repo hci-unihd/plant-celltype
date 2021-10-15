@@ -1,5 +1,5 @@
 _internal_variables:
-  template: !update 'experiments/node_classification/template.yaml'
+  template: !update 'features_importance/template.yaml'
   model_name: &model_name 'DeeperGCN'
 
 logs:
@@ -17,6 +17,3 @@ module:
       in_features: None
       num_layers: 16
       dropout: 0.1
-
-trainer:
-  max_epochs: 200

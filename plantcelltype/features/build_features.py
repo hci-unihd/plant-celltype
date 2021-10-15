@@ -26,7 +26,7 @@ from plantcelltype.utils.io import import_labels_csv
 from plantcelltype.utils.rag_image import rectify_edge_image
 
 
-# Base features
+# Base features_importance
 def build_labels_from_csv(stack, csv_path, create_labels_image=True):
     """update labels from csv and optionally creat a gt image"""
     cell_ids, cell_labels = stack['cell_ids'], stack['cell_labels']
@@ -100,7 +100,7 @@ def build_basic(stack, csv_path=None):
     return stack
 
 
-# cell features
+# cell features_importance
 def build_cell_com(stack, feat_name='com_voxels', group='cell_features'):
     cell_com = seg2com(stack['segmentation'], stack['cell_ids'])
     cell_com = cell_com.astype('float32')
@@ -195,7 +195,7 @@ def build_es_features(stack, compute_etd=False, feat_name=('hops_to_es', 'edt_es
     return stack
 
 
-# edges features
+# edges features_importance
 def build_edges_com_surface(stack, feat_name=('com_voxels', 'surface_voxels'), group='edges_features'):
     rag, edges_ids = rag_from_seg(stack['segmentation'])
     edges_com, edges_surface = get_edges_com_voxels(rag)
@@ -502,7 +502,7 @@ def build_edges_dot_features(stack, axis_transformer, group='edges_features'):
     return stack
 
 
-# precompute grs features
+# precompute grs features_importance
 def build_cell_transformed_voxels_features(stack, axis_transform, group='cell_features'):
     stack[group]['com_grs'] = axis_transform.transform_coord(stack[group]['com_voxels'])
     stack[group]['volume_um'] = axis_transform.scale_volumes(stack[group]['volume_voxels'])

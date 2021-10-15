@@ -121,7 +121,7 @@ def fix_grs(config):
 def advanced_preprocessing(config):
     files = load_paths(config['file_list'], filter_h5=True)
 
-    for file in nice_enumerate(files, message='advanced-features'):
+    for file in nice_enumerate(files, message='advanced-features_importance'):
         stack, at = open_full_stack(file)
 
         # basics

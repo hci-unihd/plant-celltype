@@ -85,7 +85,7 @@ def load_paths(path, filter_h5=True):
 
 
 def parser():
-    _parser = argparse.ArgumentParser(description='plant-celltype training config')
-    _parser.add_argument('--config', type=str, help='Path to the YAML config file', required=True)
+    _parser = argparse.ArgumentParser(description='plant-celltype training experiments')
+    _parser.add_argument('--experiments', type=str, help='Path to the YAML experiments file', required=True)
     args = _parser.parse_args()
     return args

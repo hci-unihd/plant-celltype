@@ -1,5 +1,5 @@
 _internal_variables:
-  template: !update 'config/node_classification/template.yaml'
+  template: !update 'experiments/node_classification/template.yaml'
   model_name: &model_name 'GAT2'
 
 logs:

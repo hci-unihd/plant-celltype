@@ -3,7 +3,7 @@ _internal_variables:
   - &root !join [*home_path, '/data/ovules/ovules-celltype-dataset/']
   - &force_process false
   - &num_workers 4
-  - &raw_transform_config !load 'config/node_classification/dataset_default.yaml'
+  - &raw_transform_config !load 'experiments/node_classification/dataset_default.yaml'
 
 mode: NodesClassification
 seed: 0

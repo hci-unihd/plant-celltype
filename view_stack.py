@@ -5,7 +5,7 @@ from plantcelltype.visualization.napari_visualization import CellTypeViewer
 
 
 def parser():
-    _parser = argparse.ArgumentParser(description='plant-celltype training config')
+    _parser = argparse.ArgumentParser(description='plant-celltype training experiments')
     _parser.add_argument('--stack', type=str, help='Path to the CellType h5 stack', required=True)
     args = _parser.parse_args()
     return args

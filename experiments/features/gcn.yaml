@@ -1,5 +1,5 @@
 _internal_variables:
-  template: !update 'config/features/template.yaml'
+  template: !update 'experiments/features/template.yaml'
   model_name: &model_name 'GCN2'
 
 logs:

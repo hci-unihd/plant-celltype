@@ -10,20 +10,11 @@ from torch_geometric.loader import DataLoader
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
 from pctg_benchmark.loaders.torch_loader import PCTGSimpleSplit, PCTGCrossValidationSplit
 from plantcelltype.utils.utils import print_config
+from dataclasses import dataclass
 
 
 datasets = {'simple': PCTGSimpleSplit,
             'cross_validation': PCTGCrossValidationSplit}
-
-base_checkpoint = ModelCheckpoint(filename="last_{epoch:03d}_{val_acc:.2f}")
-
-acc_checkpoint = ModelCheckpoint(monitor='val_acc',
-                                 filename="best_acc_{epoch:03d}_{val_acc:.2f}",
-                                 mode='max')
-
-acc_class_checkpoint = ModelCheckpoint(monitor='val_class_acc',
-                                       filename="best_class_acc_{epoch:03d}_{val_class_acc:.2f}",
-                                       mode='max')
 
 
 class LogConfigCallback(Callback):
@@ -51,6 +42,29 @@ class LogConfigCallback(Callback):
 
     def on_test_end(self, trainer, model) -> None:
         self._save(trainer, model)
+
+
+@dataclass
+class TrainerCallbacks:
+    config: dict
+    common_checkpoints_pattern: str = '{epoch:03d}_{val_acc:.2f}_{val_class_acc:.2f}'
+
+    def __post_init__(self):
+        self.base_checkpoint = ModelCheckpoint(filename=f"last_{self.common_checkpoints_pattern}")
+
+        self.acc_checkpoint = ModelCheckpoint(monitor='val_acc',
+                                              filename=f"best_acc_{self.common_checkpoints_pattern}",
+                                              mode='max')
+
+        self.acc_class_checkpoint = ModelCheckpoint(monitor='val_class_acc',
+                                                    filename=f"best_class_acc_{self.common_checkpoints_pattern}",
+                                                    mode='max')
+
+        self.log_callback = LogConfigCallback(self.config)
+        self.all_callbacks = [self.base_checkpoint,
+                              self.acc_checkpoint,
+                              self.acc_class_checkpoint,
+                              self.log_callback]
 
 
 def get_model(config, in_features, in_edges_attr):
@@ -91,9 +105,6 @@ def get_logger(config):
 
 def run_test(trainer, model, config, checkpoint_path=None):
     test_dataset = datasets[config['mode']](**config['test_dataset'])
-    acc_checkpoint_path = acc_checkpoint.best_model_path
-    model = model.load_from_checkpoint(acc_checkpoint_path)
-    model.eval()
     test_loader = DataLoader(test_dataset,
                              batch_size=config['val_batch_size'],
                              num_workers=config['num_workers'],
@@ -107,14 +118,13 @@ def simple_train(config):
 
     model = get_model(config, in_features, in_edges_attr)
     config = get_logger(config)
+    callbacks = TrainerCallbacks(config)
+
     trainer = pl.Trainer(**config['trainer'],
-                         callbacks=[LogConfigCallback(config),
-                                    base_checkpoint,
-                                    acc_checkpoint,
-                                    acc_class_checkpoint])
+                         callbacks=callbacks.all_callbacks)
 
     trainer.fit(model, train_loader, val_loader)
-    run_test(trainer, model, config['loader'], acc_checkpoint.best_model_path)
+    run_test(trainer, model, config['loader'], callbacks.acc_checkpoint.best_model_path)
 
     version = f'version_{trainer.logger.version}'
     checkpoint_path = os.path.join(trainer.logger.save_dir,

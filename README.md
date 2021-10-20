@@ -28,10 +28,9 @@ conda create -n plant-ct -c rusty1s -c pytorch -c conda-forge -c cpape numpy sci
 ```
 pip install 'napari[pyqt5]'
 pip install plotly==5.0.0
-pip install tensorboard-reducer
 ```
 
-## benchmark
+## Install pctg-benchmark
 ```
 conda activate plant-ct
 cd [path-to]/plant-celltype-graph-benchmark

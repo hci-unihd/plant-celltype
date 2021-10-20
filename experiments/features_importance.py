@@ -40,7 +40,6 @@ features_groups = (('baseline', ),  # nothing will be changed compared to the de
                     'pca_proj_axis2_grs',
                     'pca_proj_axis3_grs'),
                    ('pca_explained_variance_grs', ),
-                   ('proj_length_unit_sphere', )
                    )
 
 for template_config_path in template_config_paths:

@@ -22,8 +22,8 @@ grs_groups = ({'train': ('trivial_grs', ), 'test': ('trivial_grs', )},
               )
 
 for template_config_path in template_config_paths:
-    template_config = load_yaml(template_config_path)
     for grs_group in grs_groups:
+        template_config = load_yaml(template_config_path)
         train_name, test_name = '_'.join(grs_group['train']), '_'.join(grs_group['test'])
         template_config['logs']['name'] += f'_train:{train_name}_test:{test_name}'
         template_config['loader']['train_dataset']['grs'] = grs_group['train']

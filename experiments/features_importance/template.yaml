@@ -1,6 +1,6 @@
 _internal_variables:
   - &home_path !home_path
-  - &root !join [*home_path, '/data/ovules/ovules-celltype-dataset/']
+  - &root !join [*home_path, '/data/pctg_feat/']
   - &force_process false
   - &num_workers 4
   - &ratio [0.7, 0.1, 0.2]

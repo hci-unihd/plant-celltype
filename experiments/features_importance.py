@@ -12,11 +12,14 @@ template_perturbations = ({'name': 'SetToValue'},
                           {'name': 'SetToRandom'},
                           {'name': 'RandomShuffle'})
 
-features_groups = (#('baseline', ),  # nothing will be changed compared to the default config
+features_groups = (('baseline', ),  # nothing will be changed compared to the default config
                    ('com_grs', ),
                    ('lrs_orientation_axis1_grs',
                     'lrs_orientation_axis2_grs',
                     'lrs_orientation_axis3_grs'),
+                   ('lrs_axis1_grs',
+                    'lrs_axis2_grs',
+                    'lrs_axis3_grs'),
                    ('pca_orientation_axis1_grs',
                     'pca_orientation_axis3_grs',
                     'pca_orientation_axis3_grs'),
@@ -37,6 +40,7 @@ features_groups = (#('baseline', ),  # nothing will be changed compared to the d
                     'pca_proj_axis2_grs',
                     'pca_proj_axis3_grs'),
                    ('pca_explained_variance_grs', ),
+                   ('proj_length_unit_sphere', )
                    )
 
 for template_config_path in template_config_paths:

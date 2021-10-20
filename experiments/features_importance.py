@@ -8,10 +8,11 @@ template_config_paths = ('./features_importance/deeper_gcn.yaml',
                          './features_importance/gcn.yaml',
                          )
 
-template_perturbations = ({'name': 'SetToRandom'},
+template_perturbations = ({'name': 'SetToValue'},
+                          {'name': 'SetToRandom'},
                           {'name': 'RandomShuffle'})
 
-features_groups = (('baseline', ),  # nothing will be changed compared to the default config
+features_groups = (#('baseline', ),  # nothing will be changed compared to the default config
                    ('com_grs', ),
                    ('lrs_orientation_axis1_grs',
                     'lrs_orientation_axis2_grs',

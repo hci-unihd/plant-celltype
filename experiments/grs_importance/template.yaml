@@ -10,7 +10,7 @@ mode: NodesClassification
 seed: 0
 
 logs:
-  save_dir: !join [*home_path, '/results/plant-ct-logs/grid_search/']
+  save_dir: !join [*home_path, '/results/plant-ct-logs/ablation/grs_importance/']
 
 trainer:
   gpus: 1

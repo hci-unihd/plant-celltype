@@ -17,4 +17,3 @@ grid_search:
   module/model/kwargs/hidden_feat: [ 64, 128, 256 ]
   module/model/kwargs/layer1_kwargs/batch_norm: [ true, false ]
   module/model/kwargs/layer1_kwargs/drop_out: [ 0., 0.5 ]
-  loader/batch: [ 1, 5 ]

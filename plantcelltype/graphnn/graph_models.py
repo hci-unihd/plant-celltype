@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch.nn import Linear, LayerNorm, ReLU
 from torch_geometric.nn import GCN2Conv
-from torch_geometric.nn import GENConv, DeeTgCNLayer
+from torch_geometric.nn import GENConv, DeepGCNLayer
 from torch_geometric.nn.conv.gcn_conv import gcn_norm
 from plantcelltype.graphnn.layers.graph_conv_blocks import GCNLayer, GATLayer, TransformerGCNLayer
 from torch_sparse.tensor import SparseTensor

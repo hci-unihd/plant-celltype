@@ -4,18 +4,27 @@ import torch.nn.functional as F
 from torchmetrics import Accuracy
 
 from pctg_benchmark.evaluation.metrics import NodeClassificationMetrics
-from plantcelltype.graphnn.graph_models import GCN2, GCN3
-from plantcelltype.graphnn.graph_models import GAT2, GAT3
-from plantcelltype.graphnn.graph_models import TransformerGCN2, TransformerGCN3
-from plantcelltype.graphnn.graph_models import GCNII, DeeperGCN
+from plantcelltype.graphnn.graph_models import GCN2
+from plantcelltype.graphnn.graph_models import GAT2, GAT2v2
+from plantcelltype.graphnn.graph_models import TransformerGCN2, NoEdgesTransformerGCN2
+from plantcelltype.graphnn.graph_models import GCNII, DeeperGCN, NoEdgesDeeperGCN
 from plantcelltype.graphnn.edge_models import EGCN2, EGAT2, ETransformerGCN2
 from plantcelltype.graphnn.edge_models import EDeeperGCN, EGCNII
+from plantcelltype.graphnn.graph_models import TgGCN, TgGAT, TgGraphSAGE, TgGIN
 
-models_pool = {'GCN3': GCN3, 'GCN2': GCN2,
-               'GAT3': GAT3, 'GAT2': GAT2,
-               'GCNII': GCNII, 'DeeperGCN': DeeperGCN,
-               'TransformerGCN3': TransformerGCN3,
+
+models_pool = {'GCN2': GCN2,
+               'GAT2': GAT2,
+               'GAT2v2': GAT2v2,
+               'TgGCN': TgGCN,
+               'TgGAT': TgGAT,
+               'TgGIN': TgGIN,
+               'TgGraphSAGE': TgGraphSAGE,
+               'GCNII': GCNII,
+               'DeeperGCN': DeeperGCN,
+               'NoEdgesDeeperGCN': NoEdgesDeeperGCN,
                'TransformerGCN2': TransformerGCN2,
+               'NoEdgesTransformerGCN2': NoEdgesTransformerGCN2,
                'EGCN2': EGCN2,
                'EGAT2': EGAT2,
                'ETransformerGCN2': ETransformerGCN2,

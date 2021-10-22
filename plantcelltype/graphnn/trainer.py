@@ -104,6 +104,10 @@ def get_logger(config):
 
 
 def run_test(trainer, model, config, checkpoint_path=None):
+    if 'test_dataset' not in config:
+        print("Skipping Testing")
+        return None
+
     test_dataset = datasets[config['mode']](**config['test_dataset'])
     test_loader = DataLoader(test_dataset,
                              batch_size=config['val_batch_size'],
@@ -113,7 +117,7 @@ def run_test(trainer, model, config, checkpoint_path=None):
 
 
 def simple_train(config):
-    pl.seed_everything(config.get('seed', 42), workers=True)
+    pl.seed_everything(config.get('seed', 0), workers=True)
     val_loader, train_loader, in_features, in_edges_attr = get_loaders(config['loader'])
 
     model = get_model(config, in_features, in_edges_attr)
@@ -133,13 +137,28 @@ def simple_train(config):
     return checkpoint_path
 
 
+def summarize_cross_validation_rum(list_checkpoint_path, run_name):
+    save_dir_name = f'{run_name}_summary'
+    _sample_checkpoint_path = list_checkpoint_path[0]
+    version_base, version = os.path.split(_sample_checkpoint_path)
+    base, _ = os.path.split(version_base)
+    out_path = os.path.join(base, save_dir_name)
+    os.makedirs(out_path, exist_ok=True)
+
+
 def cross_validation_train(config):
-    n_splits = config['loader']['n_splits']
+    n_splits = config['loader']['train_dataset']['number_splits']
     run_name = config['logs']['name']
+    list_checkpoint_path = []
     for split in range(n_splits):
-        config['logs']['name'] = f'{run_name}_split{split}'
-        config['split_id'] = split
-        simple_train(config)
+        _config = copy.deepcopy(config)
+        _config['logs']['name'] = os.path.join(run_name, f'split{split}')
+        _config['loader']['train_dataset']['split'] = split
+        _config['loader']['val_dataset']['split'] = split
+        checkpoint_path = simple_train(_config)
+        list_checkpoint_path.append(checkpoint_path)
+
+    summarize_cross_validation_rum(list_checkpoint_path, run_name)
 
 
 def update_nested_dict(base, key, value):

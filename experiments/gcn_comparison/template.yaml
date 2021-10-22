@@ -3,8 +3,9 @@ _internal_variables:
   - &root !join [*home_path, '/data/gcn_comparison/']
   - &force_process false
   - &num_workers 4
-  - &ratio [0.7, 0.1, 0.2]
   - &grs [label_grs_surface]
+  - &split 0
+  - &number_splits 2
 
 mode: NodesClassification
 seed: 0
@@ -14,37 +15,32 @@ logs:
 
 trainer:
   gpus: 1
-  max_epochs: 50
+  max_epochs: 2
 
 loader:
-  mode: simple # simple or cross_validation
+  mode: cross_validation # simple or cross_validation
   train_dataset:
     root: *root
+    split: *split
     phase: train
-    ratio: *ratio
     grs: *grs
     force_process: *force_process
+    number_splits: *number_splits
     raw_transform_config:
 
   val_dataset:
     root: *root
     phase: val
-    ratio: *ratio
+    split: *split
     grs: *grs
     force_process: *force_process
-    raw_transform_config:
-
-  test_dataset:
-    root: *root
-    phase: test
-    ratio: *ratio
-    grs: *grs
-    force_process: *force_process
+    number_splits: *number_splits
     raw_transform_config:
 
   num_workers: *num_workers
   train_batch_size: 1
   val_batch_size: 1
+  test_batch_size: 1
 
 module:
   logger:

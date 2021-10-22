@@ -8,6 +8,7 @@ import yaml
 from pytorch_lightning import loggers as pl_loggers
 from torch_geometric.loader import DataLoader
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
+from plantcelltype.graphnn.utils import summarize_cross_validation_run
 from pctg_benchmark.loaders.torch_loader import PCTGSimpleSplit, PCTGCrossValidationSplit
 from plantcelltype.utils.utils import print_config
 from dataclasses import dataclass
@@ -137,15 +138,6 @@ def simple_train(config):
     return checkpoint_path
 
 
-def summarize_cross_validation_rum(list_checkpoint_path, run_name):
-    save_dir_name = f'{run_name}_summary'
-    _sample_checkpoint_path = list_checkpoint_path[0]
-    version_base, version = os.path.split(_sample_checkpoint_path)
-    base, _ = os.path.split(version_base)
-    out_path = os.path.join(base, save_dir_name)
-    os.makedirs(out_path, exist_ok=True)
-
-
 def cross_validation_train(config):
     n_splits = config['loader']['train_dataset']['number_splits']
     run_name = config['logs']['name']
@@ -158,7 +150,7 @@ def cross_validation_train(config):
         checkpoint_path = simple_train(_config)
         list_checkpoint_path.append(checkpoint_path)
 
-    summarize_cross_validation_rum(list_checkpoint_path, run_name)
+    summarize_cross_validation_run(list_checkpoint_path, run_name)
 
 
 def update_nested_dict(base, key, value):

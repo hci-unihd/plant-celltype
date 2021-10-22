@@ -119,7 +119,7 @@ class NodesClassification(pl.LightningModule):
 
         metrics = {'hp_metric': full_metrics['accuracy_micro']}
         self.log_dict(metrics)
-        return full_metrics, val_batch.file_path
+        return full_metrics, val_batch.file_path, val_batch.metadata
 
     def save_results_epoch(self, outputs, phase='val'):
         epoch_acc = [val_sample[0][self.reference_metric] for val_sample in outputs]
@@ -151,7 +151,7 @@ class NodesClassification(pl.LightningModule):
         metrics = {'test_acc': full_metrics['accuracy_micro'],
                    'test_class_acc': full_metrics['accuracy_macro']}
         self.log_dict(metrics)
-        return full_metrics, batch.file_path
+        return full_metrics, batch.file_path, batch.metadata
 
     def test_epoch_end(self, outputs):
         self.save_results_epoch(outputs, phase='test')

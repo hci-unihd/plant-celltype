@@ -5,7 +5,7 @@ _internal_variables:
   - &num_workers 4
   - &grs [label_grs_surface]
   - &split 0
-  - &number_splits 2
+  - &number_splits 5
 
 mode: NodesClassification
 seed: 0
@@ -15,7 +15,7 @@ logs:
 
 trainer:
   gpus: 1
-  max_epochs: 2
+  max_epochs: 50
 
 loader:
   mode: cross_validation # simple or cross_validation

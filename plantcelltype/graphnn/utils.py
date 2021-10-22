@@ -48,11 +48,10 @@ def summarize_cross_validation_run(list_checkpoint_path, run_name, save=True):
 
     if save:
         # save to disc
+        os.makedirs(out_path, exist_ok=True)
         with open(os.path.join(out_path, 'summary_readme.txt'), 'w') as f:
             f.write('Experiment source\n')
             for file_dir in list_checkpoint_path:
                 f.write(f'{file_dir}\n')
-
-        os.makedirs(out_path, exist_ok=True)
         glob_df.to_pickle(os.path.join(out_path, 'results_df.pkl'))
     return glob_df

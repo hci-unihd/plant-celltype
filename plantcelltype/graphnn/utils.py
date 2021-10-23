@@ -28,10 +28,10 @@ def results_to_dataframe(list_results, **kwargs):
     return pd.DataFrame.from_records(all_records)
 
 
-def summarize_cross_validation_run(list_checkpoint_path, run_name, save=True):
+def summarize_cross_validation_run(list_checkpoint_path, save=True):
 
     # setup directory and path
-    save_dir_name = f'{run_name}_summary'
+    save_dir_name = f'summary'
     _sample_checkpoint_path = list_checkpoint_path[0]
     version_base, version = os.path.split(_sample_checkpoint_path)
     base, _ = os.path.split(version_base)

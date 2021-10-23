@@ -150,7 +150,7 @@ def cross_validation_train(config):
         checkpoint_path = simple_train(_config)
         list_checkpoint_path.append(checkpoint_path)
 
-    summarize_cross_validation_run(list_checkpoint_path, run_name)
+    summarize_cross_validation_run(list_checkpoint_path)
 
 
 def update_nested_dict(base, key, value):

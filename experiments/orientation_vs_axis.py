@@ -6,7 +6,27 @@ template_config_paths = ('./orientation_vs_axis/deeper_gcn.yaml',
                          './orientation_vs_axis/gcn.yaml',
                          )
 
-feat_mappings = [({'lrs_orientation_axis1_grs': {'name': 'lrs_axis1_grs',
+feat_mappings = [({'lrs_orientation_axis1_grs': {'name': 'lrs_orientation_axis1_grs',
+                                                 'pre_transform': [{'name': 'ToUnitVector'},
+                                                                   {'name': 'ToTorchTensor'}]},
+                   'lrs_orientation_axis2_grs': {'name': 'lrs_orientation_axis2_grs',
+                                                 'pre_transform': [{'name': 'ToUnitVector'},
+                                                                   {'name': 'ToTorchTensor'}]},
+                   'lrs_orientation_axis3_grs': {'name': 'lrs_orientation_axis3_grs',
+                                                 'pre_transform': [{'name': 'ToUnitVector'},
+                                                                   {'name': 'ToTorchTensor'}]},
+                   'pca_orientation_axis1_grs': {'name': 'pca_orientation_axis1_grs',
+                                                 'pre_transform': [{'name': 'ToUnitVector'},
+                                                                   {'name': 'ToTorchTensor'}]},
+                   'pca_orientation_axis2_grs': {'name': 'pca_orientation_axis2_grs',
+                                                 'pre_transform': [{'name': 'ToUnitVector'},
+                                                                   {'name': 'ToTorchTensor'}]},
+                   'pca_orientation_axis3_grs': {'name': 'pca_orientation_axis3_grs',
+                                                 'pre_transform': [{'name': 'ToUnitVector'},
+                                                                   {'name': 'ToTorchTensor'}]},
+                   }, '_Orientation',
+                  ),
+                 ({'lrs_orientation_axis1_grs': {'name': 'lrs_axis1_grs',
                                                  'pre_transform': [{'name': 'ToUnitVector'},
                                                                    {'name': 'ToTorchTensor'}]},
                    'lrs_orientation_axis2_grs': {'name': 'lrs_axis2_grs',
@@ -24,7 +44,7 @@ feat_mappings = [({'lrs_orientation_axis1_grs': {'name': 'lrs_axis1_grs',
                    'pca_orientation_axis3_grs': {'name': 'pca_axis3_grs',
                                                  'pre_transform': [{'name': 'ToUnitVector'},
                                                                    {'name': 'ToTorchTensor'}]},
-                   }, 'Axis'),
+                   }, '_Axis'),
                  ({'lrs_orientation_axis1_grs': {'name': 'lrs_orientation_axis1_grs',
                                                  'pre_transform': [{'name': 'ToUnitVector'},
                                                                    {'name': 'Zscore'},
@@ -49,7 +69,7 @@ feat_mappings = [({'lrs_orientation_axis1_grs': {'name': 'lrs_axis1_grs',
                                                  'pre_transform': [{'name': 'ToUnitVector'},
                                                                    {'name': 'Zscore'},
                                                                    {'name': 'ToTorchTensor'}]},
-                   }, 'Orientation_zScore',
+                   }, '_Orientation_Zscore',
                   ),
                  ({'lrs_orientation_axis1_grs': {'name': 'lrs_axis1_grs',
                                                  'pre_transform': [{'name': 'ToUnitVector'},
@@ -74,17 +94,14 @@ feat_mappings = [({'lrs_orientation_axis1_grs': {'name': 'lrs_axis1_grs',
                                                  'pre_transform': [{'name': 'ToUnitVector'},
                                                                    {'name': 'Zscore'},
                                                                    {'name': 'ToTorchTensor'}]},
-                   }, 'Axis_zScore',
+                   }, '_Axis_Zscore',
                   )
                  ]
 
 for template_config_path in template_config_paths:
-    template_config = load_yaml(template_config_path)
-    train(config=template_config)  # standard training
-
-    dataset_config = get_basic_loader_config('dataset')
-
     for feat_mapping, name in feat_mappings:
+        template_config = load_yaml(template_config_path)
+        dataset_config = get_basic_loader_config('dataset')
         for i, feat in enumerate(dataset_config['node_features']):
             if feat['name'] in feat_mapping.keys():
                 dataset_config['node_features'][i].update(feat_mapping[feat['name']])

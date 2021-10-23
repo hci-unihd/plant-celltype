@@ -87,7 +87,7 @@ for template_config_path in template_config_paths:
     for feat_mapping, name in feat_mappings:
         for i, feat in enumerate(dataset_config['node_features']):
             if feat['name'] in feat_mapping.keys():
-                dataset_config['node_features'][i].update(feat_mappings[feat['name']])
+                dataset_config['node_features'][i].update(feat_mapping[feat['name']])
 
         for dataset in ['train_dataset', 'test_dataset', 'val_dataset']:
             if dataset in template_config['loader']:

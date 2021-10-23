@@ -12,7 +12,7 @@ mode: NodesClassification
 seed: 0
 
 logs:
-  save_dir: !join [*home_path, '/results/plant-ct-logs/ablation/features_importance/']
+  save_dir: !join [*home_path, '/results/plant-ct-logs/ablation/orientation_vs_axis/']
 
 trainer:
   gpus: 1

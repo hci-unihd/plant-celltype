@@ -1,5 +1,5 @@
 _internal_variables:
-  template: !update 'gcn_comparison/template.yaml'
+  template: !update 'orientation_vs_axis/template.yaml'
   model_name: &model_name 'TgGCN'
 
 logs:

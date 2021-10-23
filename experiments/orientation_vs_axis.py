@@ -1,10 +1,9 @@
 from pctg_benchmark.utils.utils import get_basic_loader_config
 from pctg_benchmark.utils.io import load_yaml
 from plantcelltype.graphnn.trainer import train
-import copy
 
-template_config_paths = ('./features_importance/deeper_gcn.yaml',
-                         './features_importance/gcn.yaml',
+template_config_paths = ('./orientation_vs_axis/deeper_gcn.yaml',
+                         './orientation_vs_axis/gcn.yaml',
                          )
 
 feat_mappings = {'lrs_orientation_axis1_grs': {'name': 'lrs_axis1_grs',
@@ -38,7 +37,8 @@ for template_config_path in template_config_paths:
             dataset_config['node_features'][i].update(feat_mappings[feat['name']])
 
     for dataset in ['train_dataset', 'test_dataset', 'val_dataset']:
-        dataset_config['loader'][dataset]['raw_transform_config'] = dataset_config
+        if dataset in template_config['loader']:
+            template_config['loader'][dataset]['raw_transform_config'] = dataset_config
 
     template_config['logs']['name'] += f"_axis"
-    train(config=template_config)  # standard training
+    train(config=template_config)  # perturbed training

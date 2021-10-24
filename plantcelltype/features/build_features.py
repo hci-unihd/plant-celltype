@@ -64,7 +64,7 @@ def build_cell_ids(stack, csv_path=None, create_labels_image=True):
 
 
 def build_edges_ids(stack, create_rag_image=True):
-    """create graph and edges labels (if available)"""
+    """create graph_features and edges labels (if available)"""
     _, edges_ids = rag_from_seg(stack['segmentation'])
     edges_ids = edges_ids.astype('int32')
     stack['edges_ids'] = edges_ids

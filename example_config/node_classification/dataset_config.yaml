@@ -36,7 +36,7 @@ node_features:
     pre_transform:
       - name: ComputeZscore
       - name: ComputeToTensor
-  # purely graph
+  # purely graph_features
   - name: degree_centrality
     pre_transform:
       - name: ComputeClipQuantile

@@ -7,8 +7,7 @@ template_config_paths = ('./lengths_all_directions/gcn.yaml',
                          )
 
 perturbation = {'name': 'proj_length_unit_sphere',
-                'pre_transform': [{'name': 'ClipQuantile'},
-                                  {'name': 'Zscore'},
+                'pre_transform': [{'name': 'Zscore'},
                                   {'name': 'ToTorchTensor'}]}
 name = '_All_Lengths'
 for template_config_path in template_config_paths:

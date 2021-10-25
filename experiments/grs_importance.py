@@ -14,11 +14,13 @@ grs_groups = ({'train': ('trivial_grs', ), 'test': ('trivial_grs', )},
                          'label_grs_funiculum',
                          'es_trivial_grs',
                          'es_pca_grs'),
-               'test': ('es_trivial_grs', )},
-              {'train': ('label_grs_surface',
-                         'label_grs_funiculum',
+               'test': ('label_grs_surface', )},
+              {'train': ('label_grs_funiculum',
+                         'es_trivial_grs',
                          'es_pca_grs'),
-               'test': ('es_trivial_grs', )}
+               'test': ('label_grs_surface', )},
+              {'train': ('es_pca_grs', ),
+               'test': ('label_grs_surface', )}
               )
 
 for template_config_path in template_config_paths:

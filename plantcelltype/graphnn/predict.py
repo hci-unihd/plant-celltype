@@ -26,12 +26,18 @@ def get_test_loaders(config):
 
 def get_files_loader(config):
     paths = load_paths(config['files_list'])
+
+    dataset_config = config.get('dataset', None)
+    meta = config.get('meta', None)
     all_data, data = [], None
     for file in paths:
-        data = default_build_torch_geometric_data(file, config)
+        data = default_build_torch_geometric_data(file,
+                                                  config=dataset_config,
+                                                  meta=meta)
         all_data.append(data)
 
-    in_features, in_edges_attr = data.num_features, data.num_edge_features
+    in_edges_attr = data.in_edges_attr
+    in_features = data.in_features
     return all_data, in_features, in_edges_attr
 
 
@@ -47,7 +53,7 @@ def export_predictions_as_csv(file_path, cell_ids, cell_predictions):
 
 def run_predictions(config):
     check_point = config['checkpoint']
-    check_point_config = f'{check_point}/config.yaml'
+    check_point_config = f'{check_point}/experiments.yaml'
     check_point_weights = f'{check_point}/checkpoints/*ckpt'
     check_point_weights = glob.glob(check_point_weights)[0]
     model_config = load_yaml(check_point_config)

@@ -119,6 +119,7 @@ def fix_grs(config):
 
 
 def advanced_preprocessing(config):
+    skip_unused = config.get('skip_unused', False)
     files = load_paths(config['file_list'], filter_h5=True)
 
     for file in nice_enumerate(files, message='advanced-features_importance'):
@@ -129,13 +130,17 @@ def advanced_preprocessing(config):
 
         # random samples
         stack = build_hollow_cell_points_random_samples(stack)
-        stack = build_cell_points_random_samples(stack)
-        stack = build_edges_points_random_samples(stack)
+
+        if skip_unused:
+            stack = build_cell_points_random_samples(stack)
+            stack = build_edges_points_random_samples(stack)
 
         # compute fps samples
         stack = build_hollow_cell_points_fps_samples(stack, at)
-        stack = build_cell_points_fps_samples(stack, at)
-        stack = build_edges_points_fps_samples(stack, at)
+
+        if skip_unused:
+            stack = build_cell_points_fps_samples(stack, at)
+            stack = build_edges_points_fps_samples(stack, at)
 
         # lrs
         stack = build_edges_planes(stack, at)
@@ -157,7 +162,8 @@ def advanced_preprocessing(config):
         stack = build_edges_transformed_voxels_features(stack, at)
 
         # proj on sphere
-        stack = build_proj_length_on_sphere(stack, at)
+        if skip_unused:
+            stack = build_proj_length_on_sphere(stack, at)
 
         # export processed files
         export_full_stack(file, stack)

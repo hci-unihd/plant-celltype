@@ -1,7 +1,7 @@
 from plantcelltype.graphnn.trainer import grid_search_train
 from pctg_benchmark.utils.io import load_yaml
 
-template_config_paths = ('./experiments/node_grid_search/depp_gcn.yaml',
+template_config_paths = ('./experiments/node_grid_search/deep_gcn.yaml',
                          './experiments/node_grid_search/gat.yaml',
                          './experiments/node_grid_search/gatv2.yaml',
                          './experiments/node_grid_search/gcn.yaml',

@@ -25,7 +25,7 @@ class GenericTgModel(torch.nn.Module):
 
     def forward(self, data):
         x, edge_index = data.x, data.edge_index
-        x = self.module(x, edge_index)
+        x = self.module(x, edge_index, batch=None)
         data.out = x
         return data
 

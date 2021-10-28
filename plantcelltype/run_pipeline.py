@@ -122,25 +122,25 @@ def advanced_preprocessing(config):
     skip_unused = config.get('skip_unused', False)
     files = load_paths(config['file_list'], filter_h5=True)
 
-    for file in nice_enumerate(files, message='advanced-features_importance'):
+    for file in nice_enumerate(files, message='advanced-features'):
         stack, at = open_full_stack(file)
 
         # basics
         stack = build_basic_edges_features(stack, at)
 
         # random samples
-        stack = build_hollow_cell_points_random_samples(stack)
-
-        if skip_unused:
+        if not skip_unused:
+            stack = build_hollow_cell_points_random_samples(stack)
             stack = build_cell_points_random_samples(stack)
             stack = build_edges_points_random_samples(stack)
 
         # compute fps samples
-        stack = build_hollow_cell_points_fps_samples(stack, at)
-
-        if skip_unused:
+        if not skip_unused:
             stack = build_cell_points_fps_samples(stack, at)
-            stack = build_edges_points_fps_samples(stack, at)
+
+        # Essential sampling
+        stack = build_hollow_cell_points_fps_samples(stack, at)
+        stack = build_edges_points_fps_samples(stack, at)
 
         # lrs
         stack = build_edges_planes(stack, at)
@@ -162,7 +162,7 @@ def advanced_preprocessing(config):
         stack = build_edges_transformed_voxels_features(stack, at)
 
         # proj on sphere
-        if skip_unused:
+        if not skip_unused:
             stack = build_proj_length_on_sphere(stack, at)
 
         # export processed files

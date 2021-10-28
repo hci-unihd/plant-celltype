@@ -3,14 +3,14 @@ _internal_variables:
   - &grs es_pca_grs # trivial_grs, es_trivial_grs, es_pca_grs, label_grs_surface, label_grs_funiculum
 
 # parameters to change
-input_file: &in_files !join [*home_path, '/data/ovules/tejasvinee_samples/cell_type/cell_segmentation/1137*']
-output_directory: &out_dir !join [*home_path, '/data/ovules/tejasvinee_samples/cell_type/', *grs]
+input_file: &in_files !join [*home_path, '/Downloads/', '*.tiff']
+output_directory: &out_dir !join [*home_path, '/Downloads/', *grs]
 model_directory: &model_dir !join [*home_path, '/hci/results/plant-ct-logs/ablation/grs_importance/DeeperGCN_train:label_grs_surface_label_grs_funiculum_es_trivial_grs_es_pca_grs_test:label_grs_surface/split0/version_0']
 
 
 preprocessing:
   state: true
-  train_data_voxels_size: [0.25, 0.2, 0.2]
+  train_data_voxels_size: [1, 1, 1]
   default_seg_key: 'segmentation'
   file_list: *in_files
   out_dir: *out_dir

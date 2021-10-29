@@ -26,12 +26,18 @@ def get_test_loaders(config):
 
 def get_files_loader(config):
     paths = load_paths(config['files_list'])
+
+    dataset_config = config.get('dataset', None)
+    meta = config.get('meta', None)
     all_data, data = [], None
     for file in paths:
-        data = default_build_torch_geometric_data(file, config)
+        data, _ = default_build_torch_geometric_data(file,
+                                                     config=dataset_config,
+                                                     meta=meta)
         all_data.append(data)
 
-    in_features, in_edges_attr = data.num_features, data.num_edge_features
+    in_edges_attr = data.in_edges_attr
+    in_features = data.in_features
     return all_data, in_features, in_edges_attr
 
 
@@ -48,7 +54,7 @@ def export_predictions_as_csv(file_path, cell_ids, cell_predictions):
 def run_predictions(config):
     check_point = config['checkpoint']
     check_point_config = f'{check_point}/config.yaml'
-    check_point_weights = f'{check_point}/checkpoints/*ckpt'
+    check_point_weights = f'{check_point}/checkpoints/best_class_acc_*ckpt'
     check_point_weights = glob.glob(check_point_weights)[0]
     model_config = load_yaml(check_point_config)
 
@@ -59,7 +65,7 @@ def run_predictions(config):
     else:
         raise NotImplementedError
 
-    save_h5_predictions = config['save_h5_predictions']
+    save_h5_predictions = config.get('save_h5_predictions', False)
 
     model = get_model(model_config, in_features=in_features, in_edges_attr=in_edges_attr)
     model = model.load_from_checkpoint(check_point_weights)
@@ -71,14 +77,14 @@ def run_predictions(config):
         cell_predictions = cell_predictions.cpu().data.numpy().astype('int32')
 
         if save_h5_predictions:
-            create_h5(data.file_path[0],
+            create_h5(data.file_path,
                       cell_predictions,
                       key='cell_predictions', voxel_size=None)
 
-            create_h5(data.file_path[0],
+            create_h5(data.file_path,
                       data.out.cpu().data.numpy(),
                       key='cell_net_out', voxel_size=None)
 
-        export_predictions_as_csv(data.file_path[0],
-                                  data.cell_ids[0],
+        export_predictions_as_csv(data.file_path,
+                                  data.node_ids.cpu().data.numpy(),
                                   cell_predictions)

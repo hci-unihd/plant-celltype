@@ -13,6 +13,7 @@ from plantcelltype.utils.io import open_full_stack, export_full_stack
 def create_prediction_label_image(stack, segmentation=None):
     segmentation = segmentation if segmentation is None else stack['segmentation']
     cell_labels = copy.deepcopy(stack['cell_labels'])
+    gt_mapping[0] = 0
     cell_predictions = stack['cell_predictions']
     for i in range(cell_labels.shape[0]):
         # map labels for consistency

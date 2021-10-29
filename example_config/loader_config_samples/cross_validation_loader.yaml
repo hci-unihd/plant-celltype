@@ -1,21 +1,11 @@
 _internal_variables:
   - &home_path !home_path
-  - &root !join [*home_path, '/data/pctg/']
+  - &root !join [*home_path, '/data/gcn_comparison/']
   - &force_process false
   - &num_workers 4
   - &grs [label_grs_surface]
   - &split 0
   - &number_splits 5
-
-mode: NodesClassification
-seed: 0
-
-logs:
-  save_dir: !join [*home_path, '/results/plant-ct-logs/ablation/grs_importance/']
-
-trainer:
-  gpus: 1
-  max_epochs: 100
 
 loader:
   mode: cross_validation # simple or cross_validation
@@ -41,11 +31,3 @@ loader:
   train_batch_size: 1
   val_batch_size: 1
   test_batch_size: 1
-
-module:
-  logger:
-    log_points: false
-
-  model:
-    kwargs:
-      out_features: 9

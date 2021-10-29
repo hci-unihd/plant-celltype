@@ -1,0 +1,34 @@
+# parameters to change
+input_file: &in_files PATH-TO-SEGMENTATION
+output_directory: &out_dir PATH-TO-OUTPUT-DIRECTORY
+model_directory: &model_dir PATH-TO-TRAINED-MODEL2
+grs: &grs es_pca_grs # trivial_grs, es_trivial_grs, es_pca_grs
+
+# Danger zone!
+preprocessing:
+  state: true
+  train_data_voxels_size: [0.25, 0.2, 0.2]
+  default_seg_key: 'segmentation'
+  file_list: *in_files
+  out_dir: *out_dir
+
+grs_step:
+  state: true
+  mode: *grs
+  file_list: !join [*out_dir, '/*']
+
+advanced_features_step:
+  state: true
+  skip_unused: true
+  file_list: !join [*out_dir, '/*']
+
+ct_predictions:
+  state: true
+  mode: 'NodesClassification'
+  save_h5_predictions: true
+
+  loader:
+    mode: files
+    files_list: !join [*out_dir, '/*']
+
+  checkpoint: *model_dir

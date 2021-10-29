@@ -2,8 +2,8 @@
 This repository contains the code for all experiments in the submitted manuscript. The dataset download will be handle autmonatically by the plant-celltype-graph-benchmark.
 
 # Requirements
-- linux
-- Anaconda/miniconda
+- Linux
+- Anaconda / miniconda
 
 # Dependencies
 - python >= 3.7

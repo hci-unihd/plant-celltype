@@ -35,7 +35,7 @@ class LogConfigCallback(Callback):
                          'results': model.saved_metrics}
 
         del config['trainer']['logger']
-        with open(os.path.join(checkpoint_path, 'experiments.yaml'), 'w') as outfile:
+        with open(os.path.join(checkpoint_path, 'config.yaml'), 'w') as outfile:
             yaml.dump(config, outfile)
 
     def on_validation_end(self, trainer, model) -> None:

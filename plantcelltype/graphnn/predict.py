@@ -53,8 +53,8 @@ def export_predictions_as_csv(file_path, cell_ids, cell_predictions):
 
 def run_predictions(config):
     check_point = config['checkpoint']
-    check_point_config = f'{check_point}/experiments.yaml'
-    check_point_weights = f'{check_point}/checkpoints/*ckpt'
+    check_point_config = f'{check_point}/config.yaml'
+    check_point_weights = f'{check_point}/checkpoints/best_class_acc_*ckpt'
     check_point_weights = glob.glob(check_point_weights)[0]
     model_config = load_yaml(check_point_config)
 

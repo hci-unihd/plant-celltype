@@ -28,11 +28,18 @@ conda create -n plant-ct -c rusty1s -c pytorch -c conda-forge -c cpape numpy sci
 ```
 
 ## Install pctg-benchmark
+With the `plant-ct` environment active:
 ```
-conda activate plant-ct
 cd [path-to]/plant-celltype-graph-benchmark
 pip install .
 ```
+
+## Install plant-celltype
+With the `plant-ct` environment active, executed from the root directory:
+```
+pip install .
+```
+
 ## Optional dependencies for visualization
 ```
 pip install 'napari[pyqt5]'

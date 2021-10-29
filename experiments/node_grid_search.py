@@ -2,10 +2,13 @@ from plantcelltype.graphnn.trainer import grid_search_train
 from pctg_benchmark.utils.io import load_yaml
 
 template_config_paths = ('./experiments/node_grid_search/deeper_gcn.yaml',
+                         './experiments/node_grid_search/deeper_gcn_no_edges.yaml'
                          './experiments/node_grid_search/gat.yaml',
                          './experiments/node_grid_search/gatv2.yaml',
                          './experiments/node_grid_search/gcn.yaml',
                          './experiments/node_grid_search/gcnii.yaml',
+                         './experiments/node_grid_search/gin.yaml',
+                         './experiments/node_grid_search/graphsage.yaml',
                          './experiments/node_grid_search/tgcn.yaml',
                          './experiments/node_grid_search/tgcn_no_edge.yaml',
                          )

@@ -41,5 +41,9 @@ pip install plotly==5.0.0
 ```
 
 ## run experiments
-all experiments are self-contained in 'experiments', please check the README.md inside the experiment directory for 
+All experiments reported in the manuscript are self-contained in `experiments`, please check the README.md inside the experiment directory for 
 additional instructions.
+
+
+## features
+Features at all different reference systems can be runned by 

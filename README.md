@@ -5,7 +5,7 @@ This repository contains the code for all experiments in the submitted manuscrip
 - linux
 - Anaconda/miniconda
 
-# dependencies
+# Dependencies
 - python >= 3.7
 - h5py
 - pyaml
@@ -33,17 +33,26 @@ conda activate plant-ct
 cd [path-to]/plant-celltype-graph-benchmark
 pip install .
 ```
-
-## optional dependencies for visualization
+## Optional dependencies for visualization
 ```
 pip install 'napari[pyqt5]'
 pip install plotly==5.0.0
 ```
-
-## run experiments
-All experiments reported in the manuscript are self-contained in `experiments`, please check the README.md inside the experiment directory for 
+## Reproduce experiments
+All experiments reported in the manuscript are self-contained in [experiments](experiments), please check the README.md inside the experiment directory for 
 additional instructions.
 
+## Features
+Features can be computed from segmentation by running:  
+```
+python run_dataprocessing.py -c example_config/build_dataset/CONFIG-NAME.yaml
+```
 
-## features
-Features at all different reference systems can be runned by 
+## Predictions
+To run prediction on new segmentation data using a pretrained model
+* Configure the pipeline by editing the prediction
+[config](example_config/node_predictions/predict_from_segmentation.yaml).
+* Run the pipeline by:
+```
+python run_dataprocessing.py -c example_config/node_predictions/predict_from_segmentation.yaml
+```

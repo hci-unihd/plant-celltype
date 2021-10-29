@@ -44,6 +44,10 @@ loader:
   test_batch_size: 1
 
 module:
+  optimizer:
+    lr:
+    wd:
+
   logger:
     log_points: false
 

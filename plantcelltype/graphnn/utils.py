@@ -40,7 +40,7 @@ def summarize_cross_validation_run(list_checkpoint_path, save=True):
     # create dataframe
     list_results, config = [], {}
     for file_dir in list_checkpoint_path:
-        config_path = os.path.join(file_dir, 'experiments.yaml')
+        config_path = os.path.join(file_dir, 'config.yaml')
         config = load_yaml(config_path)
         config_run = config.pop('run')
         list_results += config_run['results']['val']['results']

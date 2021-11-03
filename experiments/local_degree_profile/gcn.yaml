@@ -1,0 +1,18 @@
+_internal_variables:
+  template: !update 'local_degree_profile/template.yaml'
+  model_name: &model_name 'TgGCN'
+
+logs:
+  name: *model_name
+
+module:
+  optimizer:
+    lr: 1e-3
+    wd: 0
+
+  model:
+    name: *model_name
+    kwargs:
+      hidden_feat: 128
+      dropout: 0.5
+      out_features: 9

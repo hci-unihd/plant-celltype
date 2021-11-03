@@ -1,6 +1,6 @@
 _internal_variables:
   - &home_path !home_path
-  - &root !join [*home_path, '/data/pctg_features/']
+  - &root !join [*home_path, '/data/pctg_local_profile/']
   - &force_process false
   - &num_workers 4
   - &grs [label_grs_surface]
@@ -12,7 +12,7 @@ mode: NodesClassification
 seed: 0
 
 logs:
-  save_dir: !join [*home_path, '/results/plant-ct-logs/ablation/features_importance/']
+  save_dir: !join [*home_path, '/results/plant-ct-logs/ablation/local_degree_profile/']
 
 trainer:
   gpus: 1

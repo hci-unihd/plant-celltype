@@ -7,21 +7,32 @@ from plantcelltype.features.utils import check_valid_idx, fibonacci_sphere
 from plantcelltype.utils.utils import create_edge_mapping, create_cell_mapping, cantor_sym_pair
 
 
-def compute_local_reference_axis1(cell_ids, edges_ids, cell_hops_to_bg, edges_plane_vectors):
+def compute_local_reference_axis1(cell_ids, edges_ids, cell_hops_to_bg, cell_com, edges_plane_vectors):
     nx_graph = build_nx_graph(cell_ids, edges_ids)
+    cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
     cell_hops_to_bg_mapping = create_cell_mapping(cell_ids, cell_hops_to_bg)
     edges_pv_mapping = create_edge_mapping(edges_ids, edges_plane_vectors)
     lr_axis_1 = np.zeros((cell_ids.shape[0], 3))
     for i, c_idx in enumerate(cell_ids):
         list_nx = list(nx_graph.neighbors(c_idx))
         c_idx_hops = cell_hops_to_bg_mapping[c_idx]
+        c_com = cell_com_mapping[c_idx]
 
-        local_vectors = Vector([0.0, 0.0, 0.0])
-        for cn_idx in list_nx:
-            cn_idx_hops = cell_hops_to_bg_mapping[cn_idx]
-            if cn_idx_hops < c_idx_hops or c_idx_hops == 1:
-                edges_pv = edges_pv_mapping[cantor_sym_pair(cn_idx, c_idx)]
-                local_vectors += Vector(edges_pv[1])
+        if c_idx_hops == 1:
+            local_vectors = Vector(edges_pv_mapping[cantor_sym_pair(0, c_idx)][1])
+
+        else:
+            local_vectors = Vector([0.0, 0.0, 0.0])
+            for cn_idx in list_nx:
+                cn_idx_hops = cell_hops_to_bg_mapping[cn_idx]
+                if cn_idx_hops < c_idx_hops:
+                    edges_pv = edges_pv_mapping[cantor_sym_pair(cn_idx, c_idx)]
+                    vector = Vector(edges_pv[1])
+                    test_vector = Vector.from_points(c_com, edges_pv[0])
+                    if vector.dot(test_vector) < 0:
+                        vector *= -1
+
+                    local_vectors += vector
 
         local_vectors = local_vectors.unit()
         lr_axis_1[i] = local_vectors

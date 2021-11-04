@@ -48,7 +48,7 @@ def _check_valid_idx(samples, zeros=(0, 0, 0)):
     valid_samples = List()
     for i, _point in enumerate(samples):
         d = np.sqrt(np.sum((_point - zeros)**2))
-        if d > 0:
+        if d > 1e-5:
             valid_samples.append(_point)
     return valid_samples
 

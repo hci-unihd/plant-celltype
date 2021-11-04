@@ -52,10 +52,12 @@ features_groups = (('inv', invariant),
                    )
 
 
+save_dir = "/results/plant-ct-logs/ablation/features_importance_group/"
+
 for template_config_path in template_config_paths:
     template_config = load_yaml(template_config_path)
 
-    template_config['logs']['save_dir'] = f"{os.path.expanduser('~')}/results/plant-ct-logs/ablation/features_importance_group/"
+    template_config['logs']['save_dir'] = f"{os.path.expanduser('~')}{save_dir}"
     dataset_config = get_basic_loader_config('dataset')
     for template_perturbation in template_perturbations:
         for name, group in features_groups:

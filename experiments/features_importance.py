@@ -9,7 +9,8 @@ template_config_paths = ('./features_importance/deeper_gcn.yaml',
 
 template_perturbations = ({'name': 'SetToValue'},
                           {'name': 'SetToRandom'},
-                          {'name': 'RandomShuffle'})
+                          {'name': 'RandomShuffle'}
+                          )
 
 features_groups = (('baseline',),  # nothing will be changed compared to the default config
                    ('com_grs',),

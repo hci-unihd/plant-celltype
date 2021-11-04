@@ -283,20 +283,21 @@ def build_edges_planes(stack, axis_transform):
     return stack
 
 
-def build_lrs(stack, axis_transformer, global_axis=0, group='cell_features'):
-
+def build_lrs(stack, axis_transform, global_axis=0, group='cell_features'):
+    cell_com_grs = axis_transform.transform_coord(stack['cell_features']['com_voxels'])
     lrs_axis_1 = compute_local_reference_axis1(stack['cell_ids'],
                                                stack['edges_ids'],
-                                               stack['cell_features']['hops_to_bg'],
-                                               stack['edges_features']['plane_vectors_grs'])
+                                               cell_hops_to_bg=stack['cell_features']['hops_to_bg'],
+                                               cell_com=cell_com_grs,
+                                               edges_plane_vectors=stack['edges_features']['plane_vectors_grs'])
 
-    cell_com_grs = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
+    cell_com_grs = axis_transform.transform_coord(stack['cell_features']['com_voxels'])
 
     lrs_axis_2, lrs_axis_2_angle = compute_local_reference_axis2(stack['cell_ids'],
                                                                  stack['edges_ids'],
                                                                  cell_com_grs,
                                                                  stack['cell_features']['hops_to_bg'],
-                                                                 global_axis=axis_transformer.axis[global_axis])
+                                                                 global_axis=axis_transform.axis[global_axis])
 
     lrs_axis_3 = compute_local_reference_axis3(lrs_axis_1, lrs_axis_2)
 

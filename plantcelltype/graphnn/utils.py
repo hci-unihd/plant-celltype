@@ -1,27 +1,34 @@
-import numpy as np
-import pandas as pd
-from pctg_benchmark.utils.io import load_yaml
 import os
 
+import pandas as pd
 
-def aggregate_macro(score, index=None):
-    if index is not None:
-        score = np.delete(score, index)
-    return np.average(score)
+from pctg_benchmark.evaluation.metrics import aggregate_class
+from pctg_benchmark.utils.io import load_yaml
+
+
+def expand_class_metric(score, name='metric'):
+    return {f'{name} - {i}': s for i, s in enumerate(score)}
 
 
 def results_to_dataframe(list_results, **kwargs):
     all_records = []
     for exp_res in list_results:
+        accuracy_class, num_nan = aggregate_class(exp_res['results']['accuracy_class'], index=7)
+        accuracy_f1, _ = aggregate_class(exp_res['results']['f1_class'], index=7)
+
         records = {'Accuracy': exp_res['results']['accuracy_micro'],
                    'F1': exp_res['results']['f1_micro'],
-                   'Accuracy Class': aggregate_macro(exp_res['results']['accuracy_class'], index=7),
-                   'F1 Class': aggregate_macro(exp_res['results']['f1_class'], index=7),
+                   'Accuracy Class': accuracy_class,
+                   'F1 Class': accuracy_f1,
+                   'num Nan': num_nan,
                    'file_path': exp_res['file_path'][0],
                    'stack': exp_res['meta']['stack'][0],
                    'stage': exp_res['meta']['stage'][0],
                    'multiplicity': exp_res['meta']['multiplicity'][0],
                    'unique_idx': exp_res['meta']['unique_idx'][0]}
+
+        records.update(expand_class_metric(exp_res['results']['accuracy_class'], name='Accuracy Class'))
+        records.update(expand_class_metric(exp_res['results']['f1_class'], name='F1 Class'))
 
         records.update(kwargs)
         all_records.append(records)

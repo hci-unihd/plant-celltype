@@ -15,8 +15,8 @@ logs:
   save_dir: !join [*home_path, '/results/plant-ct-logs/edges_grid_search/']
 
 trainer:
-  # gpus: 1
-  max_epochs: 10
+  gpus: 1
+  max_epochs: 100
 
 loader:
   mode: cross_validation # simple or cross_validation
@@ -40,7 +40,7 @@ loader:
 
   num_workers: *num_workers
   train_batch_size: 1
-  val_batch_size: 2
+  val_batch_size: 1
   test_batch_size: 1
 
 module:

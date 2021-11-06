@@ -63,9 +63,17 @@ class TrainerCallbacks:
                                               filename=f"best_acc_{self.common_checkpoints_pattern}",
                                               mode='max')
 
-        self.acc_class_checkpoint = ModelCheckpoint(monitor='val_class_acc',
-                                                    filename=f"best_class_acc_{self.common_checkpoints_pattern}",
-                                                    mode='max')
+        if self.config['mode'] == 'NodesClassification':
+            self.acc_class_checkpoint = ModelCheckpoint(monitor='val_class_acc',
+                                                        filename=f"best_class_acc_{self.common_checkpoints_pattern}",
+                                                        mode='max')
+
+        elif self.config['mode'] == 'EdgesClassification':
+            self.acc_class_checkpoint = ModelCheckpoint(monitor='val_dice',
+                                                        filename=f"best_val_dice_{self.common_checkpoints_pattern}",
+                                                        mode='max')
+        else:
+            raise NotImplementedError
 
         self.log_callback = LogConfigCallback(self.config)
         self.all_callbacks = [self.base_checkpoint,

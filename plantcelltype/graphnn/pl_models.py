@@ -120,6 +120,7 @@ class NodesClassification(pl.LightningModule):
         self.log('val_loss', loss)
         self.log('val_acc', full_metrics['accuracy_micro'])
         self.log('val_class_acc', full_metrics['accuracy_macro'])
+        self.log('val_dice', full_metrics['dice'])
 
         metrics = {'hp_metric': full_metrics['accuracy_micro']}
         self.log_dict(metrics)

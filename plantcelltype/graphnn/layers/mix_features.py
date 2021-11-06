@@ -44,13 +44,13 @@ def mix_node_features(x,
 
     node_feat_mapping = create_cell_mapping(np_node_index, x, safe_cast=False)
 
-    line_node_feat = []
+    edge_feat = []
     for e1, e2 in np_edge_index:
         feat = [node_feat_mapping[e1], node_feat_mapping[e2]]
-        line_node_feat.append(_feat_mix[node_feat_mixing](*feat, axis=0))
+        edge_feat.append(_feat_mix[node_feat_mixing](*feat, axis=0))
 
-    line_node_feat = torch.stack(line_node_feat, 0)
+    edge_feat = torch.stack(edge_feat, 0)
     if edges_attr is not None:
-        line_node_feat = _feat_mix[edges_feat_mixing](*(line_node_feat, edges_attr), axis=1)
+        edge_feat = _feat_mix[edges_feat_mixing](*(edge_feat, edges_attr), axis=1)
 
-    return line_node_feat, np_node_index, np_edge_index
+    return edge_feat, np_node_index, np_edge_index

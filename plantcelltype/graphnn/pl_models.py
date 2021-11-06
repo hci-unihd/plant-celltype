@@ -8,8 +8,8 @@ from plantcelltype.graphnn.graph_models import GCN2
 from plantcelltype.graphnn.graph_models import GAT2, GAT2v2
 from plantcelltype.graphnn.graph_models import TransformerGCN2, NoEdgesTransformerGCN2
 from plantcelltype.graphnn.graph_models import GCNII, DeeperGCN, NoEdgesDeeperGCN
-from plantcelltype.graphnn.edge_models import EGCN2, EGAT2, ETransformerGCN2
-from plantcelltype.graphnn.edge_models import EDeeperGCN, EGCNII
+from plantcelltype.graphnn.edge_models import ETgGCN, EGAT2, ETransformerGCN2
+from plantcelltype.graphnn.edge_models import EDeeperGCN, ENoEdgesDeeperGCN, EGCNII
 from plantcelltype.graphnn.graph_models import TgGCN, TgGAT, TgGraphSAGE, TgGIN
 
 
@@ -25,10 +25,11 @@ models_pool = {'GCN2': GCN2,
                'NoEdgesDeeperGCN': NoEdgesDeeperGCN,
                'TransformerGCN2': TransformerGCN2,
                'NoEdgesTransformerGCN2': NoEdgesTransformerGCN2,
-               'EGCN2': EGCN2,
+               'ETgGCN': ETgGCN,
                'EGAT2': EGAT2,
                'ETransformerGCN2': ETransformerGCN2,
                'EDeeperGCN': EDeeperGCN,
+               'ENoEdgesDeeperGCN': ENoEdgesDeeperGCN,
                'EGCNII': EGCNII}
 
 
@@ -67,7 +68,10 @@ class NodesClassification(pl.LightningModule):
         out_class = model['kwargs']['out_features']
         self.classification_evaluation = NodeClassificationMetrics(out_class)
         self.micro_accuracy = Accuracy(average='micro')
-        self.macro_accuracy = Accuracy(num_classes=out_class, average='macro')
+        if out_class == 1:
+            self.macro_accuracy = Accuracy(num_classes=out_class, average='macro', multiclass=False)
+        else:
+            self.macro_accuracy = Accuracy(num_classes=out_class, average='macro')
         self.save_hyperparameters()
 
     def configure_optimizers(self):
@@ -102,12 +106,12 @@ class NodesClassification(pl.LightningModule):
         logits = torch.log_softmax(val_batch.out, 1)
         pred = logits.max(1)[1]
         loss = F.nll_loss(logits, val_batch.y)
-        return pred, loss
+        return pred, val_batch.y, loss
 
     def validation_step(self, val_batch, batch_idx):
-        pred, loss = self._val_forward(val_batch)
+        pred, target, loss = self._val_forward(val_batch)
         full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(),
-                                                                      val_batch.y.cpu(),
+                                                                      target.cpu(),
                                                                       self.global_step)
 
         if self.log_points:
@@ -146,8 +150,8 @@ class NodesClassification(pl.LightningModule):
         self.save_results_epoch(outputs, phase='val')
 
     def test_step(self, batch, batch_idx):
-        pred, loss = self._val_forward(batch)
-        full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(), batch.y.cpu(), self.global_step)
+        pred, target, loss = self._val_forward(batch)
+        full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(), target.cpu(), self.global_step)
         metrics = {'test_acc': full_metrics['accuracy_micro'],
                    'test_class_acc': full_metrics['accuracy_macro']}
         self.log_dict(metrics)
@@ -204,6 +208,5 @@ class EdgesClassification(NodesClassification, pl.LightningModule):
         val_batch = self.net(val_batch)
         logits = val_batch.out[:, 0]
         logits = torch.sigmoid(logits)
-        pred = logits > 0.5
         loss = F.binary_cross_entropy(logits, val_batch.edge_y.float())
-        return pred, loss
+        return logits, val_batch.edge_y, loss

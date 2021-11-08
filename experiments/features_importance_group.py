@@ -22,7 +22,6 @@ if __name__ == '__main__':
                         'length_axis3_grs', ]
 
     not_invariant = ['com_grs',
-                     'com_proj_grs',
                      'lrs_axis12_dot_grs',
                      'lrs_orientation_axis1_grs',
                      'lrs_orientation_axis2_grs',

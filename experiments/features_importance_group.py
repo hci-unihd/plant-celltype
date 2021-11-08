@@ -48,6 +48,6 @@ if __name__ == '__main__':
                         ('not_inv_approx', not_invariant + approx_invariant),
                         )
 
-    _save_dir = "/results/plant-ct-logs/ablation/features_importance_group/"
+    _save_dir = '/results/plant-ct-logs/ablation/features_importance_group/'
 
     train_feat_perturbations(_features_groups, _template_perturbations, _template_config_paths, _save_dir)

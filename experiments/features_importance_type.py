@@ -75,6 +75,6 @@ if __name__ == '__main__':
                         ('pca', pca)
                         )
 
-    _save_dir = "/results/plant-ct-logs/ablation/features_importance_type/"
+    _save_dir = '/results/plant-ct-logs/ablation/features_importance_type/'
 
     train_feat_perturbations(_features_groups, _template_perturbations, _template_config_paths, _save_dir)

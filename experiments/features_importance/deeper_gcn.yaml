@@ -1,9 +1,12 @@
 _internal_variables:
   template: !update 'features_importance/template.yaml'
-  model_name: &model_name 'DeeperGCN'
+  model_name: &model_name 'NoEdgesDeeperGCN'
 
 logs:
   name: *model_name
+
+trainer:
+  max_epochs: 60
 
 module:
   optimizer:

@@ -5,22 +5,17 @@ template_config_paths = ('./grs_importance/gcn.yaml',
                          './grs_importance/deeper_gcn.yaml',
                          )
 
-grs_groups = ({'train': ('label_grs_surface',
-                         'label_grs_funiculum',
-                         'es_trivial_grs',
-                         'es_pca_grs'),
-               'test': ('label_grs_surface', )},
+grs_groups = ({'train': ('trivial_grs',), 'test': ('trivial_grs',)},
+              {'train': ('label_grs_surface',), 'test': ('label_grs_surface',)},
+              {'train': ('label_grs_funiculum',), 'test': ('label_grs_funiculum',)},
+              {'train': ('es_trivial_grs',), 'test': ('es_trivial_grs',)},
+              {'train': ('es_pca_grs',), 'test': ('es_pca_grs',)},
               {'train': ('label_grs_funiculum',
                          'es_trivial_grs',
                          'es_pca_grs'),
-               'test': ('label_grs_surface', )},
-              {'train': ('es_pca_grs', ),
-               'test': ('label_grs_surface', )},
-              {'train': ('trivial_grs', ), 'test': ('trivial_grs', )},
-              {'train': ('label_grs_surface', ), 'test': ('label_grs_surface', )},
-              {'train': ('label_grs_funiculum', ), 'test': ('label_grs_funiculum', )},
-              {'train': ('es_trivial_grs', ), 'test': ('es_trivial_grs', )},
-              {'train': ('es_pca_grs', ), 'test': ('es_pca_grs', )},
+               'test': ('label_grs_surface',)},
+              {'train': ('es_pca_grs',),
+               'test': ('label_grs_surface',)},
               )
 
 for template_config_path in template_config_paths:
@@ -30,5 +25,4 @@ for template_config_path in template_config_paths:
         template_config['logs']['name'] += f'_train:{train_name}_test:{test_name}'
         template_config['loader']['train_dataset']['grs'] = grs_group['train']
         template_config['loader']['val_dataset']['grs'] = grs_group['test']
-        # template_config['loader']['test_dataset']['grs'] = grs_group['test']
         train(config=template_config)

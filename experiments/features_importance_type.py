@@ -37,8 +37,7 @@ if __name__ == '__main__':
                                {'name': 'RandomShuffle'}
                                )
 
-    pos = ['com_grs',
-           'com_proj_grs', ]
+    pos = ['com_grs', ]
 
     graph = ['degree_centrality',
              'hops_to_bg',

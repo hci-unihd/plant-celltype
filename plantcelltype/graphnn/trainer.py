@@ -101,11 +101,13 @@ def get_loaders(config):
     val_loader = DataLoader(val_dataset,
                             batch_size=config['val_batch_size'],
                             num_workers=config['num_workers'],
+                            pin_memory=config.get('pin_memory', False),
                             shuffle=False)
 
     train_loader = DataLoader(train_dataset,
                               batch_size=config['train_batch_size'],
                               num_workers=config['num_workers'],
+                              pin_memory=config.get('pin_memory', False),
                               shuffle=True)
 
     in_edges_attr = train_dataset.in_edges_attr

@@ -87,7 +87,8 @@ def compute_local_reference_axis2(cell_ids,
     cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
     cell_hops_to_bg_mapping = create_cell_mapping(cell_ids, cell_hops_to_bg)
 
-    lr_axis_2_mapping = {}
+    # lr_axis_2_mapping = np.zeros((cell_ids.shape[0], 3))  # {}
+    lr_axis_2 = np.zeros((cell_ids.shape[0], 3))  # {}
     lr_axis_2_angle = np.zeros((cell_ids.shape[0]))
     for idx, n in enumerate(cell_ids):
         # defaults
@@ -107,19 +108,22 @@ def compute_local_reference_axis2(cell_ids,
                 cv2 = get_query_vector(cell_com_mapping, a_n2, com_n)
 
                 total_similarity = cv1.dot(cv2)
+
                 if total_similarity < min_dot:
                     min_dot = total_similarity
+                    # find orientation more in line with lr vector
                     fv1_g_sym = cv1.dot(global_axis)
                     fv2_g_sym = cv2.dot(global_axis)
                     lr_vector = cv1 if fv1_g_sym > fv2_g_sym else cv2
 
-        lr_axis_2_mapping[n] = lr_vector
+        # lr_axis_2_mapping[n] = lr_vector
+        lr_axis_2[idx] = lr_vector
         lr_axis_2_angle[idx] = min_dot
 
     # removed for consistency
     # lr_axis_2_mapping = local_vectors_alignment(nx_graph, lr_axis_2_mapping, iteration=10)
     # lr_axis_2_mapping = local_vectors_averaging(nx_graph, lr_axis_2_mapping)
-    lr_axis_2 = np.array([lr_axis_2_mapping[idx] for idx in cell_ids])
+    # lr_axis_2 = np.array([lr_axis_2_mapping[idx] for idx in cell_ids])
     return lr_axis_2, lr_axis_2_angle
 
 
@@ -143,7 +147,7 @@ def _test_angles(valid_samples, cell_com_i, vector):
     min_value, max_value = 0, 0
     for sample in valid_samples:
         test_vector = sample - cell_com_i
-        test_vector /= np.sqrt(np.sum(test_vector**2))
+        test_vector /= np.sqrt(np.sum(test_vector ** 2))
         value = np.dot(vector, test_vector)
 
         if value < min_value:
@@ -194,14 +198,13 @@ def compute_sym_length_along_cell_axis(cell_axis, cell_com, cell_samples, origin
         # find min and max point along the axis
         min_point, max_point = _test_angles(valid_samples, com_i, axis_i)
         # evaluate length
-        lengths[i] = _l2_distance(com_i, max_point)
-
+        lengths[i] = _l2_distance(min_point, max_point)
     return lengths
 
 
 def get_vectors_orientation_mapping(vectors_array):
     orientation_vectors_array = np.zeros((vectors_array.shape[0], 6))
-    orientation_vectors_array[:, :3] = vectors_array**2
+    orientation_vectors_array[:, :3] = vectors_array ** 2
     # additional
     orientation_vectors_array[:, 3] = vectors_array[:, 0] * vectors_array[:, 1]
     orientation_vectors_array[:, 4] = vectors_array[:, 1] * vectors_array[:, 2]

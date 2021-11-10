@@ -24,7 +24,8 @@ class AbstractEGCN(torch.nn.Module):
         data = self.model(data)
 
         x, edge_index = data.out, data.edge_index
-        edges_x, _, _ = mix_node_features(x, edge_index, node_feat_mixing='cat')
+
+        edges_x = torch.cat([x[edge_index[0]], x[edge_index[1]]], 1)
         x = self.lin(edges_x)
         data.out = x
         return data
@@ -74,7 +75,8 @@ class ETransformerGCN2(torch.nn.Module):
                  layer1_kwargs=None,
                  layer2_kwargs=None):
         super(ETransformerGCN2, self).__init__()
-        model_kwarg = {'layer1_kwargs': layer1_kwargs,
+        model_kwarg = {'in_edges': None,
+                       'layer1_kwargs': layer1_kwargs,
                        'layer2_kwargs': layer2_kwargs}
         self.e_tgcn = AbstractEGCN(TransformerGCN2,
                                    in_features=in_features,

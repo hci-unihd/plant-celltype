@@ -10,14 +10,15 @@ def expand_class_metric(score, name='metric'):
     return {f'{name} - {i}': s for i, s in enumerate(score)}
 
 
-def results_to_dataframe(list_results, **kwargs):
+def results_to_dataframe(list_results, index_to_ignore=None, **kwargs):
     all_records = []
     for exp_res in list_results:
-        accuracy_class, num_nan = aggregate_class(exp_res['results']['accuracy_class'], index=7)
-        accuracy_f1, _ = aggregate_class(exp_res['results']['f1_class'], index=7)
+        accuracy_class, num_nan = aggregate_class(exp_res['results']['accuracy_class'], index=index_to_ignore)
+        accuracy_f1, _ = aggregate_class(exp_res['results']['f1_class'], index=index_to_ignore)
 
         records = {'Accuracy': exp_res['results']['accuracy_micro'],
                    'F1': exp_res['results']['f1_micro'],
+                   'Dice': exp_res['results']['dice'],
                    'Accuracy Class': accuracy_class,
                    'F1 Class': accuracy_f1,
                    'num Nan': num_nan,
@@ -45,13 +46,15 @@ def summarize_cross_validation_run(list_checkpoint_path, save=True):
     out_path = os.path.join(base, save_dir_name)
 
     # create dataframe
-    list_results, config = [], {}
+    list_results, config, index_to_ignore = [], {}, None
     for file_dir in list_checkpoint_path:
         config_path = os.path.join(file_dir, 'config.yaml')
         config = load_yaml(config_path)
+        mode = config.get('mode')
+        index_to_ignore = None if mode == 'EdgesClassification' else 7
         config_run = config.pop('run')
         list_results += config_run['results']['val']['results']
-    glob_df = results_to_dataframe(list_results, **config)
+    glob_df = results_to_dataframe(list_results, index_to_ignore=index_to_ignore, **config)
 
     if save:
         # save to disc

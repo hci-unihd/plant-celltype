@@ -10,7 +10,7 @@ trainer:
 
 module:
   optimizer:
-    lr: 1e-2
+    lr: 1e-3
     wd: 0
 
   model:

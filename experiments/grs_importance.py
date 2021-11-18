@@ -2,7 +2,7 @@ from pctg_benchmark.utils.io import load_yaml
 from plantcelltype.graphnn.trainer import train
 
 template_config_paths = ('./grs_importance/gcn.yaml',
-                         './grs_importance/deeper_gcn.yaml',
+                         # './grs_importance/deeper_gcn.yaml',
                          )
 
 grs_groups = ({'train': ('trivial_grs',), 'test': ('trivial_grs',)},

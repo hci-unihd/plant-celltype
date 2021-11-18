@@ -1,6 +1,6 @@
 # parameters to change
-input_file: &in_files PATH-TO-SEGMENTATION
-output_directory: &out_dir PATH-TO-OUTPUT-DIRECTORY
+input_file: &in_files '/home/lcerrone/Downloads/525_Segmented_Cells.tif'
+output_directory: &out_dir '/home/lcerrone/Downloads/'
 model_directory: &model_dir PATH-TO-TRAINED-MODEL2
 grs: &grs es_pca_grs # trivial_grs, es_trivial_grs, es_pca_grs
 
@@ -13,17 +13,17 @@ preprocessing:
   out_dir: *out_dir
 
 grs_step:
-  state: true
+  state: false
   mode: *grs
   file_list: !join [*out_dir, '/*']
 
 advanced_features_step:
-  state: true
+  state: false
   skip_unused: true
   file_list: !join [*out_dir, '/*']
 
 ct_predictions:
-  state: true
+  state: false
   mode: 'NodesClassification'
   save_h5_predictions: true
 

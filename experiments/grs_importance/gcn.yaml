@@ -15,4 +15,5 @@ module:
     kwargs:
       hidden_feat: 128
       dropout: 0.5
+      num_layers: 2
       out_features: 9

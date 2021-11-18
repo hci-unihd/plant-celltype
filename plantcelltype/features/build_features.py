@@ -487,9 +487,9 @@ def build_edges_dot_features(stack, axis_transformer, group='edges_features'):
     for i, (e1, e2) in enumerate(stack['edges_ids']):
         if e1 > 0 and e2 > 0:
             # proj between lrs
-            lrs_dot_axis1_grs[i] = get_edges_dot(e1, e1, cell_axis1_grs)
-            lrs_dot_axis2_grs[i] = get_edges_dot(e1, e1, cell_axis2_grs)
-            lrs_dot_axis3_grs[i] = get_edges_dot(e1, e1, cell_axis3_grs)
+            lrs_dot_axis1_grs[i] = get_edges_dot(e1, e2, cell_axis1_grs)
+            lrs_dot_axis2_grs[i] = get_edges_dot(e1, e2, cell_axis2_grs)
+            lrs_dot_axis3_grs[i] = get_edges_dot(e1, e2, cell_axis3_grs)
 
             # proj edges axis to the global axis
             e_v = Vector.from_points(cell_com_grs[e1], cell_com_grs[e2]).unit()

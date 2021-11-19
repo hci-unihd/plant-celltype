@@ -8,6 +8,7 @@ from plantcelltype.utils.utils import create_edge_mapping, create_cell_mapping, 
 
 
 def compute_local_reference_axis1(cell_ids, edges_ids, cell_hops_to_bg, cell_com, edges_plane_vectors):
+    """ Compute the surface axes """
     nx_graph = build_nx_graph(cell_ids, edges_ids)
     cell_com_mapping = create_cell_mapping(cell_ids, cell_com)
     cell_hops_to_bg_mapping = create_cell_mapping(cell_ids, cell_hops_to_bg)
@@ -82,6 +83,7 @@ def compute_local_reference_axis2(cell_ids,
                                   cell_com,
                                   cell_hops_to_bg,
                                   global_axis=(1, 0, 0)):
+    """ Compute the growth axes """
     global_axis = Vector(global_axis)
     nx_graph = build_nx_graph(cell_ids, edges_ids)
     cell_com_mapping = create_cell_mapping(cell_ids, cell_com)

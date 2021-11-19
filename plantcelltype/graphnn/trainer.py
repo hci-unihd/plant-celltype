@@ -13,7 +13,6 @@ from pctg_benchmark.loaders.torch_loader import PCTGSimpleSplit, PCTGCrossValida
 from plantcelltype.utils.utils import print_config
 from dataclasses import dataclass
 
-
 datasets = {'simple': PCTGSimpleSplit,
             'cross_validation': PCTGCrossValidationSplit}
 
@@ -115,7 +114,7 @@ def get_loaders(config):
     return val_loader, train_loader, in_features, in_edges_attr
 
 
-def get_logger(config):
+def get_logger(config: dict):
     config['trainer']['logger'] = pl_loggers.TensorBoardLogger(**config['logs'])
     return config
 
@@ -133,7 +132,7 @@ def run_test(trainer, model, config, checkpoint_path=None):
     trainer.test(model, test_loader, ckpt_path=checkpoint_path)
 
 
-def simple_train(config):
+def simple_train(config: dict):
     pl.seed_everything(config.get('seed', 0), workers=True)
     val_loader, train_loader, in_features, in_edges_attr = get_loaders(config['loader'])
 
@@ -142,6 +141,7 @@ def simple_train(config):
     callbacks = TrainerCallbacks(config)
 
     trainer = pl.Trainer(**config['trainer'],
+                         deterministic=True,
                          callbacks=callbacks.all_callbacks)
 
     trainer.fit(model, train_loader, val_loader)
@@ -154,7 +154,7 @@ def simple_train(config):
     return checkpoint_path
 
 
-def cross_validation_train(config):
+def cross_validation_train(config: dict):
     n_splits = config['loader']['train_dataset']['number_splits']
     run_name = config['logs']['name']
     list_checkpoint_path = []
@@ -166,23 +166,33 @@ def cross_validation_train(config):
         checkpoint_path = simple_train(_config)
         list_checkpoint_path.append(checkpoint_path)
 
+    # produce a run summary
     summarize_cross_validation_run(list_checkpoint_path)
 
 
-def update_nested_dict(base, key, value):
-    keys = key.split('/')
-    key0, _key = keys[0], '/'.join(keys[1:])
-    if len(keys) == 1:
-        base.update({key0: value})
-    else:
-        if key0 not in base:
-            base.update({key0: {}})
-        up_config = update_nested_dict(base[key0], '/'.join(keys[1:]), value)
-        base.update({key0: up_config})
-    return base
+def grid_search_train(config: dict, kwargs: dict):
+    """
+    Grid search training
+    Parameters
+    ----------
+    config basic training config
+    kwargs grid-search hyper parameters
+    Returns None
+    -------
+    """
 
+    def update_nested_dict(base, dict_key, dict_value):
+        keys = dict_key.split('/')
+        key0, _key = keys[0], '/'.join(keys[1:])
+        if len(keys) == 1:
+            base.update({key0: dict_value})
+        else:
+            if key0 not in base:
+                base.update({key0: {}})
+            up_config = update_nested_dict(base[key0], '/'.join(keys[1:]), dict_value)
+            base.update({key0: up_config})
+        return base
 
-def grid_search_train(config, kwargs):
     all_config = []
     for new_params in itertools.product(*kwargs.values()):
         _config = copy.deepcopy(config)
@@ -199,7 +209,10 @@ def grid_search_train(config, kwargs):
         train(_config)
 
 
-def train(config):
+def train(config: dict):
+    """
+    Main training loop
+    """
     print_config(config)
     if config['loader']['mode'] == 'cross_validation':
         cross_validation_train(config)

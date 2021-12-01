@@ -3,6 +3,8 @@ import glob
 
 import torch
 
+import numpy as np
+import pandas as pd
 from plantcelltype.graphnn.trainer import get_model
 from plantcelltype.utils import create_h5
 from pctg_benchmark.utils.io import load_yaml
@@ -41,7 +43,7 @@ def get_files_loader(config):
     return all_data, in_features, in_edges_attr
 
 
-def export_predictions_as_csv(file_path, cell_ids, cell_predictions, ensemble=None):
+def export_predictions_as_csv(file_path, cell_ids, cell_predictions):
     keys = ['label', 'parent_label']
     file_path = file_path.replace('.h5', '.csv')
 
@@ -53,6 +55,41 @@ def export_predictions_as_csv(file_path, cell_ids, cell_predictions, ensemble=No
             dict_writer.writerow({keys[0]: c_id, keys[1]: c_pred})
             out_dict[c_id] = c_pred
     return out_dict
+
+
+def create_df(cell_ids, cell_predictions, ensemble=None):
+    label_key, prediction_key = 'label', 'parent_label_model'
+    prediction_key = f'{prediction_key}' if ensemble is None else f'{prediction_key}_{ensemble}'
+    df_dict = {label_key: cell_ids, prediction_key: cell_predictions}
+    return pd.DataFrame.from_dict(df_dict)
+
+
+def summarize_df(predictions_df: pd.DataFrame):
+    label_key, prediction_key, confidence_key = 'label', 'parent_label', 'confidence_key'
+    keys = list(predictions_df.keys())
+    keys.remove('label')
+
+    cell_ids = list(predictions_df['label'])
+
+    parent_label, confidence_label = [], []
+    for i, _x in predictions_df[keys].iterrows():
+        pred, pred_counts = np.unique(_x.to_numpy(), return_counts=True)
+        argmax_pred = np.argmax(pred_counts)
+        max_pred, confidence = pred[argmax_pred], pred_counts[argmax_pred] / np.sum(pred_counts)
+        confidence = round(confidence, 2)
+        parent_label.append(max_pred)
+        confidence_label.append(confidence)
+
+    return pd.DataFrame.from_dict({label_key: cell_ids,
+                                   prediction_key: parent_label,
+                                   confidence_key: confidence_label})
+
+
+def create_csv(file_path, predictions_df: pd.DataFrame, summarize=False):
+    file_path = file_path.replace('.h5', '.csv')
+    if summarize:
+        predictions_df = summarize_df(predictions_df)
+    predictions_df.to_csv(file_path, index=False)
 
 
 def export_predictions_as_h5(file_path,
@@ -106,22 +143,31 @@ def run_simple_prediction(config, checkpoint=None, ensemble=None):
                                      network_out=data.out.cpu().data.numpy(),
                                      ensemble=ensemble)
 
-        results_dict[data.file_path] = export_predictions_as_csv(data.file_path,
-                                                                 data.node_ids.cpu().data.numpy(),
-                                                                 cell_predictions)
+        results_dict[data.file_path] = create_df(data.node_ids.cpu().data.numpy(),
+                                                 cell_predictions,
+                                                 ensemble=ensemble)
+
     return results_dict
 
 
 def run_ensemble_prediction(config):
-    results = {}
+    results_list = []
     for i, checkpoint in enumerate(config['checkpoint']):
-        _results = run_simple_prediction(config, checkpoint=checkpoint, ensemble=i)
-        results[i] = _results
+        results_pd = run_simple_prediction(config, checkpoint=checkpoint, ensemble=i)
+        results_list.append(results_pd)
+
+    for key in results_list[0].keys():
+        results_pd = pd.concat([_df[key] for _df in results_list], axis=1)
+        create_csv(file_path=key, predictions_df=results_pd, summarize=True)
 
 
 def run_prediction(config):
     checkpoints = config['checkpoint']
     if isinstance(checkpoints, str):
-        run_simple_prediction(config)
+        results_dict = run_simple_prediction(config)
+        [create_csv(file_path=key, predictions_df=results_dict[key]) for key in results_dict.keys()]
+
     elif isinstance(config, list):
         run_ensemble_prediction(config)
+    else:
+        raise NotImplementedError

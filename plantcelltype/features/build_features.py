@@ -482,24 +482,57 @@ def build_edges_dot_features(stack, axis_transformer, group='edges_features'):
     lrs_dot_axis1_grs = np.zeros(stack['edges_ids'].shape[0])
     lrs_dot_axis2_grs = np.zeros(stack['edges_ids'].shape[0])
     lrs_dot_axis3_grs = np.zeros(stack['edges_ids'].shape[0])
+
+    lrs1e1_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
+    lrs2e1_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
+    lrs3e1_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
+    lrs1e2_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
+    lrs2e2_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
+    lrs3e2_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
+
     lrs_proj_grs = np.zeros((stack['edges_ids'].shape[0], 3))
 
     for i, (e1, e2) in enumerate(stack['edges_ids']):
         if e1 > 0 and e2 > 0:
-            # proj between lrs
+            # lrs*_e1 dot lrs*_e2
             lrs_dot_axis1_grs[i] = get_edges_dot(e1, e2, cell_axis1_grs)
             lrs_dot_axis2_grs[i] = get_edges_dot(e1, e2, cell_axis2_grs)
             lrs_dot_axis3_grs[i] = get_edges_dot(e1, e2, cell_axis3_grs)
 
-            # proj edges axis to the global axis
             e_v = Vector.from_points(cell_com_grs[e1], cell_com_grs[e2]).unit()
+
+            # lrs* dot grs*
             lrs_proj_grs[i] = np.dot(e_v, global_axis.T)
 
+            # lrs*e1 dot ev
+            lrs1e1_dot_ev_grs[i] = np.dot(e_v, cell_axis1_grs[e1])
+            lrs2e1_dot_ev_grs[i] = np.dot(e_v, cell_axis2_grs[e1])
+            lrs3e1_dot_ev_grs[i] = np.dot(e_v, cell_axis3_grs[e1])
+
+            # lrs*e2 dot ev
+            lrs1e2_dot_ev_grs[i] = np.dot(e_v, cell_axis1_grs[e2])
+            lrs2e2_dot_ev_grs[i] = np.dot(e_v, cell_axis2_grs[e2])
+            lrs3e2_dot_ev_grs[i] = np.dot(e_v, cell_axis3_grs[e2])
+
     # create attr
+    # lrs*_e1 dot lrs*_e2
     stack[group]['lrs_dot_axis1_grs'] = lrs_dot_axis1_grs.astype('float32')
     stack[group]['lrs_dot_axis2_grs'] = lrs_dot_axis2_grs.astype('float32')
     stack[group]['lrs_dot_axis3_grs'] = lrs_dot_axis3_grs.astype('float32')
+
+    # lrs* dot grs*
     stack[group]['lrs_proj_grs'] = lrs_proj_grs.astype('float32')
+
+    # lrs*e1 dot ev
+    stack[group]['lrs1e1_dot_ev_grs'] = lrs1e1_dot_ev_grs.astype('float32')
+    stack[group]['lrs2e1_dot_ev_grs'] = lrs2e1_dot_ev_grs.astype('float32')
+    stack[group]['lrs3e1_dot_ev_grs'] = lrs3e1_dot_ev_grs.astype('float32')
+
+    # lrs*e2 dot ev
+    stack[group]['lrs1e2_dot_ev_grs'] = lrs1e2_dot_ev_grs.astype('float32')
+    stack[group]['lrs2e2_dot_ev_grs'] = lrs2e2_dot_ev_grs.astype('float32')
+    stack[group]['lrs3e2_dot_ev_grs'] = lrs3e2_dot_ev_grs.astype('float32')
+
     return stack
 
 

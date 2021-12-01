@@ -20,7 +20,7 @@ from plantcelltype.features.build_features import build_edges_transformed_voxels
 from plantcelltype.features.build_features import build_preprocessing
 from plantcelltype.features.build_features import build_proj_length_on_sphere
 from plantcelltype.features.build_features import build_trivial_grs, build_es_trivial_grs, build_es_pca_grs
-from plantcelltype.graphnn.predict import run_predictions
+from plantcelltype.graphnn.predict import run_simple_prediction
 from plantcelltype.utils import export_full_stack, open_full_stack
 from plantcelltype.utils.io import import_segmentation, load_axis_transformer
 from plantcelltype.utils.utils import load_paths
@@ -174,7 +174,7 @@ def main(config, process=None):
         process = {'preprocessing': preprocessing,
                    'grs_step': fix_grs,
                    'advanced_features_step': advanced_preprocessing,
-                   'ct_predictions': run_predictions}
+                   'ct_predictions': run_simple_prediction}
 
     for process_key, process_func in process.items():
         sub_config = config[process_key]

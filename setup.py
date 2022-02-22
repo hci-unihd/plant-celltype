@@ -4,10 +4,10 @@ exec(open('plantcelltype/__version__.py').read())
 setup(
     name='plantcelltype',
     version=__version__,
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(),
     include_package_data=True,
     description='Training environment for PlantCellType Graph Benchmark',
-    author='Anonymous',
-    url='TODO',
-    author_email='TODO',
+    author='Lorenzo Cerrone',
+    url='https://github.com/hci-unihd/plant-celltype',
+    author_email='lorenzo.cerrone@iwr.uni-heidelberg.de',
 )

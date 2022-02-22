@@ -1,5 +1,5 @@
 package:
-  name: plantct
+  name: plantcelltype
   version: {{ RELEASE_VERSION }}
 
 source:
@@ -11,7 +11,7 @@ build:
   number: 1
 
   entry_points:
-    - plantct = plantseg.run_pipeline:main
+    - plantcelltype = plantcelltype.run_pipeline:main
 
 requirements:
   build:
@@ -20,23 +20,12 @@ requirements:
 
   run:
     - python
-    - numpy
-    - scipy
-    - matplotlib
-    - tqdm
-    - h5py
-    - requests
-    - pyyaml
-    - scikit-image
+    - ctg-benchmark
     - tifffile
+    - scikit-image
     - scikit-spatial
-    - scikit-imagew
     - python-elf
-    - pytorch
-    - pytorch-metrics
     - pytorch-lightning
-    - pytorch-geometric
-
 
 about:
   home: https://github.com/hci-unihd/plant-celltype

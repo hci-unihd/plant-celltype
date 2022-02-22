@@ -14,17 +14,17 @@ This repository contains the code for all experiments in the submitted manuscrip
 - torchmetrics
 
 ## Install dependencies using conda
-- for cuda 11.1
+- for cuda 11.3
 ```
-conda create -n plant-ct -c rusty1s -c pytorch -c nvidia -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml jupyterlab tqdm scikit-spatial elf nifty pytorch torchvision cudatoolkit=11.1 pytorch-lightning pytorch-geometric
+conda create -n ctg -c rusty1s -c pytorch -c conda-forge -c lcerrone ctg-benchmark cudatoolkit=11.3 scikit-image scikit-spatial python-elf pytorch-lightning 
 ```
 - for cuda 10.2
 ```
-conda create -n plant-ct -c rusty1s -c pytorch -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml jupyterlab tqdm scikit-spatial elf nifty pytorch torchvision cudatoolkit=10.2 pytorch-lightning pytorch-geometric
+conda create -n ctg -c rusty1s -c pytorch -c conda-forge -c lcerrone ctg-benchmark cudatoolkit=10.2 scikit-image scikit-spatial python-elf pytorch-lightning
 ```
 - for cpu only 
 ```
-conda create -n plant-ct -c rusty1s -c pytorch -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml jupyterlab tqdm scikit-spatial elf nifty pytorch torchvision cpuonly pytorch-lightning pytorch-geometric napari plotly python=3.9 
+conda create -n ctg -c rusty1s -c pytorch -c conda-forge -c lcerrone ctg-benchmark cpuonly scikit-image scikit-spatial python-elf pytorch-lightning 
 ```
 
 ## Install ctg-benchmark

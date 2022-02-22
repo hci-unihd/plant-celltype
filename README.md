@@ -16,15 +16,15 @@ This repository contains the code for all experiments in the submitted manuscrip
 ## Install dependencies using conda
 - for cuda 11.3
 ```
-conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchmark cudatoolkit=11.3 scikit-image scikit-spatial python-elf pytorch-lightning 
+conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchmark cudatoolkit=11.3 tifffile scikit-image scikit-spatial python-elf pytorch-lightning 
 ```
 - for cuda 10.2
 ```
-conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchmark cudatoolkit=10.2 scikit-image scikit-spatial python-elf pytorch-lightning
+conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchmark cudatoolkit=10.2 tifffile scikit-image scikit-spatial python-elf pytorch-lightning
 ```
 - for cpu only 
 ```
-conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchmark cpuonly scikit-image scikit-spatial python-elf pytorch-lightning 
+conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchmark cpuonly tifffile scikit-image scikit-spatial python-elf pytorch-lightning 
 ```
 
 ## Install ctg-benchmark

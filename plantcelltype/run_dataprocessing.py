@@ -1,4 +1,4 @@
-from plantcelltype.run_pipeline import main, process_train_data
+from plantcelltype.pipeline import main, process_train_data
 from ctg_benchmark.utils.io import load_yaml
 
 from plantcelltype.utils.utils import parser

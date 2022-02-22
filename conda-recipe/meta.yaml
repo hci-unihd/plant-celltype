@@ -11,7 +11,7 @@ build:
   number: 1
 
   entry_points:
-    - plantcelltype = plantcelltype.run_pipeline:main
+    - plantcelltype = plantcelltype.run_dataprocessing:main
 
 requirements:
   build:

@@ -169,7 +169,7 @@ def advanced_preprocessing(config):
         export_full_stack(file, stack)
 
 
-def main(config, process=None):
+def run_data_processing(config, process=None):
     if process is None:
         process = {'preprocessing': preprocessing,
                    'grs_step': fix_grs,
@@ -182,7 +182,7 @@ def main(config, process=None):
             process_func(sub_config)
 
 
-def process_train_data(config):
+def run_train_data_processing(config):
     _temp_id = 'XXXX'
     for stack in ['2-III', '2-IV', '2-V', '3-I', '3-II', '3-III', '3-IV', '3-V', '3-VI']:
         _config = copy.deepcopy(config)
@@ -194,4 +194,4 @@ def process_train_data(config):
         _config['advanced_features_step']['file_list'] = files_list
         _config['ct_predictions']['loader']['file_list'] = files_list
 
-        main(_config)
+        run_data_processing(_config)

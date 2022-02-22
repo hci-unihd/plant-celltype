@@ -1,4 +1,4 @@
-from pctg_benchmark.utils.io import load_yaml
+from ctg_benchmark.utils.io import load_yaml
 from plantcelltype.graphnn.trainer import train
 from torch_geometric.transforms import LocalDegreeProfile, Compose
 template_config_paths = ('./local_degree_profile/gcn.yaml',

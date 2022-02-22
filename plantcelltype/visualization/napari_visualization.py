@@ -5,7 +5,7 @@ import numpy as np
 from scipy.ndimage import zoom
 from skspatial.objects import Line, Vector
 
-from pctg_benchmark import gt_mapping
+from ctg_benchmark import gt_mapping
 from plantcelltype.utils import map_edges_features2rag_boundaries, map_cell_features2segmentation
 from plantcelltype.utils.io import open_full_stack, export_full_stack
 

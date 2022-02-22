@@ -1,5 +1,5 @@
 from plantcelltype.graphnn.trainer import grid_search_train
-from pctg_benchmark.utils.io import load_yaml
+from ctg_benchmark.utils.io import load_yaml
 
 template_config_paths = ('./node_grid_search/deeper_gcn.yaml',
                          './node_grid_search/deeper_gcn_no_edges.yaml'

@@ -1,5 +1,5 @@
-from pctg_benchmark.utils.utils import get_basic_loader_config
-from pctg_benchmark.utils.io import load_yaml
+from ctg_benchmark.utils.utils import get_basic_loader_config
+from ctg_benchmark.utils.io import load_yaml
 from plantcelltype.graphnn.trainer import train
 import os
 

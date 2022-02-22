@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 from torchmetrics import Accuracy
 
-from pctg_benchmark.evaluation.metrics import NodeClassificationMetrics
+from ctg_benchmark.evaluation.metrics import NodeClassificationMetrics
 from plantcelltype.graphnn.graph_models import GCN2
 from plantcelltype.graphnn.graph_models import GAT2, GAT2v2
 from plantcelltype.graphnn.graph_models import TransformerGCN2, NoEdgesTransformerGCN2

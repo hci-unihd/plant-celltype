@@ -2,8 +2,8 @@ import os
 
 import pandas as pd
 
-from pctg_benchmark.evaluation.metrics import aggregate_class
-from pctg_benchmark.utils.io import load_yaml
+from ctg_benchmark.evaluation.metrics import aggregate_class
+from ctg_benchmark.utils.io import load_yaml
 
 
 def expand_class_metric(score, name='metric'):

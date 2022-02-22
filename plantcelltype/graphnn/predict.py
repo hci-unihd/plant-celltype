@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 from plantcelltype.graphnn.trainer import get_model
 from plantcelltype.utils import create_h5
-from pctg_benchmark.utils.io import load_yaml
+from ctg_benchmark.utils.io import load_yaml
 from plantcelltype.utils.utils import load_paths
 from plantcelltype.graphnn.trainer import datasets
 from torch_geometric.loader import DataLoader
-from pctg_benchmark.loaders.build_dataset import default_build_torch_geometric_data
+from ctg_benchmark.loaders.build_dataset import default_build_torch_geometric_data
 
 
 def get_test_loaders(config):

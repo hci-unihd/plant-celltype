@@ -11,7 +11,7 @@ from plantcelltype.features.build_features import build_cell_points_fps_samples
 from plantcelltype.features.build_features import build_edges_points_fps_samples
 from plantcelltype.features.build_features import build_edges_points_random_samples
 from plantcelltype.features.build_features import build_edges_planes, build_lrs, build_pca_features
-from plantcelltype.features.build_features import build_grs_from_labels_funiculum, build_grs_from_labels_surface
+from plantcelltype.features.build_features import build_grs_from_labels_funiculus, build_grs_from_labels_surface
 from plantcelltype.features.build_features import build_length_along_local_axis
 from plantcelltype.features.build_features import build_cell_dot_features, build_cell_orientation_features
 from plantcelltype.features.build_features import build_edges_dot_features
@@ -105,8 +105,8 @@ def fix_grs(config):
     elif mode == 'es_pca_grs':
         return automatic_grs(files, step=build_es_pca_grs)
 
-    elif mode == 'label_grs_funiculum':
-        return automatic_grs(files, step=build_grs_from_labels_funiculum)
+    elif mode == 'label_grs_funiculus':
+        return automatic_grs(files, step=build_grs_from_labels_funiculus)
 
     elif mode == 'label_grs_surface':
         return automatic_grs(files, step=build_grs_from_labels_surface)

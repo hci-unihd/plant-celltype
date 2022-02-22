@@ -117,7 +117,7 @@ def find_axis_l123(cell_labels, cell_com, l123_set=(1, 2, 3)):
     return main_axis, second_axis, third_axis
 
 
-def find_axis_funiculum(cell_labels, cell_com, l_set=(2, 3, 4, 5, 8, 14), funiculum=(7, )):
+def find_axis_funiculus(cell_labels, cell_com, l_set=(2, 3, 4, 5, 8, 14), funiculus=(7, )):
     labels_com = []
     for key in l_set:
         _com = find_label_com(cell_labels, cell_com, (key,))
@@ -129,11 +129,11 @@ def find_axis_funiculum(cell_labels, cell_com, l_set=(2, 3, 4, 5, 8, 14), funicu
     main_axis = - line.vector
     
     # secondary axis
-    if isinstance(funiculum, int):
-        pivot_point = Point(find_label_com(cell_labels, cell_com, (funiculum,)))
+    if isinstance(funiculus, int):
+        pivot_point = Point(find_label_com(cell_labels, cell_com, (funiculus,)))
 
-    elif isinstance(funiculum, (list, tuple)):
-        pivot_point = Point(funiculum)
+    elif isinstance(funiculus, (list, tuple)):
+        pivot_point = Point(funiculus)
 
     else:
         return None, None, None

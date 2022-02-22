@@ -21,7 +21,7 @@ from plantcelltype.features.sampling import compute_farthest_points_samples
 from plantcelltype.features.utils import make_seg_hollow
 from plantcelltype.utils import cantor_sym_pair
 from plantcelltype.utils import create_cell_mapping, map_cell_features2segmentation, create_rag_boundary_from_seg
-from plantcelltype.utils.axis_transforms import find_axis_funiculum, find_label_com
+from plantcelltype.utils.axis_transforms import find_axis_funiculus, find_label_com
 from plantcelltype.utils.io import import_labels_csv
 from plantcelltype.utils.rag_image import rectify_edge_image
 
@@ -222,14 +222,14 @@ def build_basic_edges_features(stack, axis_transformer, group='edges_features'):
 # compute global axis
 def build_grs_from_labels(stack, axis_transformer, label=7):
     cell_com_um = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
-    axis = find_axis_funiculum(stack['cell_labels'], cell_com_um)
+    axis = find_axis_funiculus(stack['cell_labels'], cell_com_um)
     center = find_label_com(stack['cell_labels'], cell_com_um, (label, ))
     stack['attributes']['global_reference_system_origin'] = center
     stack['attributes']['global_reference_system_axis'] = axis
     return stack
 
 
-def build_grs_from_labels_funiculum(stack, axis_transformer):
+def build_grs_from_labels_funiculus(stack, axis_transformer):
     return build_grs_from_labels(stack, axis_transformer, 7)
 
 

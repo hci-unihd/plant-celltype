@@ -1,6 +1,6 @@
 _internal_variables:
   template: !update 'experiments/test_grs/template.yaml'
-  model_name: &grs 'label_grs_funiculum'
+  model_name: &grs 'label_grs_funiculus'
   home_path: &home_path !home_path
 
 logs:

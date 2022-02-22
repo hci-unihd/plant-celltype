@@ -1,6 +1,6 @@
 _internal_variables:
   - &home_path !home_path
-  - &mode_grs label_grs_funiculum
+  - &mode_grs label_grs_funiculus
   - &dataset late_cropped_ds3
 
 mode: train

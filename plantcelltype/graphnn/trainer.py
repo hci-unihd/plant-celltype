@@ -9,12 +9,12 @@ from pytorch_lightning import loggers as pl_loggers
 from torch_geometric.loader import DataLoader
 from plantcelltype.graphnn.pl_models import NodesClassification, EdgesClassification
 from plantcelltype.graphnn.utils import summarize_cross_validation_run
-from ctg_benchmark.loaders.torch_loader import PCTGSimpleSplit, PCTGCrossValidationSplit
+from ctg_benchmark.loaders.torch_loader import CTGSimpleSplit, CTGCrossValidationSplit
 from plantcelltype.utils.utils import print_config
 from dataclasses import dataclass
 
-datasets = {'simple': PCTGSimpleSplit,
-            'cross_validation': PCTGCrossValidationSplit}
+datasets = {'simple': CTGSimpleSplit,
+            'cross_validation': CTGCrossValidationSplit}
 
 
 class LogConfigCallback(Callback):

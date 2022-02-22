@@ -27,7 +27,7 @@ conda create -n plant-ct -c rusty1s -c pytorch -c conda-forge -c cpape numpy sci
 conda create -n plant-ct -c rusty1s -c pytorch -c conda-forge -c cpape numpy scipy matplotlib scikit-image h5py pyaml jupyterlab tqdm scikit-spatial elf nifty pytorch torchvision cpuonly pytorch-lightning pytorch-geometric napari plotly python=3.9 
 ```
 
-## Install pctg-benchmark
+## Install ctg-benchmark
 With the `plant-ct` environment active:
 ```
 cd [path-to]/plant-celltype-graph-benchmark

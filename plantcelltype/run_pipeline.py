@@ -24,7 +24,6 @@ from plantcelltype.graphnn.predict import run_simple_prediction
 from plantcelltype.utils import export_full_stack, open_full_stack
 from plantcelltype.utils.io import import_segmentation, load_axis_transformer
 from plantcelltype.utils.utils import load_paths
-from plantcelltype.visualization.napari_visualization import CellTypeViewer
 
 
 def nice_enumerate(files, message='Message here', timer_message='runtime', max_length=100):
@@ -77,6 +76,7 @@ def preprocessing(config):
 
 
 def manual_grs(files):
+    from plantcelltype.visualization.napari_visualization import CellTypeViewer
     for i, file in enumerate(files):
         progress = f'{i+1}/{len(files)}'
         print(f'{progress} - fix-grs: {file}')

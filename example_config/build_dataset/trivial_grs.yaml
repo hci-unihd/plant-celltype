@@ -7,10 +7,9 @@ mode: train
 
 preprocessing:
   state: true
-  train_data_voxels_size: [0.25, 0.2, 0.2]
   default_seg_key: 'segmentation'
-  file_list: !join [*home_path, '/data/ovules/ovules-celltype/', *dataset, '/XXXX/*.h5']
-  out_dir: &out_dir !join [*home_path, '/data/ovules/ovules-celltype-new/', *mode_grs, '/', *dataset, '/XXXX/']
+  file_list: !join [*home_path, '/data/ovules-celltype/', *dataset, '/XXXX/*.h5']
+  out_dir: &out_dir !join [*home_path, '/data/ovules-celltype-processed/', *mode_grs, '/', *dataset, '/XXXX/']
 
 grs_step:
   state: true

@@ -220,36 +220,57 @@ def build_basic_edges_features(stack, axis_transformer, group='edges_features'):
 
 
 # compute global axis
-def build_grs_from_labels(stack, axis_transformer, label=7):
+def build_grs_from_labels(stack,
+                          axis_transformer,
+                          label=7,
+                          group='attributes',
+                          feat_name=('global_reference_system_origin', 'global_reference_system_axis')):
     cell_com_um = axis_transformer.transform_coord(stack['cell_features']['com_voxels'])
     axis = find_axis_funiculus(stack['cell_labels'], cell_com_um)
-    center = find_label_com(stack['cell_labels'], cell_com_um, (label, ))
-    stack['attributes']['global_reference_system_origin'] = center
-    stack['attributes']['global_reference_system_axis'] = axis
+    center = find_label_com(stack['cell_labels'], cell_com_um, (label,))
+    stack[group][feat_name[0]] = center
+    stack[group][feat_name[1]] = axis
     return stack
 
 
-def build_grs_from_labels_funiculus(stack, axis_transformer):
-    return build_grs_from_labels(stack, axis_transformer, 7)
+def build_grs_from_labels_funiculus(stack, axis_transformer, **kwargs):
+    return build_grs_from_labels(stack=stack,
+                                 axis_transformer=axis_transformer,
+                                 label=7,
+                                 **kwargs)
 
 
-def build_grs_from_labels_surface(stack, axis_transformer):
-    return build_grs_from_labels(stack, axis_transformer, 1)
+def build_grs_from_labels_surface(stack, axis_transformer, **kwargs):
+    return build_grs_from_labels(stack=stack,
+                                 axis_transformer=axis_transformer,
+                                 label=1,
+                                 **kwargs)
 
 
-def build_trivial_grs(stack, axis_transformer):
+def build_trivial_grs(stack,
+                      axis_transformer,
+                      group='attributes',
+                      feat_name=('global_reference_system_origin', 'global_reference_system_axis')):
     stack['attributes']['global_reference_system_origin'] = (0, 0, 0)
     stack['attributes']['global_reference_system_axis'] = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
     return stack
 
 
-def build_es_trivial_grs(stack, axis_transformer, es_label=8):
-    stack['attributes']['global_reference_system_origin'] = get_es_com(stack, axis_transformer, es_label)
-    stack['attributes']['global_reference_system_axis'] = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+def build_es_trivial_grs(stack,
+                         axis_transformer,
+                         es_label=8,
+                         group='attributes',
+                         feat_name=('global_reference_system_origin', 'global_reference_system_axis')):
+    stack[group][feat_name[0]] = get_es_com(stack, axis_transformer, es_label)
+    stack[group][feat_name[1]] = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
     return stack
 
 
-def build_es_pca_grs(stack, axis_transformer, es_label=8):
+def build_es_pca_grs(stack,
+                     axis_transformer,
+                     es_label=8,
+                     group='attributes',
+                     feat_name=('global_reference_system_origin', 'global_reference_system_axis')):
     es_index, es_ids = get_proposed_es(stack, es_label)
     masks = []
     for _es_ids in es_ids:
@@ -260,8 +281,8 @@ def build_es_pca_grs(stack, axis_transformer, es_label=8):
     samples_grs = axis_transformer.transform_coord(samples_voxels)
     components, _ = compute_pca_comp_idx(samples_grs)
 
-    stack['attributes']['global_reference_system_origin'] = get_es_com(stack, axis_transformer, es_label)
-    stack['attributes']['global_reference_system_axis'] = components
+    stack[group][feat_name[0]] = get_es_com(stack, axis_transformer, es_label)
+    stack[group][feat_name[1]] = components
     return stack
 
 
@@ -479,16 +500,15 @@ def build_edges_dot_features(stack, axis_transformer, group='edges_features'):
     cell_axis3_grs = create_cell_mapping(stack['cell_ids'], cell_features['lrs_axis3_grs'])
 
     # init feat
-    lrs_dot_axis1_grs = np.zeros(stack['edges_ids'].shape[0])
-    lrs_dot_axis2_grs = np.zeros(stack['edges_ids'].shape[0])
-    lrs_dot_axis3_grs = np.zeros(stack['edges_ids'].shape[0])
-
-    lrs1e1_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
-    lrs2e1_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
-    lrs3e1_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
-    lrs1e2_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
-    lrs2e2_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
-    lrs3e2_dot_ev_grs = np.zeros(stack['edges_ids'].shape[0])
+    (lrs_dot_axis1_grs,
+     lrs_dot_axis2_grs,
+     lrs_dot_axis3_grs,
+     lrs1e1_dot_ev_grs,
+     lrs2e1_dot_ev_grs,
+     lrs3e1_dot_ev_grs,
+     lrs1e2_dot_ev_grs,
+     lrs2e2_dot_ev_grs,
+     lrs3e2_dot_ev_grs) = [np.zeros(stack['edges_ids'].shape[0]) for _ in range(9)]
 
     lrs_proj_grs = np.zeros((stack['edges_ids'].shape[0], 3))
 

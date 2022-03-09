@@ -14,6 +14,7 @@ preprocessing:
 grs_step:
   state: true
   mode: *mode_grs
+  compute_all: true
   file_list: !join [*out_dir, '*']
 
 advanced_features_step:

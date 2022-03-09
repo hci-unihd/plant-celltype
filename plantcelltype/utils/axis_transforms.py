@@ -117,7 +117,7 @@ def find_axis_l123(cell_labels, cell_com, l123_set=(1, 2, 3)):
     return main_axis, second_axis, third_axis
 
 
-def find_axis_funiculus(cell_labels, cell_com, l_set=(2, 3, 4, 5, 8, 14), funiculus=(7, )):
+def find_axis_funiculus(cell_labels, cell_com, l_set=(2, 3, 4, 5, 8, 14), funiculus=(7,)):
     labels_com = []
     for key in l_set:
         _com = find_label_com(cell_labels, cell_com, (key,))

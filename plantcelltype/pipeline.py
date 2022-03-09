@@ -92,7 +92,27 @@ def automatic_grs(files, step=build_trivial_grs):
         export_full_stack(file, stack)
 
 
+def compute_all_grs(config):
+    files = load_paths(config['file_list'], filter_h5=True)
+    steps = {'es_trivial_grs': build_es_trivial_grs,
+             'es_pca_grs': build_es_pca_grs,
+             'label_grs_funiculus': build_grs_from_labels_funiculus,
+             'label_grs_surface': build_grs_from_labels_surface}
+
+    for file in nice_enumerate(files, message='compute-all-grs'):
+        stack, at = open_full_stack(file)
+        stack['grs'] = {}
+        for name, step in steps.items():
+            at.reset_axis()
+            stack = step(stack, at, group='grs', feat_name=(f'{name}_origin', f'{name}_axis'))
+        export_full_stack(file, stack)
+
+
 def fix_grs(config):
+    compute_all = config.get('compute_all', True)
+    if compute_all:
+        compute_all_grs(config)
+
     mode = config.get('mode', 'trivial_grs')
     files = load_paths(config['file_list'], filter_h5=True)
 

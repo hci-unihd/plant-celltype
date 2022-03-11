@@ -461,20 +461,19 @@ def build_cell_dot_features(stack, axis_transformer, group='cell_features'):
     # proj cell com proj on the global axis
     cell_com_grs = axis_transformer.transform_coord(cell_features['com_voxels'])
     cell_com_grs = cell_com_grs
-    stack[group]['com_proj_grs'] = cell_com_grs.dot(global_axis.T).astype('float32')
+    stack[group]['com_proj_grs'] = cell_com_grs.dot(global_axis).astype('float32')
 
     # proj cell lrs axis proj on the global axis
     for axis_mode in ['lrs', 'pca']:
         for axis in [1, 2, 3]:
             feat_name = f'{axis_mode}_proj_axis{axis}_grs'
-            proj_axis = cell_features[f'{axis_mode}_axis1_grs'].dot(global_axis.T)
+            proj_axis = cell_features[f'{axis_mode}_axis1_grs'].dot(global_axis)
             stack[group][feat_name] = proj_axis.astype('float32')
     return stack
 
 
 def build_cell_orientation_features(stack, group='cell_features'):
     cell_features = stack['cell_features']
-    # proj cell lrs axis proj on the global axis
     for axis_mode in ['lrs', 'pca']:
         for axis in [1, 2, 3]:
             feat_name = f'{axis_mode}_orientation_axis{axis}_grs'
@@ -522,7 +521,7 @@ def build_edges_dot_features(stack, axis_transformer, group='edges_features'):
             e_v = Vector.from_points(cell_com_grs[e1], cell_com_grs[e2]).unit()
 
             # lrs* dot grs*
-            lrs_proj_grs[i] = np.dot(e_v, global_axis.T)
+            lrs_proj_grs[i] = np.dot(e_v, global_axis)
 
             # lrs*e1 dot ev
             lrs1e1_dot_ev_grs[i] = np.dot(e_v, cell_axis1_grs[e1])

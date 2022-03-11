@@ -126,7 +126,7 @@ def compute_eigen_vector_centrality(cell_ids, edges_ids):
 def compute_pca_comp_idx(cell_samples):
     pca = PCA()
     pca.fit(cell_samples)
-    return pca.components_, pca.explained_variance_
+    return pca.components_, pca.explained_variance_ratio_
 
 
 def compute_pca(cell_samples, origin=(0, 0, 0)):

@@ -38,7 +38,14 @@ def compute_local_reference_axis1(cell_ids, edges_ids, cell_hops_to_bg, cell_com
         local_vectors = local_vectors.unit()
         lr_axis_1[i] = local_vectors
 
+    lr_axis_1 = to_unit_vector(lr_axis_1)
     return lr_axis_1
+
+
+def to_unit_vector(feat: np.ndarray, eps: float = 1e-16) -> np.ndarray:
+    norm = np.sqrt(np.sum(feat**2, axis=1))[:, None]
+    feat /= (norm + eps)
+    return feat
 
 
 def get_query_vector(cell_com_mapping, a_nx, com_n):
@@ -126,6 +133,7 @@ def compute_local_reference_axis2(cell_ids,
     # lr_axis_2_mapping = local_vectors_alignment(nx_graph, lr_axis_2_mapping, iteration=10)
     # lr_axis_2_mapping = local_vectors_averaging(nx_graph, lr_axis_2_mapping)
     # lr_axis_2 = np.array([lr_axis_2_mapping[idx] for idx in cell_ids])
+    lr_axis_2 = to_unit_vector(lr_axis_2)
     return lr_axis_2, lr_axis_2_angle
 
 
@@ -133,7 +141,7 @@ def compute_local_reference_axis3(cell_axis1, cell_axis2):
     cell_axis3 = np.zeros_like(cell_axis1)
     for i, (ax1, ax2) in enumerate(zip(cell_axis1, cell_axis2)):
         ax3 = Vector(ax1).cross(ax2)
-        cell_axis3[i] = ax3
+        cell_axis3[i] = ax3 / np.sqrt(np.sum(ax3**2))
     return cell_axis3
 
 

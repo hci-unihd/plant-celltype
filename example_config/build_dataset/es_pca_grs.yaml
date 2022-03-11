@@ -9,7 +9,7 @@ preprocessing:
   state: true
   default_seg_key: 'segmentation'
   file_list: !join [ *home_path, '/data/ovules-celltype/', *dataset, '/XXXX/*.h5' ]
-    out_dir: &out_dir !join [ *home_path, '/data/ovules-celltype-processed/', *mode_grs, '/', *dataset, '/XXXX/' ]
+  out_dir: &out_dir !join [ *home_path, '/data/ovules-celltype-processed/', *mode_grs, '/', *dataset, '/XXXX/' ]
 
 grs_step:
   state: true

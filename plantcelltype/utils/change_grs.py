@@ -214,3 +214,18 @@ def change_fullstack_basis(stack, new_axis, new_origin):
 
     return new_stack
 
+
+def generate_all_grs_stacks(stack):
+    dict_new_stacks = {}
+    for axis_key, origin_key in [('es_pca_grs_axis', 'es_pca_grs_origin'),
+                                 ('es_trivial_grs_axis', 'es_trivial_grs_origin'),
+                                 ('label_grs_funiculus_axis', 'label_grs_funiculus_origin'),
+                                 ('label_grs_surface_axis', 'label_grs_surface_origin')]:
+        new_axis = stack['grs'][axis_key]
+        new_origin = stack['grs'][origin_key]
+        name = axis_key.replace('_axis', '')
+        dict_new_stacks[name] = change_fullstack_basis(stack, new_axis=new_axis, new_origin=new_origin)
+
+    return dict_new_stacks
+
+

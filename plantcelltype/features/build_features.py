@@ -24,7 +24,7 @@ from plantcelltype.utils import create_cell_mapping, map_cell_features2segmentat
 from plantcelltype.utils.axis_transforms import find_axis_funiculus, find_label_com
 from plantcelltype.utils.io import import_labels_csv
 from plantcelltype.utils.rag_image import rectify_edge_image
-from plantcelltype.features.cell_vector_features import to_unit_vector
+from plantcelltype.features.norms import vector_array_unit_norm
 
 
 # Base features_importance
@@ -281,7 +281,7 @@ def build_es_pca_grs(stack,
     samples_voxels = np.stack(np.nonzero(masks)).T
     samples_grs = axis_transformer.transform_coord(samples_voxels)
     components, _ = compute_pca_comp_idx(samples_grs)
-    components = to_unit_vector(components)
+    components = vector_array_unit_norm(components)
 
     stack[group][feat_name[0]] = get_es_com(stack, axis_transformer, es_label)
     stack[group][feat_name[1]] = components
@@ -462,7 +462,7 @@ def build_cell_dot_features(stack, axis_transformer, group='cell_features'):
 
     # proj cell com proj on the global axis
     cell_com_grs = axis_transformer.transform_coord(cell_features['com_voxels'])
-    cell_com_grs = to_unit_vector(cell_com_grs)
+    cell_com_grs = vector_array_unit_norm(cell_com_grs)
     stack[group]['com_proj_grs'] = cell_com_grs.dot(global_axis).astype('float32')
 
     # proj cell lrs axis proj on the global axis

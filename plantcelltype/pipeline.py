@@ -95,6 +95,7 @@ def automatic_grs(files, step=build_trivial_grs):
 def compute_all_grs(config):
     files = load_paths(config['file_list'], filter_h5=True)
     steps = {'es_trivial_grs': build_es_trivial_grs,
+             'trivial_grs': build_trivial_grs,
              'es_pca_grs': build_es_pca_grs,
              'label_grs_funiculus': build_grs_from_labels_funiculus,
              'label_grs_surface': build_grs_from_labels_surface}

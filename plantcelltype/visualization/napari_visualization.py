@@ -14,7 +14,7 @@ def create_prediction_label_image(stack, segmentation=None):
     segmentation = segmentation if segmentation is None else stack['segmentation']
     cell_labels = copy.deepcopy(stack['cell_labels'])
     gt_mapping[0] = 0
-    cell_predictions = stack['cell_predictions']
+    cell_predictions = stack['net_predictions']['celltype']
     for i in range(cell_labels.shape[0]):
         # map labels for consistency
         cell_labels[i] = gt_mapping[cell_labels[i]] + 1
@@ -50,7 +50,7 @@ class CellTypeViewer:
                           name='segmentation',
                           scale=self.voxel_size)
 
-        if 'cell_predictions' in self.stack:
+        if 'net_predictions' in self.stack:
             predictions, labels = create_prediction_label_image(self.stack, self.segmentation)
             viewer.add_labels(labels, name='labels', scale=self.voxel_size, visible=False)
             viewer.add_labels(predictions, name='predictions', scale=self.voxel_size)

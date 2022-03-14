@@ -36,9 +36,9 @@ class LogConfigCallback(Callback):
         # delete python obj
         del config['trainer']['logger']
         for dataset in ['train_dataset', 'val_dataset', 'test_dataset']:
-            for transfrom in ['pre_transform', 'transform']:
-                if dataset in config['loader'] and transfrom in config['loader'][dataset]:
-                    del config['loader'][dataset][transfrom]
+            for transform in ['pre_transform', 'transform']:
+                if dataset in config['loader'] and transform in config['loader'][dataset]:
+                    del config['loader'][dataset][transform]
 
         with open(os.path.join(checkpoint_path, 'config.yaml'), 'w') as outfile:
             yaml.dump(config, outfile)

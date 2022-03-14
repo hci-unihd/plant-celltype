@@ -12,8 +12,9 @@ module:
       hidden_feat: 128
 
 grid_search:
-  module/optimizer/lr: [ 1e-2, 1e-3, 1e-4 ]
-  module/optimizer/wd: [ 0, 1e-5 ]
-  module/optimizer/num_layers: [2, 4, 8]
-  module/model/kwargs/hidden_feat: [32, 64, 128]
-  module/model/kwargs/dropout: [ 0., 0.1, 0.5 ]
+  module/optimizer/lr: [ 1e-3, 1e-2, 1e-4 ]
+  module/optimizer/wd: [ 1e-5, 0. ]
+  module/optimizer/num_layers: [ 2, 4, 8 ]
+  module/model/kwargs/hidden_feat: [ 128, 64, 32 ]
+  module/model/kwargs/dropout: [ 0.5, 0.1, 0. ]
+

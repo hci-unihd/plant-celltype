@@ -3,6 +3,7 @@ import itertools
 import os
 
 import pytorch_lightning as pl
+import torch
 from pytorch_lightning.callbacks import Callback, ModelCheckpoint
 import yaml
 from pytorch_lightning import loggers as pl_loggers
@@ -12,6 +13,7 @@ from plantcelltype.graphnn.utils import summarize_cross_validation_run
 from ctg_benchmark.loaders.torch_loader import CTGSimpleSplit, CTGCrossValidationSplit
 from plantcelltype.utils.utils import print_config
 from dataclasses import dataclass
+
 
 datasets = {'simple': CTGSimpleSplit,
             'cross_validation': CTGCrossValidationSplit}
@@ -141,7 +143,6 @@ def simple_train(config: dict):
     callbacks = TrainerCallbacks(config)
 
     trainer = pl.Trainer(**config['trainer'],
-                         deterministic=True,
                          callbacks=callbacks.all_callbacks)
 
     trainer.fit(model, train_loader, val_loader)

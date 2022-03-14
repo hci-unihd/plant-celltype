@@ -15,7 +15,6 @@ logs:
 
 trainer:
   gpus: 1
-  deterministic: true
   max_epochs: 100
 
 loader:

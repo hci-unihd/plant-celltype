@@ -117,13 +117,14 @@ class NodesClassification(pl.LightningModule):
         if self.log_points:
             self._log_points(val_batch.pos, pred, batch_idx)
 
-        self.log('val_loss', loss)
-        self.log('val_acc', full_metrics['accuracy_micro'])
-        self.log('val_class_acc', full_metrics['accuracy_macro'])
-        self.log('val_dice', full_metrics['dice'])
+        batch_size = val_batch.batch.max() + 1
+        self.log('val_loss', loss, batch_size=batch_size)
+        self.log('val_acc', full_metrics['accuracy_micro'], batch_size=batch_size)
+        self.log('val_class_acc', full_metrics['accuracy_macro'], batch_size=batch_size)
+        self.log('val_dice', full_metrics['dice'], batch_size=batch_size)
 
         metrics = {'hp_metric': full_metrics['accuracy_micro']}
-        self.log_dict(metrics)
+        self.log_dict(metrics, batch_size=batch_size)
         return full_metrics, val_batch.file_path, val_batch.metadata
 
     def save_results_epoch(self, outputs, phase='val'):
@@ -145,7 +146,7 @@ class NodesClassification(pl.LightningModule):
 
         self.saved_metrics[phase]['results_last'] = results
         if phase == 'val':
-            self.log(f'{phase}_epoch_acc', epoch_acc)
+            self.log(f'{phase}_epoch_acc', epoch_acc, batch_size=1)
 
     def validation_epoch_end(self, outputs):
         self.save_results_epoch(outputs, phase='val')
@@ -155,7 +156,8 @@ class NodesClassification(pl.LightningModule):
         full_metrics = self.classification_evaluation.compute_metrics(pred.cpu(), target.cpu(), self.global_step)
         metrics = {'test_acc': full_metrics['accuracy_micro'],
                    'test_class_acc': full_metrics['accuracy_macro']}
-        self.log_dict(metrics)
+        batch_size = batch.batch.max() + 1
+        self.log_dict(metrics, batch_size=batch_size)
         return full_metrics, batch.file_path, batch.metadata
 
     def test_epoch_end(self, outputs):
@@ -199,9 +201,10 @@ class EdgesClassification(NodesClassification, pl.LightningModule):
         glob_acc = self.micro_accuracy(pred, batch.edge_y)
         class_acc = self.macro_accuracy(pred, batch.edge_y)
 
-        self.log('train_loss', loss)
-        self.log('train_global_acc', glob_acc)
-        self.log('train_class_acc', class_acc)
+        batch_size = batch.batch.max() + 1
+        self.log('train_loss', loss, batch_size=batch_size)
+        self.log('train_global_acc', glob_acc, batch_size=batch_size)
+        self.log('train_class_acc', class_acc, batch_size=batch_size)
         return loss
 
     def _val_forward(self, val_batch):

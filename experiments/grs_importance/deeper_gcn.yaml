@@ -1,5 +1,5 @@
 _internal_variables:
-  template: !update 'grs_importance/template2.yaml'
+  template: !update 'grs_importance/template.yaml'
   model_name: &model_name 'NoEdgesDeeperGCN'
 
 logs:

@@ -20,22 +20,22 @@ if __name__ == '__main__':
                  'lrs_axis2_angle_grs',
                  'rw_centrality',
                  'surface_um',
-                 'volume_um']
+                 'volume_um',
+                 'lrs_proj_axis1_grs',
+                 'lrs_proj_axis2_grs',
+                 'lrs_proj_axis3_grs',
+                 'pca_proj_axis1_grs',
+                 'pca_proj_axis2_grs',
+                 'pca_proj_axis3_grs'
+                 ]
 
     not_invariant = ['com_grs',
-                     'lrs_axis12_dot_grs',
                      'lrs_orientation_axis1_grs',
                      'lrs_orientation_axis2_grs',
                      'lrs_orientation_axis3_grs',
-                     'lrs_proj_axis1_grs',
-                     'lrs_proj_axis2_grs',
-                     'lrs_proj_axis3_grs',
                      'pca_orientation_axis1_grs',
                      'pca_orientation_axis2_grs',
                      'pca_orientation_axis3_grs',
-                     'pca_proj_axis1_grs',
-                     'pca_proj_axis2_grs',
-                     'pca_proj_axis3_grs'
                      ]
 
     _features_groups = (('inv_not_inv', invariant + not_invariant),

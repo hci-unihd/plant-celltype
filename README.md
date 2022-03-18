@@ -27,13 +27,6 @@ conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchma
 conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchmark cpuonly tifffile scikit-image scikit-spatial python-elf pytorch-lightning 
 ```
 
-## Install ctg-benchmark
-With the `plant-ct` environment active:
-```
-cd [path-to]/plant-celltype-graph-benchmark
-pip install .
-```
-
 ## Install plant-celltype
 With the `plant-ct` environment active, executed from the root directory:
 ```

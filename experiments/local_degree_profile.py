@@ -4,9 +4,7 @@ from torch_geometric.transforms import LocalDegreeProfile, Compose
 template_config_paths = ('./local_degree_profile/gcn.yaml',
                          './local_degree_profile/deeper_gcn.yaml',
                          )
-perturbation = {'name': 'proj_length_unit_sphere',
-                'pre_transform': [{'name': 'Zscore'},
-                                  {'name': 'ToTorchTensor'}]}
+
 name = '_local_degree_profile'
 for template_config_path in template_config_paths:
     template_config = load_yaml(template_config_path)

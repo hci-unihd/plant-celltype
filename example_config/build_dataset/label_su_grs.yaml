@@ -19,6 +19,7 @@ grs_step:
 
 advanced_features_step:
   state: true
+  skip_unused: true
   file_list: !join [*out_dir, '*']
 
 ct_predictions:

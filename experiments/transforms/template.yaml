@@ -1,0 +1,52 @@
+_internal_variables:
+  - &home_path !home_path
+  - &root !join [*home_path, '/data/ctg_transforms/']
+  - &force_process false
+  - &num_workers 4
+  - &grs [label_grs_surface]
+  - &split 0
+  - &number_splits 5
+
+
+mode: NodesClassification
+seed: 0
+
+logs:
+  save_dir: !join [*home_path, '/results/plant-ct-logs/ablation/transforms/']
+
+trainer:
+  gpus: 1
+  max_epochs: 100
+
+loader:
+  mode: cross_validation # simple or cross_validation
+  train_dataset:
+    root: *root
+    split: *split
+    phase: train
+    grs: *grs
+    force_process: *force_process
+    number_splits: *number_splits
+    raw_transform_config:
+
+  val_dataset:
+    root: *root
+    phase: val
+    split: *split
+    grs: *grs
+    force_process: *force_process
+    number_splits: *number_splits
+    raw_transform_config:
+
+  num_workers: *num_workers
+  train_batch_size: 1
+  val_batch_size: 1
+  test_batch_size: 1
+
+module:
+  logger:
+    log_points: false
+
+  model:
+    kwargs:
+      out_features: 9

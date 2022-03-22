@@ -164,7 +164,6 @@ class NodesClassification(pl.LightningModule):
         self.save_results_epoch(outputs, phase='test')
 
     def _log_points(self, pos, cor_pred, batch_idx):
-        pass
         """
         TO be reimplemented
         tensorboard = self.logger.experiment
@@ -182,6 +181,7 @@ class NodesClassification(pl.LightningModule):
                              config_dict=config_pc, global_step=self.global_step)
 
         """
+        pass
 
 
 class EdgesClassification(NodesClassification, pl.LightningModule):

@@ -1,24 +1,20 @@
 # plant-celltype
 This repository contains the code for all experiments in the submitted manuscript. The dataset download will be handled automatically by the plant-celltype-graph-benchmark.
 
-# Requirements
+## Requirements
 - Linux
 - Anaconda / miniconda
 
-# Dependencies
-- python >= 3.7
-- h5py
-- tifffile
+### Dependencies
+- python >= 3.8
+- ctg-benchmark
+- tiffile
 - scikit-image
 - scikit-spatial
-- python-eld
-- pyaml
-- pytorch
-- pytorch_geometric
+- python-elf
 - pytorch-lightning
-- torchmetrics
 
-## Install dependencies using conda
+### Install dependencies using conda
 - for cuda 11.3
 ```
 conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchmark cudatoolkit=11.3 tifffile scikit-image scikit-spatial python-elf pytorch-lightning 
@@ -32,13 +28,18 @@ conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchma
 conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchmark cpuonly tifffile scikit-image scikit-spatial python-elf pytorch-lightning 
 ```
 
-## Install plant-celltype
+Additional dependencies
+```
+pip install class_resolver       
+```
+
+### Install plantcelltype
 With the `pct` environment active, executed from the root directory:
 ```
 pip install .
 ```
 
-## Optional dependencies for visualization
+### Optional dependencies for visualization
 ```
 pip install 'napari[pyqt5]'
 pip install plotly==5.0.0
@@ -47,13 +48,13 @@ pip install plotly==5.0.0
 All experiments reported in the manuscript are self-contained in [experiments](experiments), please check the README.md inside the experiment directory for 
 additional instructions.
 
-## Features
+## Process raw data
 Features can be computed from segmentation by running:  
 ```
 python run_dataprocessing.py -c example_config/build_dataset/CONFIG-NAME.yaml
 ```
 
-## Predictions
+## Run predictions
 To run prediction on new segmentation data using a pretrained model
 * Configure the pipeline by editing the prediction
 [config](example_config/node_predictions/predict_from_segmentation.yaml).
@@ -61,3 +62,6 @@ To run prediction on new segmentation data using a pretrained model
 ```
 python run_dataprocessing.py -c example_config/node_predictions/predict_from_segmentation.yaml
 ```
+
+## Cite
+coming soon...

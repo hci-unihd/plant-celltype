@@ -1,5 +1,5 @@
 _internal_variables:
-  template: !update 'experiments/node_grid_search/template.yaml'
+  template: !update 'node_grid_search/template.yaml'
   model_name: &model_name 'NoEdgesTransformerGCN2'
 
 logs:

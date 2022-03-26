@@ -8,9 +8,14 @@ This repository contains the code for all experiments in the submitted manuscrip
 # Dependencies
 - python >= 3.7
 - h5py
+- tifffile
+- scikit-image
+- scikit-spatial
+- python-eld
 - pyaml
 - pytorch
 - pytorch_geometric
+- pytorch-lightning
 - torchmetrics
 
 ## Install dependencies using conda
@@ -28,7 +33,7 @@ conda create -n pct -c rusty1s -c lcerrone -c pytorch -c conda-forge ctg-benchma
 ```
 
 ## Install plant-celltype
-With the `plant-ct` environment active, executed from the root directory:
+With the `pct` environment active, executed from the root directory:
 ```
 pip install .
 ```

@@ -45,8 +45,8 @@ pip install 'napari[pyqt5]'
 pip install plotly==5.0.0
 ```
 ## Reproduce experiments
-All experiments reported in the manuscript are self-contained in [experiments](experiments), please check the README.md inside the experiment directory for 
-additional instructions.
+All experiments reported in the manuscript are self-contained in [experiments](experiments), please check the 
+`README.md` inside the experiment directory for additional instructions.
 
 ## Process raw data
 Features can be computed from segmentation by running:  

@@ -1,5 +1,6 @@
 # plant-celltype
-This repository contains the code for all experiments in the submitted manuscript. The dataset download will be handled automatically by the plant-celltype-graph-benchmark.
+This repository contains the code for all experiments in the submitted manuscript. The dataset download will be handled
+automatically by the [plant-celltype-graph-benchmark](https://github.com/hci-unihd/celltype-graph-benchmark).
 
 ## Requirements
 - Linux

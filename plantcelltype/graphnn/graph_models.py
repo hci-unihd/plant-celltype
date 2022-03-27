@@ -203,6 +203,11 @@ class NoEdgesTransformerGCN2(TransformerGCN2):
 
 
 class DeeperGCN(torch.nn.Module):
+    """
+    Implementation adapted from:
+    https://github.com/pyg-team/pytorch_geometric/blob/master/examples/ogbn_proteins_deepgcn.py
+    Credits to Matthias Fey
+    """
     def __init__(self, in_features, out_features,
                  hidden_feat,
                  num_layers,
@@ -263,6 +268,11 @@ class NoEdgesDeeperGCN(DeeperGCN):
 
 
 class GCNII(torch.nn.Module):
+    """
+    Implementation adapted from:
+    https://github.com/pyg-team/pytorch_geometric/blob/master/examples/gcn2_cora.py
+    Credits to Matthias Fey
+    """
     def __init__(self, in_features, out_features, hidden_feat, num_layers, alpha, theta,
                  shared_weights=True, dropout=0.0):
         super(GCNII, self).__init__()

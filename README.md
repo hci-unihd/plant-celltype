@@ -65,4 +65,10 @@ python run_dataprocessing.py -c example_config/node_predictions/predict_from_seg
 ```
 
 ## Cite
-coming soon...
+@inproceedings{cerrone2022celltypegraph,
+  title={CellTypeGraph: A New Geometric Computer Vision Benchmark},
+  author={Cerrone, Lorenzo and Vijayan, Athul and Mody, Tejasvinee and Schneitz, Kay and Hamprecht, Fred A},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={20897--20907},
+  year={2022}
+}
